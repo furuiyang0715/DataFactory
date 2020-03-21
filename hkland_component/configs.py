@@ -8,7 +8,7 @@ thisdir = os.path.dirname(__file__)
 cf.read(os.path.join(thisdir, '.conf'))
 
 # 是否本地 默认是在本地运行
-LOCAL = env.get("LOCAL", 1)
+LOCAL = int(env.get("LOCAL", 1))
 
 # 聚源
 JUY_HOST = env.get("JUY_HOST", cf.get('juyuan', 'JUY_HOST'))

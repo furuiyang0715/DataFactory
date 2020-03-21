@@ -7,14 +7,7 @@
 请检查: 000022 0
 [I 2020-03-20 10:02:04|merge_lc_zhsccomponent|process_zh_changes|123] 新增一条记录: {'CompType': 3, 'SecuCode': '000022', 'InDate': datetime.datetime(2018, 1, 2, 0, 0), 'InnerCode': None, 'Flag': 1}
 '''
-
 '''
-select SSESCode, EffectiveDate, Ch_ange from hkex_lgt_change_of_szse_securities_lists where SSESCode = '000043' order by  EffectiveDate;
-select * from lc_zhsccomponent where SecuCode = '000043';
-'''
-
-
-'''  这条是 ok 的 
 mysql>select SSESCode, EffectiveDate, Ch_ange from hkex_lgt_change_of_szse_securities_lists where SSESCode = '000043' order by  EffectiveDate;
 +----------+---------------+------------------------------------------------------------------------------------------------------------------+
 | SSESCode | EffectiveDate | Ch_ange                                                                                                          |
