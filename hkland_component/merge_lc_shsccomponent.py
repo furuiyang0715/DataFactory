@@ -2,9 +2,9 @@ import datetime
 import sys
 import traceback
 
-from ganggutong_list.configs import LOCAL
-from ganggutong_list.merge_tools import MergeTools
-from ganggutong_list.my_log import logger
+from hkland_component.configs import LOCAL
+from hkland_component.merge_tools import MergeTools
+from hkland_component.my_log import logger
 
 
 class SHMergeTools(MergeTools):

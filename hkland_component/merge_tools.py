@@ -1,10 +1,10 @@
 import datetime
 import traceback
 
-from ganggutong_list.configs import JUY_HOST, JUY_PORT, JUY_USER, JUY_PASSWD, JUY_DB, SPIDER_HOST, SPIDER_PORT, \
+from hkland_component.configs import JUY_HOST, JUY_PORT, JUY_USER, JUY_PASSWD, JUY_DB, SPIDER_HOST, SPIDER_PORT, \
     SPIDER_USER, SPIDER_PASSWD, SPIDER_DB, TARGET_PORT, TARGET_PASSWD, TARGET_HOST, TARGET_USER, TARGET_DB
-from ganggutong_list.my_log import logger
-from ganggutong_list.sql_pool import PyMysqlPoolBase
+from hkland_component.my_log import logger
+from hkland_component.sql_pool import PyMysqlPoolBase
 
 
 class MergeTools(object):

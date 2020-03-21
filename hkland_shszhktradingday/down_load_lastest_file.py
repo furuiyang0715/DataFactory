@@ -1,6 +1,6 @@
 from urllib.request import urlretrieve
 
-from lgt_trade_days.my_log import logger
+from hkland_shszhktradingday.my_log import logger
 
 
 def download_lastst_csv_file():

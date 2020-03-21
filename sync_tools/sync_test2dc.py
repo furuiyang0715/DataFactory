@@ -236,10 +236,10 @@ class SyncTools(object):
 
     def start(self):
         # test --> dc
-        # self.transdatas(self.need_tables, test_cfg, target_cfg, re_create=False)
+        self.transdatas(self.need_tables, test_cfg, target_cfg, re_create=False)
 
         # test --> local
-        self.transdatas(self.need_tables, test_cfg, local_cfg, re_create=True)
+        # self.transdatas(self.need_tables, test_cfg, local_cfg, re_create=True)
 
 
 if __name__ == "__main__":

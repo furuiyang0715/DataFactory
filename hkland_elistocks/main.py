@@ -1,9 +1,9 @@
 import sys
 sys.path.append("./../")
 
-from lgt_scelistocks.configs import LOCAL
-from lgt_scelistocks.human_gene import HumanTools
-from lgt_scelistocks.zh_human_gene import ZHHumanTools
+from hkland_elistocks.configs import LOCAL
+from hkland_elistocks.human_gene import HumanTools
+from hkland_elistocks.zh_human_gene import ZHHumanTools
 
 # sh = HumanTools()
 # if LOCAL:

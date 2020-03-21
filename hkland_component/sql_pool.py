@@ -2,7 +2,7 @@ import pymysql
 from pymysql.cursors import DictCursor
 from DBUtils.PooledDB import PooledDB
 
-# from ganggutong_list.my_log import logger
+# from hkland_component.my_log import logger
 
 
 class PyMysqlPoolBase(object):

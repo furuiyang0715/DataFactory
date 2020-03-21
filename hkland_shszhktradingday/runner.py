@@ -2,10 +2,10 @@ import datetime
 import sys
 sys.path.append("./../")
 
-from lgt_trade_days.down_load_lastest_file import download_lastst_csv_file
-from lgt_trade_days.gene_trading_days import CSVLoader
-from lgt_trade_days.my_log import logger
-from lgt_trade_days.parse_page_update_info import get_lastest_update_dt
+from hkland_shszhktradingday.down_load_lastest_file import download_lastst_csv_file
+from hkland_shszhktradingday.gene_trading_days import CSVLoader
+from hkland_shszhktradingday.my_log import logger
+from hkland_shszhktradingday.parse_page_update_info import get_lastest_update_dt
 
 
 def main():

@@ -1,6 +1,6 @@
 import sys
 
-from ganggutong_list.sql_pool import PyMysqlPoolBase
+from hkland_component.sql_pool import PyMysqlPoolBase
 
 
 local_cfg = {

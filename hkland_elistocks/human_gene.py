@@ -6,10 +6,10 @@ import traceback
 import pymysql
 
 sys.path.append("./../")
-from lgt_scelistocks.configs import SPIDER_HOST, SPIDER_PORT, SPIDER_USER, SPIDER_PASSWD, SPIDER_DB, JUY_HOST, JUY_PORT, \
+from hkland_elistocks.configs import SPIDER_HOST, SPIDER_PORT, SPIDER_USER, SPIDER_PASSWD, SPIDER_DB, JUY_HOST, JUY_PORT, \
     JUY_USER, JUY_PASSWD, JUY_DB, TARGET_HOST, TARGET_PORT, TARGET_USER, TARGET_PASSWD, TARGET_DB
-from lgt_scelistocks.my_log import logger
-from lgt_scelistocks.sql_pool import PyMysqlPoolBase
+from hkland_elistocks.my_log import logger
+from hkland_elistocks.sql_pool import PyMysqlPoolBase
 
 
 class HumanTools(object):

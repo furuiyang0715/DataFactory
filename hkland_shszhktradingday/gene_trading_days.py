@@ -6,10 +6,10 @@ import traceback
 
 import pandas as pd
 
-from lgt_trade_days.configs import DATACENTER_HOST, DATACENTER_PORT, DATACENTER_USER, DATACENTER_PASSWD, DATACENTER_DB, \
+from hkland_shszhktradingday.configs import DATACENTER_HOST, DATACENTER_PORT, DATACENTER_USER, DATACENTER_PASSWD, DATACENTER_DB, \
     TARGET_HOST, TARGET_PORT, TARGET_USER, TARGET_PASSWD, TARGET_DB, LOCAL
-from lgt_trade_days.my_log import logger
-from lgt_trade_days.sql_pool import PyMysqlPoolBase
+from hkland_shszhktradingday.my_log import logger
+from hkland_shszhktradingday.sql_pool import PyMysqlPoolBase
 
 
 class CSVLoader(object):

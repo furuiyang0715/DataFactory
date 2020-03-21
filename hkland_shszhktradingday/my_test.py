@@ -1,9 +1,9 @@
 import datetime
 import pprint
 
-from lgt_trade_days.configs import JUY_HOST, JUY_PORT, JUY_USER, JUY_PASSWD, JUY_DB, TARGET_HOST, TARGET_PORT, \
+from hkland_shszhktradingday.configs import JUY_HOST, JUY_PORT, JUY_USER, JUY_PASSWD, JUY_DB, TARGET_HOST, TARGET_PORT, \
     TARGET_USER, TARGET_PASSWD, TARGET_DB
-from lgt_trade_days.sql_pool import PyMysqlPoolBase
+from hkland_shszhktradingday.sql_pool import PyMysqlPoolBase
 
 
 '''
