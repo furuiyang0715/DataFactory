@@ -283,16 +283,16 @@ class SHMergeTools(MergeTools):
         target_cli.dispose()
 
     def save_hu_changes(self, hu_changes):
-        with open("hu_changes.pickle", "wb") as f:
+        with open("HU_CHANGES.pickle", "wb") as f:
             f.write(pickle.dumps(hu_changes))
 
     def save_hk_changes(self, hk_changes):
-        with open("hk_changes.pickle", "wb") as f:
+        with open("HK_CHANGES_H.pickle", "wb") as f:
             f.write(pickle.dumps(hk_changes))
 
     def loads_hu_changes(self):
         try:
-            with open("hu_changes.pickle", "rb") as f:
+            with open("HU_CHANGES.pickle", "rb") as f:
                 content = f.read()
                 hu_changes = pickle.loads(content)
         except:
@@ -301,7 +301,7 @@ class SHMergeTools(MergeTools):
 
     def loads_hk_changes(self):
         try:
-            with open("hk_changes.pickle", "rb") as f:
+            with open("HK_CHANGES_H.pickle", "rb") as f:
                 content = f.read()
                 hk_changes = pickle.loads(content)
         except:

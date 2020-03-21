@@ -1,4 +1,5 @@
 import datetime
+import pickle
 import traceback
 
 from hkland_component.configs import LOCAL
@@ -150,14 +151,6 @@ class ZHMergeTools(MergeTools):
                 logger.warning("其他状态: {}".format(stats))
 
     def check_zh_list(self):
-        def get_juyuan_zh_list():
-            juyuan = self.init_sql_pool(self.juyuan_cfg)
-            sql = 'select SecuCode from {} where CompType = 3 and Flag = 1;'.format(self.juyuan_table_name)
-            ret = juyuan.select_all(sql)
-            juyuan.dispose()
-            zh_list = [r.get("SecuCode") for r in ret]
-            return zh_list
-
         def get_spider_zh_list():
             spider_source = self.init_sql_pool(self.source_cfg)
             sql = 'select distinct(SSESCode) from {} where Date = (select max(Date) from {});'.format(
@@ -175,21 +168,11 @@ class ZHMergeTools(MergeTools):
             zh_list = [r.get("SecuCode") for r in ret]
             return zh_list
 
-        juyuan_zh_list = set(get_juyuan_zh_list())
         spider_zh_list = set(get_spider_zh_list())
         target_zh_list = set(get_target_zh_list())
-        logger.info(juyuan_zh_list == spider_zh_list)
         logger.info(spider_zh_list == target_zh_list)
 
     def check_hk_list(self):
-        def get_juyuan_hk_list():
-            juyuan = self.init_sql_pool(self.juyuan_cfg)
-            sql = 'select SecuCode from {} where CompType = 4 and Flag = 1;'.format(self.juyuan_table_name)
-            ret = juyuan.select_all(sql)
-            juyuan.dispose()
-            hk_list = [r.get("SecuCode") for r in ret]
-            return hk_list
-
         def get_spider_hk_list():
             spider_source = self.init_sql_pool(self.source_cfg)
             sql = 'select distinct(SecuCode) from {} where Time = (select max(Time) from {});'.format(
@@ -207,16 +190,14 @@ class ZHMergeTools(MergeTools):
             hk_list = [r.get("SecuCode") for r in ret]
             return hk_list
 
-        juyuan_hk_list = set(get_juyuan_hk_list())
         spider_hk_list = set(get_spider_hk_list())
         target_hk_list = set(get_target_hk_list())
-        logger.info(juyuan_hk_list == spider_hk_list)
         logger.info(spider_hk_list == target_hk_list)
 
     def get_hk_changes(self):
         # 获取深港通中港的更改
         spider_source = self.init_sql_pool(self.source_cfg)
-        sql = 'select * from {}; '.format(self.hk_change_table_name)
+        sql = 'select * from {} where Time = (select max(Time) from {}); '.format(self.hk_change_table_name, self.hk_change_table_name)
         hk_changes = spider_source.select_all(sql)
         spider_source.dispose()
         return hk_changes
@@ -275,30 +256,19 @@ class ZHMergeTools(MergeTools):
     def sync_juyuan_table(self, table, target_cli, target_table_name, fields=None):
         """
         将聚源数据库中的有效字段导出
-        :param table:
-        :param target_cli:
-        :param target_table_name:
-        :param fields:
-        :return:
         """
         fields_str = ",".join(fields)
-        # print(fields_str)   # CompType,InnerCode,SecuCode,InDate,OutDate,Flag
 
         juyuan = self.init_sql_pool(self.juyuan_cfg)
         sql = 'select {} from {}; '.format(fields_str, table)
-        # print(sql)   # select CompType,InnerCode,SecuCode,InDate,OutDate,Flag from lc_zhsccomponent;
         datas = juyuan.select_all(sql)
         juyuan.dispose()
-
-        # print(len(datas))    # 1984
-        # print(datas[0])
 
         data = datas[0]
         fields = sorted(data.keys())
         columns = ", ".join(fields)
         placeholders = ', '.join(['%s'] * len(data))
-        insert_sql = "INSERT INTO %s ( %s ) VALUES ( %s )" % (target_table_name, columns, placeholders)
-        print(insert_sql)
+        insert_sql = "REPLACE INTO %s ( %s ) VALUES ( %s )" % (target_table_name, columns, placeholders)
         values = []
         for data in datas:
             value = tuple(data.get(field) for field in fields)
@@ -312,32 +282,68 @@ class ZHMergeTools(MergeTools):
             logger.info("深港通成分股历史数据插入数量: {}".format(count))
         target_cli.dispose()
 
+    def read_last_zh_changes(self):
+        try:
+            with open("ZH_CHANGES.pickle", "rb") as f:
+                content = f.read()
+            last_zh_changes = pickle.loads(content)
+        except:
+            return []
+        return last_zh_changes
+
+    def read_last_hk_changes(self):
+        try:
+            with open("HK_CHANGES_Z.pickle", "rb") as f:
+                content = f.read()
+            last_hk_changes = pickle.loads(content)
+        except:
+            return []
+        return last_hk_changes
+
+    def dumps_zh_changes(self, zh_changes):
+        with open("ZH_CHANGES.pickle", "wb") as f:
+            f.write(pickle.dumps(zh_changes))
+
+    def dumps_hk_changes(self, zh_changes):
+        with open("HK_CHANGES_Z.pickle", "wb") as f:
+            f.write(pickle.dumps(zh_changes))
+
     def _start(self):
+        # 建表
         if LOCAL:
             self._create_table()
 
+        # 在聚源数据库停止更新之前 先导入聚源数据库
         target = self.init_sql_pool(self.target_cfg)
         fields = ["CompType", "InnerCode", "SecuCode", "InDate", "OutDate", "Flag"]
         self.sync_juyuan_table(self.juyuan_table_name, target, self.target_table_name, fields=fields)
 
+        # # 处理深港通 深的变更
+        last_zh_changes = self.read_last_zh_changes()
         zh_changes = self.get_zh_changes()
-        logger.info("len(hu_changes): {} ".format(len(zh_changes)))
-        self.process_zh_changes(zh_changes)
+        new_zh_changes = []
+        for change in zh_changes:
+            if not change in last_zh_changes:
+                new_zh_changes.append(change)
+        self.dumps_zh_changes(zh_changes)
+        logger.info("len(new_zh_changes): {} ".format(len(new_zh_changes)))
+        self.process_zh_changes(new_zh_changes)
         self.check_zh_list()
 
+        # 处理深港通 港的更改
+        last_hk_changes = self.read_last_hk_changes()
+        print(last_hk_changes)
         hk_changes = self.get_hk_changes()
-        logger.info("len(hk_changes): {}".format(len(hk_changes)))
-        self.process_hk_changes(hk_changes)
+        new_hk_changes = []
+        for change in hk_changes:
+            if not change in last_hk_changes:
+                new_hk_changes.append(change)
+        logger.info("len(new_hk_changes): {}".format(len(new_hk_changes)))
+        self.dumps_hk_changes(hk_changes)
+        self.process_hk_changes(new_hk_changes)
         self.check_hk_list()
 
 
 if __name__ == "__main__":
     tool = ZHMergeTools()
-
     tool.start()
-
-# select SSESCode, EffectiveDate, Ch_ange from hkex_lgt_change_of_szse_securities_lists where SSESCode = '000043' order by  EffectiveDate;
-# select * from lc_zhsccomponent where SecuCode = '000043';
-
-# select SecuCode, AdjustTime, AdjustContent from lgt_szse_underlying_securities_adjustment where SecuCode = '02981';
-# select * from lc_zhsccomponent where SecuCode = '02981';
