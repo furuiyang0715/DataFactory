@@ -264,13 +264,32 @@ class ZHMergeTools(MergeTools):
         datas = juyuan.select_all(sql)
         juyuan.dispose()
 
-        data = datas[0]
+        try:
+            with open("ZH_JUYUAN.pickle", "rb") as f:
+                content = f.read()
+            last_juyuan_datas = pickle.loads(content)
+        except:
+            last_juyuan_datas = []
+
+        new_juyuan_datas = []
+        for data in datas:
+            if not data in last_juyuan_datas:
+                new_juyuan_datas.append(data)
+
+        with open("ZH_JUYUAN.pickle", "wb") as f:
+            f.write(pickle.dumps(datas))
+
+        if not new_juyuan_datas:
+            logger.info("聚源无新数据")
+            return
+
+        data = new_juyuan_datas[0]
         fields = sorted(data.keys())
         columns = ", ".join(fields)
         placeholders = ', '.join(['%s'] * len(data))
         insert_sql = "REPLACE INTO %s ( %s ) VALUES ( %s )" % (target_table_name, columns, placeholders)
         values = []
-        for data in datas:
+        for data in new_juyuan_datas:
             value = tuple(data.get(field) for field in fields)
             values.append(value)
         try:
