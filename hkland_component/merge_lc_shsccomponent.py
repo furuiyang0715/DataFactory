@@ -1,4 +1,5 @@
 import datetime
+import pickle
 import sys
 import traceback
 
@@ -22,23 +23,38 @@ class SHMergeTools(MergeTools):
         self.hk_list_table_name = 'hkex_lgt_sse_list_of_eligible_securities'
         self.hk_change_table_name = 'lgt_sse_underlying_securities_adjustment'
 
+        #  不对成分股记录产生影响的状态
+        self.stats_todonothing = [
+            'Addition to List of Eligible SSE Securities for Margin Trading and List of Eligible SSE Securities for Short Selling',
+            'Remove from List of Eligible SSE Securities for Margin Trading and List of Eligible SSE Securities for Short Selling',
+            'SSE Stock Code and Stock Name are changed to 601360 and 360 SECURITY TECHNOLOGY respectively',
+            'SSE Stock Code and Stock Name are changed from 601313 and SJEC respectively',
+            'Buy orders suspended',
+            'Buy orders resumed',
+            'Addition to List of Special SSE Securities/Special China Connect Securities (stocks eligible for sell only)',
+            # 详情见 601200
+        ]
+        self.stats_addition = ['Addition']
+        self.stats_recover = [
+            'Addition (from List of Special SSE Securities/Special China Connect Securities (stocks eligible for sell only))']  # 从移除中恢复的状态
+
+        self.stats_removal = ['Removal']
+        self.stats_transfer = [
+            'Transfer to List of Special SSE Securities/Special China Connect Securities (stocks eligible for sell only)',
+        ]  # Transfer to 加入这个名单; Addition to 从这个名单移除
+
     def get_hu_changes(self):
         # 获取爬虫数据库中的沪港通 (沪) 变更记录
-        # TODO 增量时根据 UPDATETIMEJZ 拿最新的逻辑
-        # TODO 创建-->销魂 改为 with 上下文
         spider_source = self.init_sql_pool(self.source_cfg)
-        sql = 'select * from {};'.format(self.hu_change_table_name)
-        # print(sql)
+        sql = 'select * from {} where Time = (select max(Time) from {});'.format(self.hu_change_table_name, self.hu_change_table_name)
         hu_changes = spider_source.select_all(sql)
         spider_source.dispose()
         return hu_changes
 
     def get_hk_changes(self):
         # 获取爬虫数据库中的沪港通（港）变更记录
-        # TODO 增量时根据 UPDATETIMEJZ 拿最新的逻辑
-        # TODO with 上下文
         spider_source = self.init_sql_pool(self.source_cfg)
-        sql = 'select * from {}; '.format(self.hk_change_table_name)
+        sql = 'select * from {} where Time = (select max(Time) from {}); '.format(self.hk_change_table_name, self.hk_change_table_name)
         hk_changes = spider_source.select_all(sql)
         spider_source.dispose()
         return hk_changes
@@ -78,7 +94,7 @@ class SHMergeTools(MergeTools):
             juyuan = self.init_sql_pool(self.juyuan_cfg)
             sql = 'select * from secumain where SecuMarket = 83 and SecuCode = "{}";'.format(secu_code)
             ret = juyuan.select_all(sql)
-            juyuan.dispose()   # FIXME inner 在一开始查询映射好 载入内存
+            juyuan.dispose()
             if len(ret) != 1:
                 print("请检查: {} {}".format(secu_code, len(ret)))  # 请检查: 601313 0
             else:
@@ -176,21 +192,11 @@ class SHMergeTools(MergeTools):
     def check_hu_list(self):
         def get_spider_hu_list():
             # 从爬虫成分股列表里面获取的直接成分股
-            # TODO 爬虫规则
             spider_source = self.init_sql_pool(self.source_cfg)
             sql = 'select distinct(SSESCode) from {} where Date = (select max(Date) from {});'.format(self.hu_list_table_name, self.hu_list_table_name)
             ret = spider_source.select_all(sql)
             spider_source.dispose()
             hu_list = [r.get("SSESCode") for r in ret]
-            return hu_list
-
-        def get_juyuan_hu_list():
-            # 获取聚源当前 沪 成分股
-            juyuan = self.init_sql_pool(self.juyuan_cfg)
-            sql = 'select SecuCode from {} where CompType = 2 and Flag = 1;'.format(self.juyuan_table_name)
-            ret = juyuan.select_all(sql)
-            juyuan.dispose()
-            hu_list = [r.get("SecuCode") for r in ret]
             return hu_list
 
         def get_target_hu_list():
@@ -203,14 +209,11 @@ class SHMergeTools(MergeTools):
             return hu_list
 
         spider_hu_list = set(get_spider_hu_list())
-        juyuan_hu_list = set(get_juyuan_hu_list())
         target_hu_list = set(get_target_hu_list())
-        logger.info(target_hu_list == juyuan_hu_list)
-        logger.info(spider_hu_list == juyuan_hu_list)
+        logger.info(spider_hu_list == target_hu_list)
 
     def check_hk_list(self):
         def get_spider_hk_list():
-            # TODO 爬虫规则
             spider_source = self.init_sql_pool(self.source_cfg)
             sql = 'select distinct(SecuCode) from {} where Time = (select max(Time) from {} );'.format(
                 self.hk_list_table_name, self.hk_list_table_name)
@@ -219,17 +222,7 @@ class SHMergeTools(MergeTools):
             hk_list = [r.get("SecuCode") for r in ret]
             return hk_list
 
-        def get_juyuan_hk_list():
-            # 获取聚源数据库中的港成分股
-            juyuan = self.init_sql_pool(self.juyuan_cfg)
-            sql = 'select SecuCode from {} where CompType = 1 and Flag = 1;'.format(self.juyuan_table_name)
-            ret = juyuan.select_all(sql)
-            juyuan.dispose()
-            hk_list = [r.get("SecuCode") for r in ret]
-            return hk_list
-
         def get_target_hk_list():
-            # 获取目标数据库中的港股成分
             target = self.init_sql_pool(self.target_cfg)
             sql = 'select SecuCode from {} where CompType = 1 and Flag = 1;'.format(self.target_table_name)
             ret = target.select_all(sql)
@@ -238,11 +231,8 @@ class SHMergeTools(MergeTools):
             return hk_list
 
         spider_hk_list = set(get_spider_hk_list())
-        juyuan_hk_list = set(get_juyuan_hk_list())
         target_hk_list = set(get_target_hk_list())
-
         logger.info(spider_hk_list == target_hk_list)
-        logger.info(target_hk_list == juyuan_hk_list)
 
     def _create_table(self):
         sql = """
@@ -267,30 +257,18 @@ class SHMergeTools(MergeTools):
     def sync_juyuan_table(self, table, target_cli, target_table_name, fields=None):
         """
         将聚源数据库中的有效字段导出
-        :param table:
-        :param target_cli:
-        :param target_table_name:
-        :param fields:
-        :return:
         """
         fields_str = ",".join(fields)
-        # print(fields_str)   # CompType,InnerCode,SecuCode,InDate,OutDate,Flag
-
         juyuan = self.init_sql_pool(self.juyuan_cfg)
         sql = 'select {} from {}; '.format(fields_str, table)
-        # print(sql)   # select CompType,InnerCode,SecuCode,InDate,OutDate,Flag from lc_shsccomponent;
         datas = juyuan.select_all(sql)
         juyuan.dispose()
-
-        # print(len(datas))    # 1451
-        # print(datas[0])
 
         data = datas[0]
         fields = sorted(data.keys())
         columns = ", ".join(fields)
         placeholders = ', '.join(['%s'] * len(data))
-        insert_sql = "INSERT INTO %s ( %s ) VALUES ( %s )" % (target_table_name, columns, placeholders)
-        print(insert_sql)
+        insert_sql = "REPLACE INTO %s ( %s ) VALUES ( %s )" % (target_table_name, columns, placeholders)
         values = []
         for data in datas:
             value = tuple(data.get(field) for field in fields)
@@ -304,25 +282,73 @@ class SHMergeTools(MergeTools):
             logger.info("沪港通成分股历史数据插入数量: {}".format(count))
         target_cli.dispose()
 
+    def save_hu_changes(self, hu_changes):
+        with open("hu_changes.pickle", "wb") as f:
+            f.write(pickle.dumps(hu_changes))
+
+    def save_hk_changes(self, hk_changes):
+        with open("hk_changes.pickle", "wb") as f:
+            f.write(pickle.dumps(hk_changes))
+
+    def loads_hu_changes(self):
+        try:
+            with open("hu_changes.pickle", "rb") as f:
+                content = f.read()
+                hu_changes = pickle.loads(content)
+        except:
+            return []
+        return hu_changes
+
+    def loads_hk_changes(self):
+        try:
+            with open("hk_changes.pickle", "rb") as f:
+                content = f.read()
+                hk_changes = pickle.loads(content)
+        except:
+            return []
+        return hk_changes
+
     def _start(self):
+        # 建表
         if LOCAL:
             self._create_table()
+
+        # 导入聚源数据（在聚源是一直更新的情况下
         target = self.init_sql_pool(self.target_cfg)
         fields = ["CompType", "InnerCode", "SecuCode", "InDate", "OutDate", "Flag"]
         self.sync_juyuan_table(self.juyuan_table_name, target, self.target_table_name, fields=fields)
 
+        # 处理沪港通 沪变更
         hu_changes = self.get_hu_changes()
-        logger.info("len(hu_changes): {}".format(len(hu_changes)))
-        self.process_hu_changes(hu_changes)
+        last_hu_changes = self.loads_hu_changes()
+
+        new_hu_changes = []
+        for change in hu_changes:
+            if change not in last_hu_changes:
+                new_hu_changes.append(change)
+
+        self.save_hu_changes(hu_changes)
+
+        logger.info("len(new_hu_changes): {}".format(len(new_hu_changes)))
+        self.process_hu_changes(new_hu_changes)
         self.check_hu_list()
 
+        # 处理沪港通 港变更
         hk_changes = self.get_hk_changes()
-        logger.info("len(hk_changes): {}".format(len(hk_changes)))
-        self.process_hk_changes(hk_changes)
+        last_hk_changes = self.loads_hk_changes()
+
+        new_hk_changes = []
+        for change in hk_changes:
+            if not change in last_hk_changes:
+                new_hk_changes.append(change)
+
+        self.save_hk_changes(hk_changes)
+
+        logger.info("len(new_hk_changes): {}".format(len(new_hk_changes)))
+        self.process_hk_changes(new_hk_changes)
         self.check_hk_list()
 
 
 if __name__ == "__main__":
     tool = SHMergeTools()
-
     tool.start()

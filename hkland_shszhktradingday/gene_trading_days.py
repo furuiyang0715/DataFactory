@@ -6,8 +6,10 @@ import traceback
 
 import pandas as pd
 
-from hkland_shszhktradingday.configs import DATACENTER_HOST, DATACENTER_PORT, DATACENTER_USER, DATACENTER_PASSWD, DATACENTER_DB, \
-    TARGET_HOST, TARGET_PORT, TARGET_USER, TARGET_PASSWD, TARGET_DB, LOCAL
+from hkland_shszhktradingday.configs import DATACENTER_HOST, DATACENTER_PORT, DATACENTER_USER, DATACENTER_PASSWD, \
+    DATACENTER_DB, \
+    TARGET_HOST, TARGET_PORT, TARGET_USER, TARGET_PASSWD, TARGET_DB, LOCAL, TEST_HOST, TEST_PORT, TEST_USER, \
+    TEST_PASSWD, TEST_DB
 from hkland_shszhktradingday.my_log import logger
 from hkland_shszhktradingday.sql_pool import PyMysqlPoolBase
 
@@ -22,11 +24,11 @@ class CSVLoader(object):
     }
 
     test_cfg = {
-        "host": '14.152.49.155',
-        "port": 8998,
-        "user": 'rootb',
-        "password": '3x870OV649AMSn*',
-        "db": 'test_furuiyang',
+        "host": TEST_HOST,
+        "port": TEST_PORT,
+        "user": TEST_USER,
+        "password": TEST_PASSWD,
+        "db": TEST_DB,
     }
 
     target_cfg = {
@@ -71,7 +73,7 @@ class CSVLoader(object):
 
     def create_table(self):
         c_sql = '''
-        CREATE TABLE IF NOT EXISTS `hkland_shszhktradingday` (
+        CREATE TABLE IF NOT EXISTS `{}` (
           `id` bigint(20)  unsigned NOT NULL AUTO_INCREMENT,
           `InfoSource` int(11) DEFAULT NULL COMMENT '信息来源',
           `EndDate` datetime NOT NULL COMMENT '截止日期',
@@ -88,7 +90,7 @@ class CSVLoader(object):
           UNIQUE KEY `IX_QT_SHSZHSCTradingDay` (`EndDate`,`TradingType`),
           UNIQUE KEY `IX_QT_SHSZHSCTradingDay_ID` (`ID`)
         ) ENGINE=InnoDB DEFAULT CHARSET=gbk COMMENT '陆股通交易日'; 
-        '''
+        '''.format(self.table_name)
         target = self.init_sql_pool(self.target_cfg)
         target.insert(c_sql)
         target.dispose()
@@ -172,15 +174,17 @@ class CSVLoader(object):
 
             # 插入
             self.insert_many([base72_83, base83_72, base72_90, base90_72])
-            # self.update_many([base72_83, base83_72, base72_90, base90_72])
 
-    def insert_many(self, datas):
+    def insert_many(self, datas, replace=True):
         target = self.init_sql_pool(self.target_cfg)
         data = datas[0]
         fields = sorted(data.keys())
         columns = ", ".join(fields)
         placeholders = ', '.join(['%s'] * len(data))
-        insert_sql = "INSERT INTO %s ( %s ) VALUES ( %s ); " % (self.table_name, columns, placeholders)
+        if not replace:
+            insert_sql = "INSERT INTO %s ( %s ) VALUES ( %s ); " % (self.table_name, columns, placeholders)
+        else:
+            insert_sql = "REPLACE INTO %s ( %s ) VALUES ( %s ); " % (self.table_name, columns, placeholders)
         values = []
         for data in datas:
             value = tuple(data.get(field) for field in fields)
@@ -201,9 +205,6 @@ class CSVLoader(object):
     def gen_all_quarters(self, start: datetime.datetime, end: datetime.datetime):
         """
         生成 start 和 end 之间全部季度时间点列表
-        :param start:
-        :param end:
-        :return:
         """
         idx = pd.date_range(start=start, end=end, freq="D")
         dt_list = [dt.to_pydatetime() for dt in idx]
@@ -245,9 +246,7 @@ class CSVLoader(object):
         if LOCAL:
             self.create_table()
         rows = self.read_origin_rows()
-        logger.info(rows)
         records = self.gene_insert_records(rows)
-        logger.info(records)
         self.process_records(records)
 
         wks = self.gene_wk_days(self.year)
@@ -260,16 +259,8 @@ class CSVLoader(object):
             traceback.print_exc()
 
 
-# if __name__ == "__main__":
-#     file_path = '2020 Calendar_csv_c.csv'
-#     ll = CSVLoader(csv_file_path=file_path, year=2019)
-#     ll.start()
-
-    # (1) TradingPeriod 这个更加详细的数据源是没有的。
-    # (2) 与港交所交易日历的核对。
-    # (3) 要生成连续天数的数据。
-    # (4) 更加具体关闭原因是没有的。
-    # (5) 持续拿到最新的 csv 文件。
+# (1) TradingPeriod 这个更加详细的数据源是没有的。
+# (2) 更加具体关闭原因是没有的。
 
 '''
 mysql> select distinct(Reason)  from qt_shszhsctradingday;

@@ -200,7 +200,7 @@ class SyncTools(object):
         pool.dispose()
         return ret
 
-    def transdatas(self, need_tables, source_cfg, target_cfg, re_create=False, replace=True):
+    def transdatas(self, need_tables, source_cfg, target_cfg, re_create=False, delete=False, replace=True):
         for table in need_tables:
             source = self.init_sql_pool(source_cfg)
             sql = 'select * from {}; '.format(table)
@@ -230,13 +230,19 @@ class SyncTools(object):
                 sql = self.show_table(source_cfg, table)
                 target.insert(sql)
 
+            if delete:
+                try:
+                    target.delete('delete from {}; '.format(table))
+                except:
+                    pass
+
             count = target.insert_many(insert_sql, values)
             print("{} insert count: {}".format(table, count))
             target.dispose()
 
     def start(self):
         # test --> dc
-        self.transdatas(self.need_tables, test_cfg, target_cfg, re_create=False)
+        self.transdatas(self.need_tables, test_cfg, target_cfg, delete=True)
 
         # test --> local
         # self.transdatas(self.need_tables, test_cfg, local_cfg, re_create=True)
