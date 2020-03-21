@@ -182,11 +182,11 @@ class PyMysqlPoolBase(object):
 class SyncTools(object):
 
     need_tables = [
-        # 'hkland_shszhktradingday',   # 交易日
+        'hkland_shszhktradingday',   # 交易日
         'hkland_sgelistocks',   # 深港通合资格股
         'hkland_hgelistocks',   # 沪港通合资格股
-        # 'hkland_sgcomponent',   # 深港成分股
-        # 'hkland_hgcomponent',   # 沪港成分股
+        'hkland_sgcomponent',   # 深港成分股
+        'hkland_hgcomponent',   # 沪港成分股
     ]
 
     def init_sql_pool(self, sql_cfg: dict):
@@ -200,29 +200,7 @@ class SyncTools(object):
         pool.dispose()
         return ret
 
-    def updatedatas(self, need_tables, source_cfg, target_cfg):
-        for table in need_tables:
-            source = self.init_sql_pool(source_cfg)
-            target = self.init_sql_pool(target_cfg)
-            sql = 'select max(UPDATETIMEJZ) from {}; '.format(table)
-            last_dt = target.select_one(sql).get("UPDATETIMEJZ")
-            print("last dt is {}".format(last_dt))
-            sql_1 = 'select * from {} where UPDATETIMEJZ > {}; '.format(table, last_dt)
-            new_datas = source.select_all(sql_1)
-            source.dispose()
-            # https://segmentfault.com/a/1190000015591496
-            # 使用 replace into 来实现
-            for data in new_datas:
-                print(data)
-                fields = sorted(data.keys())
-                columns = ", ".join(fields)
-                placeholders = ', '.join(['%s'] * len(data))
-                replace_sql = "REPLACE INTO %s ( %s ) VALUES ( %s )" % (table, columns, placeholders)
-                value = tuple(data.get(field) for field in fields)
-                target.insert(replace_sql, value)
-                target.dispose()
-
-    def transdatas(self, need_tables, source_cfg, target_cfg, re_create=False):
+    def transdatas(self, need_tables, source_cfg, target_cfg, re_create=False, replace=True):
         for table in need_tables:
             source = self.init_sql_pool(source_cfg)
             sql = 'select * from {}; '.format(table)
@@ -233,7 +211,10 @@ class SyncTools(object):
             fields = sorted(data.keys())
             columns = ", ".join(fields)
             placeholders = ', '.join(['%s'] * len(data))
-            insert_sql = "INSERT INTO %s ( %s ) VALUES ( %s )" % (table, columns, placeholders)
+            if replace:   # https://segmentfault.com/a/1190000015591496
+                insert_sql = "REPLACE INTO %s ( %s ) VALUES ( %s )" % (table, columns, placeholders)
+            else:
+                insert_sql = "INSERT INTO %s ( %s ) VALUES ( %s )" % (table, columns, placeholders)
             values = []
             for data in datas:
                 value = tuple(data.get(field) for field in fields)
@@ -254,11 +235,11 @@ class SyncTools(object):
             target.dispose()
 
     def start(self):
-        # remote
-        self.transdatas(self.need_tables, test_cfg, target_cfg, re_create=False)
+        # test --> dc
+        # self.transdatas(self.need_tables, test_cfg, target_cfg, re_create=False)
 
-        # local
-        # self.transdatas(self.need_tables, test_cfg, local_cfg, re_create=True)
+        # test --> local
+        self.transdatas(self.need_tables, test_cfg, local_cfg, re_create=True)
 
 
 if __name__ == "__main__":

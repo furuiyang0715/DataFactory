@@ -11,12 +11,6 @@ cf = configparser.ConfigParser()
 thisdir = os.path.dirname(__file__)
 cf.read(os.path.join(thisdir, '.conf'))
 
-# 聚源
-JUY_HOST = env.get("JUY_HOST", cf.get('juyuan', 'JUY_HOST'))
-JUY_PORT = int(env.get("JUY_PORT", cf.get('juyuan', 'JUY_PORT')))
-JUY_USER = env.get("JUY_USER", cf.get('juyuan', 'JUY_USER'))
-JUY_PASSWD = env.get("JUY_PASSWD", cf.get('juyuan', 'JUY_PASSWD'))
-JUY_DB = env.get("JUY_DB", cf.get('juyuan', 'JUY_DB'))
 
 # 爬虫数据源
 SPIDER_HOST = env.get("SPIDER_HOST", cf.get('spider', 'SPIDER_HOST'))
@@ -26,11 +20,11 @@ SPIDER_PASSWD = env.get("SPIDER_PASSWD", cf.get('spider', 'SPIDER_PASSWD'))
 SPIDER_DB = env.get("SPIDER_DB", cf.get('spider', 'SPIDER_DB'))
 
 # test
-TARGET_HOST = env.get("TARGET_HOST", cf.get('target', 'TARGET_HOST'))
-TARGET_PORT = int(env.get("TARGET_PORT", cf.get('target', 'TARGET_PORT')))
-TARGET_USER = env.get("TARGET_USER", cf.get('target', 'TARGET_USER'))
-TARGET_PASSWD = env.get("TARGET_PASSWD", cf.get('target', 'TARGET_PASSWD'))
-TARGET_DB = env.get("TARGET_DB", cf.get('target', 'TARGET_DB'))
+TEST_HOST = env.get("TEST_HOST", cf.get('test', 'TEST_HOST'))
+TEST_PORT = env.get("TEST_PORT", cf.get('test', 'TEST_PORT'))
+TEST_USER = env.get("TEST_USER", cf.get('test', 'TEST_USER'))
+TEST_PASSWD = env.get("TEST_PASSWD", cf.get('test', 'TEST_PASSWD'))
+TEST_DB = env.get("TEST_DB", cf.get('test', 'TEST_DB'))
 
 
 class PyMysqlPoolBase(object):
@@ -162,16 +156,6 @@ class PyMysqlPoolBase(object):
 
 
 class ImportTools(object):
-    # 聚源数据库
-    juyuan_cfg = {
-        "host": JUY_HOST,
-        "port": JUY_PORT,
-        "user": JUY_USER,
-        "password": JUY_PASSWD,
-        "db": JUY_DB,
-
-    }
-
     # 爬虫数据库
     spider_cfg = {
         "host": SPIDER_HOST,
@@ -181,22 +165,13 @@ class ImportTools(object):
         "db": SPIDER_DB,
     }
 
-    # 本地数据库配置
-    local_cfg = {
-        "host": '127.0.0.1',
-        "port": 3306,
-        "user": 'root',
-        "password": 'ruiyang',
-        "db": 'test_db',
-    }
-
-    # test
+    # 测试数据库
     test_cfg = {
-        "host": TARGET_HOST,
-        "port": TARGET_PORT,
-        "user": TARGET_USER,
-        "password": TARGET_PASSWD,
-        "db": TARGET_DB,
+        "host": TEST_HOST,
+        "port": TEST_PORT,
+        "user": TEST_USER,
+        "password": TEST_PASSWD,
+        "db": TEST_DB,
     }
 
     need_tables = [
@@ -221,15 +196,14 @@ class ImportTools(object):
         pool = PyMysqlPoolBase(**sql_cfg)
         return pool
 
-    def show_table(self, show_cfg, show_table):
+    def show_create_table(self, show_cfg, show_table):
         pool = self.init_sql_pool(show_cfg)
         ret = pool.select_one("show create table {};".format(show_table))
         ret = ret.get("Create Table") + ';'
         pool.dispose()
         return ret
 
-    def transdatas(self, source_cfg, target_cfg):
-        # 不包含建表这一步 需自行建立表结构
+    def transdatas(self, source_cfg, target_cfg, re_create=False, replace=True):
         for table in self.need_tables:
             source = self.init_sql_pool(source_cfg)
             sql = 'select * from {}; '.format(table)
@@ -240,41 +214,39 @@ class ImportTools(object):
             fields = sorted(data.keys())
             columns = ", ".join(fields)
             placeholders = ', '.join(['%s'] * len(data))
-            insert_sql = "INSERT INTO %s ( %s ) VALUES ( %s )" % (table, columns, placeholders)
+            if replace:
+                insert_sql = "REPLACE INTO %s ( %s ) VALUES ( %s )" % (table, columns, placeholders)
+            else:
+                insert_sql = "INSERT INTO %s ( %s ) VALUES ( %s )" % (table, columns, placeholders)
             values = []
             for data in datas:
                 value = tuple(data.get(field) for field in fields)
                 values.append(value)
 
             target = self.init_sql_pool(target_cfg)
-            # ret = target.delete('delete from {}; '.format(table))
-            # print("delete count: ", ret)
 
-            try:
-                target.delete('drop table {}; '.format(table))
-            except:
-                pass
-            sql = self.show_table(source_cfg, table)
-            target.insert(sql)
+            if re_create:
+                try:
+                    target.delete('drop table {}; '.format(table))
+                except:
+                    pass
+                sql = self.show_create_table(source_cfg, table)
+                target.insert(sql)
 
             count = target.insert_many(insert_sql, values)
             print("{} insert count: {}".format(table, count))
             target.dispose()
 
     def start(self):
-
         self.transdatas(self.spider_cfg, self.test_cfg)
-
-        # self.transdatas(self.test_cfg, self.local_cfg)
 
 
 if __name__ == "__main__":
     tool = ImportTools()
     tool.start()
 
-    # ret = tool.show_table(tool.local_cfg, tool.need_tables[0])
-    # print(ret)
-    # local = tool.init_sql_pool(tool.local_cfg)
-    # local.delete("drop table {}; ".format(tool.need_tables[0]))
-    # ret = local.insert(ret)
-    # print(ret)
+
+# 目标: 将爬虫数据库的表拉取到测试数据库
+# (1) 比较粗暴的方式 删库重建
+# (2) 根据更新字段进行拉取
+# (3) 全量 replace 比较
