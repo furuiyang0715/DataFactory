@@ -351,7 +351,6 @@ class ZHMergeTools(MergeTools):
 
         # 处理深港通 港的更改
         last_hk_changes = self.read_last_hk_changes()
-        print(last_hk_changes)
         hk_changes = self.get_hk_changes()
         new_hk_changes = []
         for change in hk_changes:
