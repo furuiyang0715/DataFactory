@@ -12,6 +12,8 @@ class HumanTools(CommonHumamTools):
         self.short_sell_list = self.get_short_sell_list()
         self.only_sell_list = self.get_only_sell_list()
         self.table_name = 'hkland_hgelistocks'   # 沪港通合资格股
+        self.change_table_name = 'hkex_lgt_change_of_sse_securities_lists'
+        self.market = 83
 
         self.stats_todonothing = [
             'SSE Stock Code and Stock Name are changed to 601360 and 360 SECURITY TECHNOLOGY respectively',
@@ -70,45 +72,44 @@ class HumanTools(CommonHumamTools):
         lst = [r.get("SSESCode") for r in ret]
         return lst
 
-    @property
-    def inner_code_map(self):
-        secu_codes = self.get_distinct_spider_secucode()
-        inner_code_map = self.get_inner_code_map(secu_codes)
-        return inner_code_map
+    # @property
+    # def inner_code_map(self):
+    #     secu_codes = self.get_distinct_spider_secucode()
+    #     inner_code_map = self.get_inner_code_map(secu_codes)
+    #     return inner_code_map
+    #
+    # @property
+    # def css_code_map(self):
+    #     secu_codes = self.get_distinct_spider_secucode()
+    #     css_code_map = self.get_css_code_map(secu_codes)
+    #     return css_code_map
 
-    @property
-    def css_code_map(self):
-        secu_codes = self.get_distinct_spider_secucode()
-        css_code_map = self.get_css_code_map(secu_codes)
-        return css_code_map
+    # def get_distinct_spider_secucode(self):
+    #     spider = self.init_sql_pool(self.spider_cfg)  # hkex_lgt_change_of_sse_securities_lists
+    #     sql = 'select distinct(SSESCode) from {}; '.format(self.change_table_name)
+    #     ret = spider.select_all(sql)
+    #     spider.dispose()
+    #     ret = [r.get("SSESCode") for r in ret]
+    #     return ret
 
-    def get_distinct_spider_secucode(self):
-        spider = self.init_sql_pool(self.spider_cfg)
-        sql = 'select distinct(SSESCode) from hkex_lgt_change_of_sse_securities_lists; '
-        ret = spider.select_all(sql)
-        spider.dispose()
-        ret = [r.get("SSESCode") for r in ret]
-        return ret
+    # def get_inner_code_map(self, secu_codes):
+    #     juyuan = self.init_sql_pool(self.juyuan_cfg)
+    #     sql = 'select SecuCode, InnerCode, SecuAbbr from secumain where SecuMarket = {} and SecuCode in {};'.format(self.market, tuple(secu_codes))
+    #     ret = juyuan.select_all(sql)
+    #     juyuan.dispose()
+    #     info = {}
+    #     for r in ret:
+    #         key = r.get("SecuCode")
+    #         value = (r.get('InnerCode'), r.get("SecuAbbr"))
+    #         info[key] = value
+    #     return info
 
-    def get_inner_code_map(self, secu_codes, market=83):
-        juyuan = self.init_sql_pool(self.juyuan_cfg)
-        sql = 'select SecuCode, InnerCode, SecuAbbr from secumain where SecuMarket = {} and SecuCode in {};'.format(market, tuple(secu_codes))
-        ret = juyuan.select_all(sql)
-        juyuan.dispose()
-        info = {}
-        for r in ret:
-            key = r.get("SecuCode")
-            value = (r.get('InnerCode'), r.get("SecuAbbr"))
-            # print(value)
-            info[key] = value
-        return info
-
-    def get_juyuan_inner_code(self, secu_code):
-        ret = self.inner_code_map.get(secu_code)
-        if ret:
-            return ret
-        else:
-            return None, None
+    # def get_juyuan_inner_code(self, secu_code):
+    #     ret = self.inner_code_map.get(secu_code)
+    #     if ret:
+    #         return ret
+    #     else:
+    #         return None, None
 
     def get_css_code_map(self, secu_codes):
         # sql = 'select SSESCode, distinct(CCASSCode), FaceValue from hkex_lgt_special_sse_securities where SSESCode in {}; '.format(tuple(secu_codes))

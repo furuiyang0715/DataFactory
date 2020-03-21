@@ -59,3 +59,42 @@ class CommonHumamTools(object):
     def init_sql_pool(self, sql_cfg: dict):
         pool = PyMysqlPoolBase(**sql_cfg)
         return pool
+
+    @property
+    def inner_code_map(self):
+        secu_codes = self.get_distinct_spider_secucode()
+        inner_code_map = self.get_inner_code_map(secu_codes)
+        return inner_code_map
+
+    @property
+    def css_code_map(self):
+        secu_codes = self.get_distinct_spider_secucode()
+        css_code_map = self.get_css_code_map(secu_codes)
+        return css_code_map
+
+    def get_distinct_spider_secucode(self):
+        spider = self.init_sql_pool(self.spider_cfg)
+        sql = 'select distinct(SSESCode) from {}; '.format(self.change_table_name)
+        ret = spider.select_all(sql)
+        spider.dispose()
+        ret = [r.get("SSESCode") for r in ret]
+        return ret
+
+    def get_inner_code_map(self, secu_codes):
+        juyuan = self.init_sql_pool(self.juyuan_cfg)
+        sql = 'select SecuCode, InnerCode, SecuAbbr from secumain where SecuMarket = {} and SecuCode in {};'.format(self.market, tuple(secu_codes))
+        ret = juyuan.select_all(sql)
+        juyuan.dispose()
+        info = {}
+        for r in ret:
+            key = r.get("SecuCode")
+            value = (r.get('InnerCode'), r.get("SecuAbbr"))
+            info[key] = value
+        return info
+
+    def get_juyuan_inner_code(self, secu_code):
+        ret = self.inner_code_map.get(secu_code)
+        if ret:
+            return ret
+        else:
+            return None, None
