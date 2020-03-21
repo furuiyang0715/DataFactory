@@ -19,6 +19,7 @@ def task():
     if not lastest_update_dt >= now - datetime.timedelta(days=2):
         logger.info("No Update in Latest 2 Days, Return.")
         return
+    print()
 
     download_lastst_csv_file()
 
