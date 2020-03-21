@@ -4,13 +4,13 @@ ENV TZ=Asia/Shanghai
 
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-RUN mkdir /ganggutong_list
+RUN mkdir /hkland_component
 
-WORKDIR /ganggutong_list
+WORKDIR /hkland_component
 
-ADD . /ganggutong_list
+ADD . /hkland_component
 
-WORKDIR /ganggutong_list
+WORKDIR /hkland_component
 
 RUN pip install -r requirements.txt -i https://pypi.douban.com/simple
 
