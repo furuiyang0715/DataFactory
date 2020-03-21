@@ -4,13 +4,13 @@ ENV TZ=Asia/Shanghai
 
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-RUN mkdir /lgt_trade_days
+RUN mkdir /hkland_shszhktradingday
 
-WORKDIR /lgt_trade_days
+WORKDIR /hkland_shszhktradingday
 
-ADD . /lgt_trade_days
+ADD . /hkland_shszhktradingday
 
-WORKDIR /lgt_trade_days
+WORKDIR /hkland_shszhktradingday
 
 RUN pip install -r requirements.txt -i https://pypi.douban.com/simple
 
