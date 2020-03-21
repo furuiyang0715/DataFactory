@@ -1,0 +1,9 @@
+.idea
+*.conf
+remote_sync
+__pycache__
+*.csv
+*.log
+*.xls
+*.txt
+*.log.*
