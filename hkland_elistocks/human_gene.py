@@ -1,64 +1,11 @@
-import datetime
-import pprint
-import sys
 import traceback
-
 import pymysql
 
-sys.path.append("./../")
-from hkland_elistocks.configs import SPIDER_HOST, SPIDER_PORT, SPIDER_USER, SPIDER_PASSWD, SPIDER_DB, JUY_HOST, JUY_PORT, \
-    JUY_USER, JUY_PASSWD, JUY_DB, TARGET_HOST, TARGET_PORT, TARGET_USER, TARGET_PASSWD, TARGET_DB
+from hkland_elistocks.common import CommonHumamTools
 from hkland_elistocks.my_log import logger
-from hkland_elistocks.sql_pool import PyMysqlPoolBase
 
 
-class HumanTools(object):
-    target_cfg = {
-        "host": TARGET_HOST,
-        "port": TARGET_PORT,
-        "user": TARGET_USER,
-        "password": TARGET_PASSWD,
-        "db": TARGET_DB,
-    }
-
-    spider_cfg = {
-        "host": SPIDER_HOST,
-        "port": SPIDER_PORT,
-        "user": SPIDER_USER,
-        "password": SPIDER_PASSWD,
-        "db": SPIDER_DB,
-    }
-
-    juyuan_cfg = {
-        "host": JUY_HOST,
-        "port": JUY_PORT,
-        "user": JUY_USER,
-        "password": JUY_PASSWD,
-        "db": JUY_DB,
-    }
-
-    related_tables = [
-        "hkex_lgt_change_of_sse_securities_lists",  # 更改上交所证券/中华通证券名单
-        'hkex_lgt_sse_securities',  # 上交所证券/中华通证券清单（可同时买卖的股票）
-        'hkex_lgt_special_sse_securities',  # 特殊上证所证券/特殊中华通证券清单（仅适合出售的股票）  # 含有面值等信息
-        'hkex_lgt_special_sse_securities_for_margin_trading',  # 保证金交易合格的上证所证券清单
-        'hkex_lgt_special_sse_securities_for_short_selling',  # 合格卖空的上证所证券清单
-
-        'hkex_lgt_sse_list_of_eligible_securities',  # 沪港通进行南向交易的合格证券清单（可同时买卖的股票）
-        'lgt_sse_underlying_securities_adjustment',  # 新增
-
-
-
-        'hkex_lgt_change_of_szse_securities_lists',  # 更改深交所证券/中华通证券名单（2020年1月）
-        'hkex_lgt_szse_securities',  # 深交所证券/中华通证券清单（可同时买卖的股票）
-        'hkex_lgt_special_szse_securities',  # 特殊深交所证券/特殊中华通证券清单（只限出售股票）
-        'hkex_lgt_special_szse_securities_for_margin_trading',  # 合格保证金交易的深交所证券清单
-        'hkex_lgt_special_szse_securities_for_short_selling',  # 合格的深交所合格股票清单
-
-        'hkex_lgt_szse_list_of_eligible_securities',  # 深港通南向交易合资格证券一览表（可买卖的股票）
-        'lgt_szse_underlying_securities_adjustment',  # 新增
-    ]
-
+class HumanTools(CommonHumamTools):
     def __init__(self):
         self.buy_and_sell_list = self.get_buy_and_sell_list()
         self.buy_margin_list = self.get_buy_margin_trading_list()
@@ -86,10 +33,6 @@ class HumanTools(object):
         self.sentense1 = 'This stock will also be added to the List of Eligible SSE Securities for Margin Trading and the List of Eligible SSE Securities for Short Selling as it is also included in SSE stock list for margin trading and shortselling.'
         self.sentense2 = 'Initial list of securities eligible for buy and sell'
         self.sentense3 = 'This stock will also be removed from the List of Eligible SSE Securities for Margin Trading and the List of Eligible SSE Securities for Short Selling.'
-
-    def init_sql_pool(self, sql_cfg: dict):
-        pool = PyMysqlPoolBase(**sql_cfg)
-        return pool
 
     def get_only_sell_list(self):
         # 只可卖出清单
