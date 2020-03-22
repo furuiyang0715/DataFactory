@@ -2,13 +2,13 @@ from hkland_elistocks.common import CommonHumamTools
 from hkland_elistocks.my_log import logger
 
 
-class HumanTools(CommonHumamTools):
+class SHHumanTools(CommonHumamTools):
     def __init__(self):
-        super(HumanTools, self).__init__()
+        super(SHHumanTools, self).__init__()
         self.only_sell_list_table = 'hkex_lgt_special_sse_securities'
         self.buy_and_sell_list_table = 'hkex_lgt_sse_securities'
         self.buy_margin_trading_list_table = 'hkex_lgt_special_sse_securities_for_margin_trading'
-        self.short_sell_list = 'hkex_lgt_special_sse_securities_for_short_selling'
+        self.short_sell_list_table = 'hkex_lgt_special_sse_securities_for_short_selling'
 
         self.table_name = 'hkland_hgelistocks'   # 沪港通合资格股
         self.change_table_name = 'hkex_lgt_change_of_sse_securities_lists'
@@ -144,10 +144,6 @@ class HumanTools(CommonHumamTools):
         """
         根据首次生成的记录以及首次之后的状态
         生成第二次处理后的总记录 以及 当前状态
-        :param change:
-        :param first_records:
-        :param first_stats:
-        :return:
         """
         _change = change.get("Ch_ange")
         remarks = change.get("Remarks")
@@ -1022,12 +1018,12 @@ class HumanTools(CommonHumamTools):
     def _process(self):
         self.first_process()
 
-        self.second_process()
+        # self.second_process()
 
-        self.third_process()
+        # self.third_process()
 
-        self.fourth_process()
+        # self.fourth_process()
 
-        self.fifth_process()
+        # self.fifth_process()
 
-        self.sixth_process()
+        # self.sixth_process()

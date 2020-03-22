@@ -60,12 +60,6 @@ class CommonHumamTools(object):
         'lgt_szse_underlying_securities_adjustment',  # 新增
     ]
 
-    def __init__(self):
-        self.buy_and_sell_list = self.get_buy_and_sell_list()
-        self.buy_margin_list = self.get_buy_margin_trading_list()
-        self.short_sell_list = self.get_short_sell_list()
-        self.only_sell_list = self.get_only_sell_list()
-
     def init_sql_pool(self, sql_cfg: dict):
         pool = PyMysqlPoolBase(**sql_cfg)
         return pool
@@ -103,7 +97,7 @@ class CommonHumamTools(object):
         return info
 
     def get_css_code_map(self, secu_codes):
-        sql = 'select SSESCode, CCASSCode, FaceValue from hkex_lgt_special_sse_securities where SSESCode in {}; '.format(
+        sql = 'select SSESCode, CCASSCode, FaceValue from {} where SSESCode in {}; '.format(
             self.only_sell_list_table, tuple(secu_codes))
         spider = self.init_sql_pool(self.spider_cfg)
         ret = spider.select_all(sql)
@@ -129,36 +123,44 @@ class CommonHumamTools(object):
         else:
             return None, None
 
-    def get_only_sell_list(self):  # self.only_sell_list_table = 'hkex_lgt_special_sse_securities'
+    @property
+    def only_sell_list(self):
         spider = self.init_sql_pool(self.spider_cfg)
-        sql = 'select distinct(SSESCode) from {} where Date = (select max(Date) from {});'.format(self.only_sell_list_table, self.only_sell_list_table)
+        sql = 'select distinct(SSESCode) from {} where Date = (select max(Date) from {});'.format(
+            self.only_sell_list_table, self.only_sell_list_table)
         ret = spider.select_all(sql)
         spider.dispose()
         lst = [r.get("SSESCode") for r in ret]
         return lst
 
-    def get_buy_and_sell_list(self):   # self.buy_and_sell_list_table = 'hkex_lgt_sse_securities'
+    @property
+    def buy_and_sell_list(self):
         # 可买入以及卖出清单
         spider = self.init_sql_pool(self.spider_cfg)
-        sql = 'select distinct(SSESCode) from {} where Date = (select max(Date) from {});'.format(self.buy_and_sell_list_table, self.buy_and_sell_list_table)
+        sql = 'select distinct(SSESCode) from {} where Date = (select max(Date) from {});'.format(
+            self.buy_and_sell_list_table, self.buy_and_sell_list_table)
         ret = spider.select_all(sql)
         spider.dispose()
         lst = [r.get("SSESCode") for r in ret]
         return lst
 
-    def get_buy_margin_trading_list(self):  # self.buy_margin_trading_list_table = 'hkex_lgt_special_sse_securities_for_margin_trading'
+    @property
+    def buy_margin_trading_list(self):
         # 可进行保证金交易的清单
         spider = self.init_sql_pool(self.spider_cfg)
-        sql = 'select distinct(SSESCode) from {} where Date = (select max(Date) from {});'.format(self.buy_margin_trading_list_table, self.buy_margin_trading_list_table)
+        sql = 'select distinct(SSESCode) from {} where Date = (select max(Date) from {});'.format(
+            self.buy_margin_trading_list_table, self.buy_margin_trading_list_table)
         ret = spider.select_all(sql)
         spider.dispose()
         lst = [r.get("SSESCode") for r in ret]
         return lst
 
-    def get_short_sell_list(self):   # self.short_sell_list = 'hkex_lgt_special_sse_securities_for_short_selling'
+    @property
+    def short_sell_list(self):
         # 可进行担保卖空的清单
         spider = self.init_sql_pool(self.spider_cfg)
-        sql = 'select distinct(SSESCode) from {} where Date = (select max(Date) from {});'.format(self.short_sell_list, self.short_sell_list)
+        sql = 'select distinct(SSESCode) from {} where Date = (select max(Date) from {});'.format(
+            self.short_sell_list_table, self.short_sell_list_table)
         ret = spider.select_all(sql)
         spider.dispose()
         lst = [r.get("SSESCode") for r in ret]
@@ -218,9 +220,9 @@ class CommonHumamTools(object):
             assert secu_code not in self.only_sell_list
 
         if stats.get("s3"):
-            assert secu_code in self.buy_margin_list
+            assert secu_code in self.buy_margin_trading_list
         else:
-            assert secu_code not in self.buy_margin_list
+            assert secu_code not in self.buy_margin_trading_list
 
         if stats.get("s4"):
             assert secu_code in self.short_sell_list
