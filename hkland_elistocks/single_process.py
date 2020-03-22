@@ -52,9 +52,9 @@ from hkland_elistocks.sh_human_gene import SHHumanTools
             "601200",  # 已处理 
 
             # third
-            '601313', # 改名为 "601360",
-            "600546",
-            '600368', '600736', '600123', '600282', '600378', '603508', '600702',
+            '601313', # 改名为 "601360", 已处理 
+            "600546",   # 已处理 
+            '600368', '600736', '600123', '600282', '600378', '603508', '600702',  # 已处理 
             
             # fourth 
             "600009",
@@ -63,8 +63,8 @@ from hkland_elistocks.sh_human_gene import SHHumanTools
         
         self.special_codes = {
             # first
-            '001914',   # 000043 --> 001914
-            '001872',   # 000022 --> 001872
+            '001914',   # 000043 --> 001914 已处理 
+            '001872',   # 000022 --> 001872 已处理 
             # second
             "000333",
             "000022",
@@ -76,6 +76,107 @@ from hkland_elistocks.sh_human_gene import SHHumanTools
 # select * from  LC_SHSCEliStocks where SecuCode = 601200\G
 
 # select * from hkex_lgt_change_of_szse_securities_lists where  SSESCode = 601200\G
+
+
+def process_600368():   # '600368', '600736', '600123', '600282', '600378', '603508', '600702',
+    sh = SHHumanTools()
+    for code in ('600368', '600736', '600123', '600282', '600378', '603508', '600702'):
+        spider_changes = sh.show_code_spider_records("600368")
+        # print()
+        # print(code)
+        # print(pprint.pformat(spider_changes))
+        change = spider_changes[0]
+        _change = change.get("Ch_ange")
+        remarks = change.get("Remarks")
+        secu_code = change.get("SSESCode")
+        inner_code, secu_abbr = sh.get_juyuan_inner_code(secu_code)
+        ccass_code, face_value = sh.get_ccas_code(secu_code)
+        effective_date = change.get("EffectiveDate")
+        # 加1
+        record1 = {
+            "TradingType": 1, "TargetCategory": 1, "SecuCode": secu_code, 'InDate': effective_date,
+            "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code,
+            'ParValue': face_value}
+
+        # 移除 1 生成 2
+        change = spider_changes[1]
+        effective_date = change.get("EffectiveDate")
+        record1.update({"OutDate": effective_date, "Flag": 2})
+        record2 = {
+            "TradingType": 1, "TargetCategory": 2, "SecuCode": secu_code, 'InDate': effective_date, "OutDate": None,
+            'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code,
+            'ParValue': face_value}
+
+        # 加入 1 3 4 结束 2
+        change = spider_changes[2]
+        effective_date = change.get("EffectiveDate")
+        record2.update({"OutDate": effective_date, "Flag": 2})
+        record3 = {
+            "TradingType": 1, "TargetCategory": 1, "SecuCode": secu_code, 'InDate': effective_date,
+            "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code,
+            'ParValue': face_value}
+        record4 = {
+            "TradingType": 1, "TargetCategory": 3, "SecuCode": secu_code, 'InDate': effective_date, "OutDate": None,
+            'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code,
+            'ParValue': face_value}
+        record5 = {
+            "TradingType": 1, "TargetCategory": 4, "SecuCode": secu_code, 'InDate': effective_date, "OutDate": None,
+            'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code,
+            'ParValue': face_value}
+
+        stats = {"date": effective_date, "s1": 1, "s2": 0, "s3": 1, "s4": 1}
+        sh.assert_stats(stats, secu_code)
+        for r in (record1, record2, record3, record4, record5):
+            print(r)
+            sh.insert(r)
+
+
+# process_600368()
+
+
+def process_600546():
+    sh = SHHumanTools()
+    spider_changes = sh.show_code_spider_records("600546")
+    # print(pprint.pformat(spider_changes))
+    change = spider_changes[0]
+    _change = change.get("Ch_ange")
+    remarks = change.get("Remarks")
+    secu_code = change.get("SSESCode")
+    inner_code, secu_abbr = sh.get_juyuan_inner_code(secu_code)
+    ccass_code, face_value = sh.get_ccas_code(secu_code)
+    effective_date = change.get("EffectiveDate")
+    # 加1
+    record1 = {
+        "TradingType": 1, "TargetCategory": 1, "SecuCode": secu_code, 'InDate': effective_date,
+        "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code,
+        'ParValue': face_value}
+    # 加3 4
+    change = spider_changes[1]
+    effective_date = change.get("EffectiveDate")
+    record2 = {
+        "TradingType": 1, "TargetCategory": 3, "SecuCode": secu_code, 'InDate': effective_date, "OutDate": None,
+        'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code,
+        'ParValue': face_value}
+    record3 = {
+        "TradingType": 1, "TargetCategory": 4, "SecuCode": secu_code, 'InDate': effective_date, "OutDate": None,
+        'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code,
+        'ParValue': face_value}
+    # 移除 1  生成 2 (这里也要移除 3 4 ）
+    record1.update({"OutDate": effective_date, "Flag": 2})
+    record2.update({"OutDate": effective_date, "Flag": 2})
+    record3.update({"OutDate": effective_date, "Flag": 2})
+    record4 = {
+        "TradingType": 1, "TargetCategory": 2, "SecuCode": secu_code, 'InDate': effective_date, "OutDate": None,
+        'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code,
+        'ParValue': face_value}
+    stats = {"date": effective_date, "s1": 0, "s2": 1, "s3": 0, "s4": 0}
+    sh.assert_stats(stats, secu_code)
+    for r in (record1, record2, record3, record4):
+        print(r)
+        sh.insert(r)
+
+
+# process_600546()
 
 
 def process_601313():
@@ -149,6 +250,8 @@ def process_601313():
     stats = {"date": effective_date, "s1": 1, "s2": 0, "s3": 1, "s4": 1}
     sh.assert_stats(stats, secu_code)
 
+# process_601313()
+
 
 def process_601200():
     sh = SHHumanTools()
@@ -185,9 +288,9 @@ def process_601200():
     sh.insert(record1)
     sh.insert(record2)
 
-
-
-
-
 # process_601200()
-# process_601313()
+
+
+
+
+
