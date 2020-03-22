@@ -408,9 +408,9 @@ class SHHumanTools(CommonHumamTools):
                             raise Exception("inner more choices ")
                 else:
                     raise Exception("more choices")
-        print(lst1)  # 第一步未加入 1 就移除了 1
-        print(lst2)  # error
-        print(lst3)  # nothing
+        print(lst1)  # 第一步未加入 1 就移除了 1 # []
+        print(lst2)  # error   # []
+        print(lst3)  # nothing  # []
 
     def fourth_process(self):
         appear_4_codes = self.select_spider_records_with_a_num(4)
