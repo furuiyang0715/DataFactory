@@ -8,6 +8,11 @@ class ZHHumanTools(CommonHumamTools):
         self.table_name = 'hkland_sgelistocks'  # 深港通合资格股
         self.change_table_name = 'hkex_lgt_change_of_szse_securities_lists'
         self.market = 90
+        self.special_codes = {
+            # first
+            '001914',   # 000043 --> 001914
+            '001872',   # 000022 --> 001872
+        }
 
         self.only_sell_list_table = 'hkex_lgt_special_szse_securities'
         self.buy_and_sell_list_table = 'hkex_lgt_szse_securities'
@@ -1126,10 +1131,9 @@ class ZHHumanTools(CommonHumamTools):
         print(lst)
 
     def first_process(self):
-        lst = []
         codes = self.select_spider_records_with_a_num(1)
         logger.info("zh len-1: {}".format(len(codes)))  # 362
-        for code in set(codes):
+        for code in set(codes) - self.special_codes:
             print()
             logger.info(code)
             spider_changes = self.show_code_spider_records(code)
@@ -1164,13 +1168,8 @@ class ZHHumanTools(CommonHumamTools):
                               "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code, 'ParValue': face_value})
                     logger.info(r1)
                     self.insert(r1)
-
-            elif _change in self.stats_todonothing:
-                lst.append(code)
-                print(_change, "\n", remarks)   # TODO
             else:
                 raise
-        print(lst)
 
     def _process(self):
         # self.sisth_process()
