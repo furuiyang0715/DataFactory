@@ -1,7 +1,3 @@
-import traceback
-
-import pymysql
-
 from hkland_elistocks.common import CommonHumamTools
 from hkland_elistocks.my_log import logger
 
@@ -9,12 +5,6 @@ from hkland_elistocks.my_log import logger
 class ZHHumanTools(CommonHumamTools):
     def __init__(self):
         super(ZHHumanTools, self).__init__()
-
-        # self.buy_and_sell_list = self.get_buy_and_sell_list()
-        # self.buy_margin_list = self.get_buy_margin_trading_list()
-        # self.short_sell_list = self.get_short_sell_list()
-        # self.only_sell_list = self.get_only_sell_list()
-
         self.table_name = 'hkland_sgelistocks'  # 深港通合资格股
         self.change_table_name = 'hkex_lgt_change_of_szse_securities_lists'
         self.market = 90
@@ -22,116 +12,22 @@ class ZHHumanTools(CommonHumamTools):
         self.only_sell_list_table = 'hkex_lgt_special_szse_securities'
         self.buy_and_sell_list_table = 'hkex_lgt_szse_securities'
         self.buy_margin_trading_list_table = 'hkex_lgt_special_szse_securities_for_margin_trading'
-        self.short_sell_list = 'hkex_lgt_special_szse_securities_for_short_selling'
+        self.short_sell_list_table = 'hkex_lgt_special_szse_securities_for_short_selling'
 
         self.stats_todonothing = [
-            # 'SSE Stock Code and Stock Name are changed to 601360 and 360 SECURITY TECHNOLOGY respectively',
-            # 'SSE Stock Code and Stock Name are changed from 601313 and SJEC respectively',
-            # 'Buy orders suspended',
-            # 'Buy orders resumed',
             'SZSE Stock Code and Stock Name are changed from 000043 and AVIC SUNDA HOLDING respectively',
             'SZSE Stock Code and Stock Name are changed to 1872 and CHINA MERCHANTS PORT GROUP respectively',
             'SZSE Stock Code and Stock Name are changed from 22 and SHENZHEN CHIWAN WHARF HOLDINGS respectively',
         ]
-        # self.stats_add_only_sell = 'Addition to List of Special SSE Securities/Special China Connect Securities (stocks eligible for sell only)'
-        #
         self.stats_transfer = 'Transfer to List of Special SZSE Securities/Special China Connect Securities (stocks eligible for sell only)'
         self.stats_recover = 'Addition (from List of Special SZSE Securities/Special China Connect Securities (stocks eligible for sell only))'
-        #
         self.stats_removal = 'Removal'
         self.stats_addition = "Addition"
-        #
         self.stats_add_margin_and_shortsell = "Addition to List of Eligible SZSE Securities for Margin Trading and List of Eligible SZSE Securities for Short Selling"
         self.stats_remove_margin_and_shortsell = 'Remove from List of Eligible SZSE Securities for Margin Trading and List of Eligible SZSE Securities for Short Selling'
-        #
         self.sentense1 = 'This stock is also added to the List of Eligible SZSE Securities for Margin Trading and the List of Eligible SZSE Securities for Short Selling as it is also included in SZSE stock list for margin trading and shortselling.'
         self.sentense2 = 'This stock will also be added to the List of Eligible SZSE Securities for Margin Trading and the List of Eligible SZSE Securities for Short Selling as it is also included in SZSE stock list for margin trading and shortselling.'
-
-        # self.sentense1 = 'This stock will also be added to the List of Eligible SSE Securities for Margin Trading and the List of Eligible SSE Securities for Short Selling as it is also included in SSE stock list for margin trading and shortselling.'
-        # self.sentense2 = 'Initial list of securities eligible for buy and sell'
-
-        # self.sentense3 = 'This stock will also be removed from the List of Eligible SSE Securities for Margin Trading and the List of Eligible SSE Securities for Short Selling.'
         self.sentense3 = 'This stock will also be removed from the List of Eligible SZSE Securities for Margin Trading and the List of Eligible SZSE Securities for Short Selling.'
-
-    # def get_only_sell_list(self):
-    #     # 只可卖出清单
-    #     spider = self.init_sql_pool(self.spider_cfg)
-    #     sql = 'select distinct(SSESCode) from hkex_lgt_special_szse_securities where Date = (select max(Date) from hkex_lgt_special_szse_securities);'
-    #     ret = spider.select_all(sql)
-    #     spider.dispose()
-    #     lst = [r.get("SSESCode") for r in ret]
-    #     return lst
-    #
-    # def get_buy_and_sell_list(self):
-    #     # 可买入以及卖出清单
-    #     spider = self.init_sql_pool(self.spider_cfg)
-    #     sql = 'select distinct(SSESCode) from hkex_lgt_szse_securities where Date = (select max(Date) from hkex_lgt_szse_securities);'
-    #     ret = spider.select_all(sql)
-    #     spider.dispose()
-    #     lst = [r.get("SSESCode") for r in ret]
-    #     return lst
-    #
-    # def get_buy_margin_trading_list(self):
-    #     # 可进行保证金交易的清单
-    #     spider = self.init_sql_pool(self.spider_cfg)
-    #     sql = 'select distinct(SSESCode) from hkex_lgt_special_szse_securities_for_margin_trading where Date = (select max(Date) from hkex_lgt_special_szse_securities_for_margin_trading);'
-    #     ret = spider.select_all(sql)
-    #     spider.dispose()
-    #     lst = [r.get("SSESCode") for r in ret]
-    #     return lst
-    #
-    # def get_short_sell_list(self):
-    #     # 可进行担保卖空的清单
-    #     spider = self.init_sql_pool(self.spider_cfg)
-    #     sql = 'select distinct(SSESCode) from hkex_lgt_special_szse_securities_for_short_selling where Date = (select max(Date) from hkex_lgt_special_szse_securities_for_short_selling);'
-    #     ret = spider.select_all(sql)
-    #     spider.dispose()
-    #     lst = [r.get("SSESCode") for r in ret]
-    #     return lst
-
-    # @property
-    # def inner_code_map(self):
-    #     secu_codes = self.get_distinct_spider_secucode()
-    #     inner_code_map = self.get_inner_code_map(secu_codes)
-    #     return inner_code_map
-    #
-    # @property
-    # def css_code_map(self):
-    #     secu_codes = self.get_distinct_spider_secucode()
-    #     css_code_map = self.get_css_code_map(secu_codes)
-    #     return css_code_map
-
-    # def get_distinct_spider_secucode(self):
-    #     spider = self.init_sql_pool(self.spider_cfg)  # hkex_lgt_change_of_szse_securities_lists
-    #     sql = 'select distinct(SSESCode) from {}; '.format(self.change_table_name)
-    #     ret = spider.select_all(sql)
-    #     spider.dispose()
-    #     ret = [r.get("SSESCode") for r in ret]
-    #     return ret
-
-    # def get_inner_code_map(self, secu_codes):
-    #     juyuan = self.init_sql_pool(self.juyuan_cfg)
-    #     sql = 'select SecuCode, InnerCode, SecuAbbr from secumain where SecuMarket = {} and SecuCode in {};'.format(self.market, tuple(secu_codes))
-    #     ret = juyuan.select_all(sql)
-    #     juyuan.dispose()
-    #     info = {}
-    #     for r in ret:
-    #         key = r.get("SecuCode")
-    #         value = (r.get('InnerCode'), r.get("SecuAbbr"))
-    #         info[key] = value
-    #     return info
-
-    def get_css_code_map(self, secu_codes):    # hkex_lgt_special_szse_securities
-        sql = 'select SSESCode, CCASSCode, FaceValue from hkex_lgt_special_szse_securities where SSESCode in {}; '.format(tuple(secu_codes))
-        spider = self.init_sql_pool(self.spider_cfg)
-        ret = spider.select_all(sql)
-        spider.dispose()
-        info = {}
-        for r in ret:
-            key = r.get("SSESCode")
-            value = (r.get('CCASSCode'), r.get("FaceValue"))
-            info[key] = value
-        return info
 
     def create_target_table(self):
         sql = '''
@@ -157,86 +53,6 @@ class ZHHumanTools(CommonHumamTools):
         target = self.init_sql_pool(self.target_cfg)
         ret = target.insert(sql)
         target.dispose()
-
-    def insert(self, data):
-        fields = sorted(data.keys())
-        columns = ", ".join(fields)
-        placeholders = ', '.join(['%s'] * len(data))
-        insert_sql = "INSERT INTO %s ( %s ) VALUES ( %s ); " % (self.table_name, columns, placeholders)
-        value = tuple(data.get(field) for field in fields)
-        target = self.init_sql_pool(self.target_cfg)
-
-        # print(insert_sql)
-        # print(value)
-        try:
-            count = target.insert(insert_sql, value)
-        except pymysql.err.IntegrityError:
-            logger.warning("重复数据 ")
-            # traceback.print_exc()
-        except Exception as e:
-            traceback.print_exc()
-        else:
-            pass
-        finally:
-            target.dispose()
-
-    def select_spider_records_with_a_num(self, num):
-        sql = 'select SSESCode from hkex_lgt_change_of_szse_securities_lists group by SSESCode having count(1) = {}; '.format(num)
-        spider = self.init_sql_pool(self.spider_cfg)
-        ret = spider.select_all(sql)
-        spider.dispose()
-        ret = [r.get('SSESCode') for r in ret]
-        return ret
-
-    def show_code_spider_records(self, code):
-        sql = '''select SSESCode, EffectiveDate, Ch_ange, Remarks from hkex_lgt_change_of_szse_securities_lists\
- where SSESCode = "{}" and Time = (select max(Time) from hkex_lgt_change_of_szse_securities_lists) order by EffectiveDate;
-        '''.format(code)
-        spider = self.init_sql_pool(self.spider_cfg)
-        ret = spider.select_all(sql)
-        spider.dispose()
-        return ret
-
-    # def get_juyuan_inner_code(self, secu_code):
-    #     ret = self.inner_code_map.get(secu_code)
-    #     if ret:
-    #         return ret
-    #     else:
-    #         return None, None
-
-    def get_ccas_code(self, secu_code):
-        ret = self.css_code_map.get(secu_code)
-        if ret:
-            return ret
-        else:
-            return None, None
-
-    def assert_stats(self, stats, secu_code):
-        """
-        判断当前状态与清单是否一致
-        :param stats:
-        :param secu_code:
-        :return:
-        """
-        if stats.get("s1"):
-            assert secu_code in self.buy_and_sell_list
-        else:
-            assert secu_code not in self.buy_and_sell_list
-
-        if stats.get("s2"):
-            assert secu_code in self.only_sell_list
-        else:
-            assert secu_code not in self.only_sell_list
-
-        if stats.get("s3"):
-            assert secu_code in self.buy_margin_list
-        else:
-            assert secu_code not in self.buy_margin_list
-
-        if stats.get("s4"):
-            assert secu_code in self.short_sell_list
-        else:
-            assert secu_code not in self.short_sell_list
 
     def sisth_process(self):
         codes = self.select_spider_records_with_a_num(6)
@@ -1312,10 +1128,10 @@ class ZHHumanTools(CommonHumamTools):
     def first_process(self):
         lst = []
         codes = self.select_spider_records_with_a_num(1)
-        print(len(codes))  # 362
+        logger.info("zh len-1: {}".format(len(codes)))  # 362
         for code in set(codes):
             print()
-            print(code)
+            logger.info(code)
             spider_changes = self.show_code_spider_records(code)
             change = spider_changes[0]
             _change = change.get("Ch_ange")
@@ -1332,39 +1148,39 @@ class ZHHumanTools(CommonHumamTools):
                     r2 = {"TargetCategory": 3, 'InDate': effective_date, "OutDate": None, 'Flag': 1}
                     r3 = {"TargetCategory": 4, 'InDate': effective_date, "OutDate": None, 'Flag': 1}
                     stats = {"date": effective_date, "s1": 1, "s2": 0, "s3": 1, "s4": 1}
+                    logger.info(stats)
                     self.assert_stats(stats, secu_code)
                     for r in (r1, r2, r3):
                         r.update({"TradingType": 3, "SecuCode": secu_code, "InnerCode": inner_code,
                                   "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code, 'ParValue': face_value})
-                        print(r)
+                        logger.info(r)
                         self.insert(r)
                 else:
                     r1 = {"TargetCategory": 1, 'InDate': effective_date, "OutDate": None, 'Flag': 1}
                     stats = {"date": effective_date, "s1": 1, "s2": 0, "s3": 0, "s4": 0}
-                    try:
-                        self.assert_stats(stats, secu_code)
-                    except:
-                        lst.append(code)
+                    logger.info(stats)
+                    self.assert_stats(stats, secu_code)
                     r1.update({"TradingType": 3, "SecuCode": secu_code, "InnerCode": inner_code,
                               "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code, 'ParValue': face_value})
-                    print(r1)
+                    logger.info(r1)
                     self.insert(r1)
+
             elif _change in self.stats_todonothing:
+                lst.append(code)
                 print(_change, "\n", remarks)   # TODO
             else:
                 raise
-
         print(lst)
 
     def _process(self):
-        self.sisth_process()
+        # self.sisth_process()
 
-        self.fifth_process()
+        # self.fifth_process()
 
-        self.fourth_process()
+        # self.fourth_process()
 
-        self.third_process()
+        # self.third_process()
 
-        self.second_process()
+        # self.second_process()
 
         self.first_process()

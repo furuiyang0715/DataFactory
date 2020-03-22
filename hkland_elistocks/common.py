@@ -175,8 +175,8 @@ class CommonHumamTools(object):
         return ret
 
     def select_spider_records_with_a_num(self, num):
-        sql = 'select SSESCode from {} group by SSESCode having count(1) = {}; '.format(
-            self.change_table_name, num)
+        sql = 'select SSESCode from {} where Time = (select max(Time) from {}) group by SSESCode having count(1) = {}; '.format(
+            self.change_table_name, self.change_table_name, num)
         spider = self.init_sql_pool(self.spider_cfg)
         ret = spider.select_all(sql)
         spider.dispose()
