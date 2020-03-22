@@ -193,8 +193,7 @@ class CommonHumamTools(object):
         try:
             count = target.insert(insert_sql, value)
         except pymysql.err.IntegrityError as e:
-            print(f"可能的重复插入: {e}")
-            # traceback.print_exc()
+            traceback.print_exc()
         except Exception as e:
             traceback.print_exc()
         else:

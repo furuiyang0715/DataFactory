@@ -81,6 +81,7 @@ class ZHHumanTools(CommonHumamTools):
 
         secu_code = change.get("SSESCode")
         inner_code, secu_abbr = self.get_juyuan_inner_code(secu_code)
+        # print(">> ", inner_code)
         ccass_code, face_value = self.get_ccas_code(secu_code)
 
         record1 = {
@@ -151,6 +152,8 @@ class ZHHumanTools(CommonHumamTools):
         # 此处将 secu_code 改为 001914
         # 所以最后一次插入的代码是 001914
         secu_code = '001914'
+        inner_code, secu_abbr = self.get_juyuan_inner_code(secu_code)
+        # print(">> ", inner_code)
 
         change_5 = spider_changes[5]
         _change = change_5.get("Ch_ange")
@@ -171,12 +174,14 @@ class ZHHumanTools(CommonHumamTools):
             "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
             'CCASSCode': ccass_code, 'ParValue': face_value}
 
-        for r in [record1, record2, record3, record4, record5, record6, record7, record8, record9, record10, record11]:
-            print(r)
-            self.insert(r)
-
         stats = {"date": effective_date, "s1": 1, "s2": 0, "s3": 1, "s4": 1}
+        logger.info(stats)
         self.assert_stats(stats, secu_code)
+
+        for r in [record1, record2, record3, record4, record5, record6, record7, record8, record9, record10, record11]:
+            r.update({"InnerCode": inner_code})
+            logger.info(r)
+            self.insert(r)
 
     def fifth_process(self):
         codes = self.select_spider_records_with_a_num(5)
@@ -1181,14 +1186,14 @@ class ZHHumanTools(CommonHumamTools):
                 raise
 
     def _process(self):
-        # self.sisth_process()
+        self.sisth_process()
 
         self.fifth_process()
 
-        # self.fourth_process()
+        self.fourth_process()
 
-        # self.third_process()
+        self.third_process()
 
-        # self.second_process()
+        self.second_process()
 
-        # self.first_process()
+        self.first_process()

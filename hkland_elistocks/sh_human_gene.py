@@ -1013,18 +1013,18 @@ class SHHumanTools(CommonHumamTools):
                                 self.assert_stats({"date": effective_date, "s1": 0, "s2": 1, "s3": 0, "s4": 0},
                                                   secu_code)
                                 for record in [record1, record2, record3, record4, record5, record6]:
-                                    print(record)
+                                    logger.info(record)
                                     self.insert(record)
 
     def _process(self):
-        # self.first_process()
+        self.first_process()
 
-        # self.second_process()
+        self.second_process()
 
-        # self.third_process()
+        self.third_process()
 
-        # self.fourth_process()
+        self.fourth_process()
 
         self.fifth_process()
 
-        # self.sixth_process()
+        self.sixth_process()
