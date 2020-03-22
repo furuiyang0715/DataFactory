@@ -42,3 +42,152 @@ EffectiveDate: 2017-03-31
 # (2) 002008  "000333" 状态有 Buy orders suspended 和 Buy orders resumed
 # (3) "000022" 改名 001872 嗯
 # (4) 000043 改名 001914
+import pprint
+
+from hkland_elistocks.sh_human_gene import SHHumanTools
+
+'''     
+        self.special_codes = {
+            # second
+            "601200",  # 已处理 
+
+            # third
+            '601313', # 改名为 "601360",
+            "600546",
+            '600368', '600736', '600123', '600282', '600378', '603508', '600702',
+            
+            # fourth 
+            "600009",
+
+        }
+        
+        self.special_codes = {
+            # first
+            '001914',   # 000043 --> 001914
+            '001872',   # 000022 --> 001872
+            # second
+            "000333",
+            "000022",
+            # third
+            "002008",
+        }
+'''
+# select * from hkex_lgt_change_of_sse_securities_lists where  SSESCode = 601200\G
+# select * from  LC_SHSCEliStocks where SecuCode = 601200\G
+
+# select * from hkex_lgt_change_of_szse_securities_lists where  SSESCode = 601200\G
+
+
+def process_601313():
+    sh = SHHumanTools()
+    spider_changes = sh.show_code_spider_records("601313")
+    # print(pprint.pformat(spider_changes))
+    change = spider_changes[0]
+    _change = change.get("Ch_ange")
+    remarks = change.get("Remarks")
+    secu_code = change.get("SSESCode")
+    inner_code, secu_abbr = sh.get_juyuan_inner_code(secu_code)
+    print(inner_code)
+    ccass_code, face_value = sh.get_ccas_code(secu_code)
+    effective_date = change.get("EffectiveDate")
+    # 加入 1
+    record1 = {
+        "TradingType": 1, "TargetCategory": 1, "SecuCode": secu_code, 'InDate': effective_date, "OutDate": None,
+        'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code,
+        'ParValue': face_value}
+
+    change = spider_changes[1]
+    # _change = change.get("Ch_ange")
+    # remarks = change.get("Remarks")
+    effective_date = change.get("EffectiveDate")
+
+    # 结束 1 生成 2
+    record1.update({"OutDate": effective_date, "Flag": 2})
+    record2 = {
+        "TradingType": 1, "TargetCategory": 2, "SecuCode": secu_code, 'InDate': effective_date, "OutDate": None,
+        'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code,
+        'ParValue': face_value}
+
+    stats = {"date": effective_date, "s1": 0, "s2": 0, "s3": 0, "s4": 0}
+    sh.assert_stats(stats, secu_code)
+
+    # 改名 改为 601360
+    secu_code = "601360"
+    inner_code, secu_abbr = sh.get_juyuan_inner_code(secu_code)
+    print(inner_code)
+    ccass_code, face_value = sh.get_ccas_code(secu_code)
+    spider_changes = sh.show_code_spider_records("601360")
+    # print(pprint.pformat(spider_changes))
+
+    change = spider_changes[1]
+    effective_date = change.get("EffectiveDate")
+    # 恢复 1
+    record3 = {
+        "TradingType": 1, "TargetCategory": 1, "SecuCode": secu_code, 'InDate': effective_date, "OutDate": None,
+        'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code,
+        'ParValue': face_value}
+    record2.update({"OutDate": effective_date, "Flag": 2})
+
+    # 加上 3 4
+    change = spider_changes[2]
+    effective_date = change.get("EffectiveDate")
+    record4 = {
+        "TradingType": 1, "TargetCategory": 3, "SecuCode": secu_code, 'InDate': effective_date, "OutDate": None,
+        'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code,
+        'ParValue': face_value}
+
+    record5 = {
+        "TradingType": 1, "TargetCategory": 4, "SecuCode": secu_code, 'InDate': effective_date, "OutDate": None,
+        'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code,
+        'ParValue': face_value}
+
+    for r in [record1, record2, record3, record4, record5]:
+        r.update({"InnerCode": inner_code, "SecuAbbr": secu_abbr})
+        print(r)
+        sh.insert(r)
+
+    stats = {"date": effective_date, "s1": 1, "s2": 0, "s3": 1, "s4": 1}
+    sh.assert_stats(stats, secu_code)
+
+
+def process_601200():
+    sh = SHHumanTools()
+    spider_changes = sh.show_code_spider_records("601200")
+    print(pprint.pformat(spider_changes))
+    change = spider_changes[0]
+    _change = change.get("Ch_ange")
+    remarks = change.get("Remarks")
+    secu_code = change.get("SSESCode")
+    inner_code, secu_abbr = sh.get_juyuan_inner_code(secu_code)
+    ccass_code, face_value = sh.get_ccas_code(secu_code)
+    effective_date = change.get("EffectiveDate")
+    # 加入 2
+    record1 = {
+        "TradingType": 1, "TargetCategory": 2, "SecuCode": secu_code, 'InDate': effective_date, "OutDate": None,
+        'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code,
+        'ParValue': face_value}
+
+    change = spider_changes[1]
+    # _change = change.get("Ch_ange")
+    # remarks = change.get("Remarks")
+    effective_date = change.get("EffectiveDate")
+    # 结束 2 加入 1
+    record1.update({"OutDate": effective_date, 'Flag': 2})
+    record2 = {
+        "TradingType": 1, "TargetCategory": 1, "SecuCode": secu_code, 'InDate': effective_date, "OutDate": None,
+        'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code,
+        'ParValue': face_value}
+    stats = {"date": effective_date, "s1": 1, "s2": 0, "s3": 0, "s4": 0}
+    print(stats)
+    sh.assert_stats(stats, secu_code)
+    print(record1)
+    print(record2)
+    sh.insert(record1)
+    sh.insert(record2)
+
+
+
+
+
+# process_601200()
+# process_601313()
