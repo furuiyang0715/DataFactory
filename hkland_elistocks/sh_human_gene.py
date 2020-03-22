@@ -1,3 +1,5 @@
+import pprint
+
 from hkland_elistocks.common import CommonHumamTools
 from hkland_elistocks.my_log import logger
 
@@ -16,7 +18,10 @@ class SHHumanTools(CommonHumamTools):
             # third
             '601313', "601360",
             "600546",
-            '600368', '600736', '600123', '600282', '600378', '603508', '600702'
+            '600368', '600736', '600123', '600282', '600378', '603508', '600702',
+            
+            # fourth 
+            "600009",
 
         }
 
@@ -415,10 +420,12 @@ class SHHumanTools(CommonHumamTools):
     def fourth_process(self):
         appear_4_codes = self.select_spider_records_with_a_num(4)
         logger.info("len-4:{}".format(len(appear_4_codes)))  # 52
-        for code in set(appear_4_codes) - {"600009"}:
+        codes = set(appear_4_codes) - self.special_codes
+        for code in codes:
             print()
-            print(code)
+            logger.info(code)
             spider_changes = self.show_code_spider_records(code)
+            # print(pprint.pformat(spider_changes))
             assert len(spider_changes) == 4
             change = spider_changes[0]
             _change = change.get("Ch_ange")
@@ -497,23 +504,24 @@ class SHHumanTools(CommonHumamTools):
                             "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
                             'CCASSCode': ccass_code, 'ParValue': face_value}
                         stats = {"date": effective_date, "s1": 1, "s2": 0, "s3": 1, "s4": 1}
+                        logger.info(stats)
                         self.assert_stats(stats, secu_code)
                         for r in [record1, record2, record3, record4, record5, record6, record7]:
-                            print(r)
+                            logger.info(r)
                             self.insert(r)
 
                     elif _change == self.stats_removal:
                         # (4) ---> 将最后的 2 也移除
-                        assert self.sentense1 not in remarks
                         record4.update({"OutDate": effective_date, 'Flag': 2})
                         stats = {"date": effective_date, "s1": 0, "s2": 0, "s3": 0, "s4": 0}
+                        logger.info(stats)
                         self.assert_stats(stats, secu_code)
                         for r in [record1, record2, record3, record4]:
-                            print(r)
+                            logger.info(r)
                             self.insert(r)
                     else:
                         raise Exception("其他情况", _change)
-                elif _change == self.stats_remove_margin_and_shortsell:  # 600270
+                elif _change == self.stats_remove_margin_and_shortsell:
                     # （3） ---> 结束 3 4
                     record2.update({"OutDate": effective_date, 'Flag': 2})
                     record3.update({"OutDate": effective_date, 'Flag': 2})
@@ -527,15 +535,15 @@ class SHHumanTools(CommonHumamTools):
                     # (4) ---> 结束 1
                     record1.update({"OutDate": effective_date, 'Flag': 2})
                     stats = {"date": effective_date, "s1": 0, "s2": 0, "s3": 0, "s4": 0}
+                    logger.info(stats)
                     self.assert_stats(stats, secu_code)
                     for r in [record1, record2, record3]:
-                        print(r)
+                        logger.info(r)
                         self.insert(r)
                 else:
                     raise Exception
-                    # assert secu_code == "600009"
 
-            elif _change == self.stats_transfer:  #  600167 600258 600310 600337 600622 600829 600845 600871 600975 601100 601966  (1)加入 （2） 移除
+            elif _change == self.stats_transfer:
                 assert self.sentense3 not in remarks
                 # (2) 将 1 移出, 生成 2
                 record1.update({"OutDate": effective_date, 'Flag': 2})
@@ -549,7 +557,7 @@ class SHHumanTools(CommonHumamTools):
                 remarks = change_2.get("Remarks")
                 effective_date = change_2.get("EffectiveDate")
 
-                assert _change in self.stats_recover   # （1） 加入1 -- (2) 移除1 生成 2 --（3） 恢复1 结束 2
+                assert _change in self.stats_recover   # （1） 加入1 -- (2) 移除 1 生成 2 --（3） 恢复1 结束 2
                 assert self.sentense1 not in remarks
                 # 只加入 1  结束 2
                 record2.update({"OutDate": effective_date, 'Flag': 2})
@@ -573,9 +581,10 @@ class SHHumanTools(CommonHumamTools):
                         "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
                         'CCASSCode': ccass_code, 'ParValue': face_value}
                     stats = {"date": effective_date, "s1": 0, "s2": 1, "s3": 0, "s4": 0}
+                    logger.info(stats)
                     self.assert_stats(stats, secu_code)
                     for r in [record1, record2, record3, record4]:
-                        print(r)
+                        logger.info(r)
                         self.insert(r)
                 elif _change == self.stats_add_margin_and_shortsell:
                     # （4） 加入 3 4
@@ -588,9 +597,10 @@ class SHHumanTools(CommonHumamTools):
                         "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
                         'CCASSCode': ccass_code, 'ParValue': face_value}
                     stats = {"date": effective_date, "s1": 1, "s2": 0, "s3": 1, "s4": 1}
+                    logger.info(stats)
                     self.assert_stats(stats, secu_code)
                     for r in [record1, record2, record3, record4, record5]:
-                        print(r)
+                        logger.info(r)
                         self.insert(r)
                 else:
                     raise Exception("其他的 {}".format(_change))
@@ -1011,9 +1021,9 @@ class SHHumanTools(CommonHumamTools):
 
         # self.second_process()
 
-        self.third_process()
+        # self.third_process()
 
-        # self.fourth_process()
+        self.fourth_process()
 
         # self.fifth_process()
 

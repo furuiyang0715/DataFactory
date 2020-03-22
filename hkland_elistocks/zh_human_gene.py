@@ -447,12 +447,11 @@ class ZHHumanTools(CommonHumamTools):
 
     def fourth_process(self):
         codes = self.select_spider_records_with_a_num(4)
-
+        logger.info("zh-len-4:{}".format(codes))
         for code in codes:
             if code in ("002367", "001696", "002210"):
                 print()
-                print(code)
-
+                logger.info(code)
                 #（1) 加入 1
                 # (2) 加入 2 3
                 # (3) 002367, 001696 移出 1 3 4 加上 2  （4) 恢复 1 3 4 结束 2
@@ -528,14 +527,15 @@ class ZHHumanTools(CommonHumamTools):
                         'CCASSCode': ccass_code, 'ParValue': face_value}
 
                     stats = {"date": effective_date, "s1": 1, "s2": 0, "s3": 1, "s4": 1}
+                    logger.info(stats)
                     self.assert_stats(stats, secu_code)
                     for r in (record1, record2, record3, record4, record5, record6, record7):
-                        print(r)
+                        logger.info(r)
                         self.insert(r)
 
                 elif code in ("002210"):
                     print()
-                    print(code)
+                    logger.info(code)
                     assert _change == self.stats_remove_margin_and_shortsell
                     record2.update({"OutDate": effective_date, 'Flag': 2})
                     record3.update({"OutDate": effective_date, 'Flag': 2})
@@ -553,23 +553,17 @@ class ZHHumanTools(CommonHumamTools):
                         'CCASSCode': ccass_code, 'ParValue': face_value}
 
                     stats = {"date": effective_date, "s1": 0, "s2": 1, "s3": 0, "s4": 0}
+                    logger.info(stats)
+                    self.assert_stats(stats, secu_code)
                     for r in (record1, record2, record3, record4):
-                        print(r)
+                        logger.info(r)
                         self.insert(r)
 
-            elif code in {
-                    '002210',  '000652', '002045',  '002135', '002334', '002649',
-                    '002342', '002083', '002510', '002564', '000523', '002021',
-                      "000498", "002192", "000016", "000070", "000301", "000861", "000936", "002100",
-                      "002124", "002446", "002567", "002792",'300348', '300352', '002741', "002782",
-                      "000652", "002045", "002135", '002334', '002649', "002342",
-                      "000532",  "002564", "002510"
-            }:
+            elif code in {'002210',  '000652', '002045',  '002135', '002334', '002649', '002342', '002083', '002510', '002564', '000523', '002021', "000498", "002192", "000016", "000070", "000301", "000861", "000936", "002100", "002124", "002446", "002567", "002792",'300348', '300352', '002741', "002782", "000652", "002045", "002135", '002334', '002649', "002342", "000532",  "002564", "002510"}:
                 print()
-                print(code)
+                logger.info(code)
                 #（1） 加入 1 （2）移除 1 生成 2 (3) 恢复 1 结束 2
                 spider_changes = self.show_code_spider_records(code)
-
                 change = spider_changes[0]
                 _change = change.get("Ch_ange")
                 remarks = change.get("Remarks")
@@ -637,10 +631,11 @@ class ZHHumanTools(CommonHumamTools):
                         "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
                         'CCASSCode': ccass_code, 'ParValue': face_value}
                     stats = {"date": effective_date, "s1": 0, "s2": 1, "s3": 0, "s4": 0}
+                    logger.info(stats)
                     self.assert_stats(stats, secu_code)
                     for r in (record1, record2, record3, record4):
+                        logger.info(r)
                         self.insert(r)
-                        print(r)
                 elif _change == self.stats_add_margin_and_shortsell:
                     record4 = {
                         "TradingType": 3, "TargetCategory": 3, "SecuCode": secu_code, 'InDate': effective_date,
@@ -653,14 +648,15 @@ class ZHHumanTools(CommonHumamTools):
                     stats = {"date": effective_date, "s1": 1, "s2": 0, "s3": 1, "s4": 1}
                     self.assert_stats(stats, secu_code)
                     for r in (record1, record2, record3, record4, record5):
+                        logger.info(r)
                         self.insert(r)
-                        print(r)
                 else:
                     raise Exception("请检查数据")
 
             elif code in ['000426', '000979', '002079', '000680', '002490', '300152']:
+                logger.info(code)
                 print()
-                print(code)
+                logger.info(code)
                 spider_changes = self.show_code_spider_records(code)
                 change = spider_changes[0]
                 _change = change.get("Ch_ange")
@@ -741,9 +737,10 @@ class ZHHumanTools(CommonHumamTools):
                             'CCASSCode': ccass_code, 'ParValue': face_value}
 
                         stats = {"date": effective_date, "s1": 0, "s2": 1, "s3":0, "s4": 0}
+                        logger.info(stats)
                         self.assert_stats(stats, secu_code)
                         for r in (record1, record2, record3, record4, record5, record6):
-                            print(r)
+                            logger.info(r)
                             self.insert(r)
 
                     elif _change == self.stats_transfer:
@@ -765,11 +762,11 @@ class ZHHumanTools(CommonHumamTools):
                         if _change == self.stats_removal:
                             # print("移出 2 ")
                             record4.update({"OutDate": effective_date, 'Flag': 2})
-                            stats = {"date": effective_date, "s1":0, "s2":0, "s3":0, "s4": 0}
+                            stats = {"date": effective_date, "s1": 0, "s2": 0, "s3": 0, "s4": 0}
                             self.assert_stats(stats, secu_code)
                             for r in (record1, record2, record3, record4):
+                                logger.info(r)
                                 self.insert(r)
-                                print(r)
                         else:
                             assert _change == self.stats_recover
                             assert self.sentense1 not in remarks
@@ -781,8 +778,8 @@ class ZHHumanTools(CommonHumamTools):
                             stats = {"date": effective_date, "s1": 1, "s2": 0, "s3": 0, "s4": 0}
                             self.assert_stats(stats, secu_code)
                             for r in (record1, record2, record3, record4, record5):
+                                logger.info(r)
                                 self.insert(r)
-                                print(r)
                     else:
                         raise Exception("error")
                 elif _change == self.stats_transfer and self.sentense3 in remarks:
@@ -827,9 +824,10 @@ class ZHHumanTools(CommonHumamTools):
                         'CCASSCode': ccass_code, 'ParValue': face_value}
 
                     stats = {"date": effective_date, "s1": 0, "s2": 1, "s3": 0, "s4": 0}
+                    logger.info(stats)
                     self.assert_stats(stats, secu_code)
                     for r in (record1, record2, record3, record4, record5, record6):
-                        print(r)
+                        logger.info(r)
                         self.insert(r)
                 else:
                     raise Exception("请检查数据")
@@ -1184,9 +1182,9 @@ class ZHHumanTools(CommonHumamTools):
 
         # self.fifth_process()
 
-        # self.fourth_process()
+        self.fourth_process()
 
-        self.third_process()
+        # self.third_process()
 
         # self.second_process()
 
