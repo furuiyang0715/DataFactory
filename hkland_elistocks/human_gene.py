@@ -59,7 +59,7 @@ class HumanTools(CommonHumamTools):
         ret = target.insert(sql)
         target.dispose()
 
-    def first_process(self, change):
+    def _first_process(self, change):
         """
         处理第一条的改变后得到的 记录 以及 当前对应的状态
         :param change:
@@ -123,7 +123,24 @@ class HumanTools(CommonHumamTools):
             logger.info(remarks)
             return None, None
 
-    def second_process(self, change, first_records: list, first_stats):
+    def first_process(self):
+        appear_1_codes = self.select_spider_records_with_a_num(1)
+        logger.info("len-1 {}".format(len(appear_1_codes)))  # 128 全部是 addition 的
+        for code in appear_1_codes:
+            print()
+            logger.info(code)
+            spider_records = self.show_code_spider_records(code)
+            assert len(spider_records) == 1
+            spider_change = spider_records[0]
+            logger.info("{} \n {}".format(spider_change.get("Ch_ange"), spider_change.get("Remarks")))
+            records, stats = self._first_process(spider_change)
+            logger.info(records)
+            logger.info(stats)
+            self.assert_stats(stats, code)
+            for record in records:
+                self.insert(record)
+
+    def _second_process(self, change, first_records: list, first_stats):
         """
         根据首次生成的记录以及首次之后的状态
         生成第二次处理后的总记录 以及 当前状态
@@ -192,6 +209,29 @@ class HumanTools(CommonHumamTools):
             logger.warning(first_records)
             logger.warning(first_stats)
             return None, None
+
+    def second_process(self):
+        appear_2_codes = self.select_spider_records_with_a_num(2)
+        print("len-2", len(appear_2_codes))  # 576
+        appear_2_codes = set(appear_2_codes) - {"601200"}
+        for code in appear_2_codes:
+            print()
+            print(code)
+            spider_changes = self.show_code_spider_records(code)
+
+            spider_change = spider_changes[0]
+            assert spider_change.get("Ch_ange") == self.stats_addition
+            assert len(spider_changes) == 2
+            first_records, first_stats = self._first_process(spider_changes[0])
+            assert first_records
+            assert first_stats
+            second_records, second_stats = self._second_process(spider_changes[1], first_records, first_stats)
+            self.assert_stats(second_stats, code)
+            assert second_records
+            assert second_stats
+            for record in second_records:
+                print(record)
+                self.insert(record)
 
     def third_process(self):
         lst1 = []
@@ -980,45 +1020,9 @@ class HumanTools(CommonHumamTools):
                                     self.insert(record)
 
     def _process(self):
-        appear_1_codes = self.select_spider_records_with_a_num(1)
-        logger.info("len-1 {}".format(len(appear_1_codes)))   # 128 全部是 addition 的
-        for code in appear_1_codes:
-            print()
-            logger.info(code)
-            spider_records = self.show_code_spider_records(code)
-            assert len(spider_records) == 1
-            spider_change = spider_records[0]
-            logger.info("{} \n {}".format(spider_change.get("Ch_ange"), spider_change.get("Remarks")))
-            records, stats = self.first_process(spider_change)
-            logger.info(records)
-            logger.info(stats)
-            self.assert_stats(stats, code)
-            for record in records:
-                self.insert(record)
+        self.first_process()
 
-        appear_2_codes = self.select_spider_records_with_a_num(2)
-        print("len-2", len(appear_2_codes))    # 576
-        appear_2_codes = set(appear_2_codes) - {"601200"}
-        for code in appear_2_codes:
-            print()
-            print(code)
-            spider_changes = self.show_code_spider_records(code)
-
-            spider_change = spider_changes[0]
-            assert spider_change.get("Ch_ange") == self.stats_addition
-
-            # print(pprint.pformat(spider_changes))
-            assert len(spider_changes) == 2
-            first_records, first_stats = self.first_process(spider_changes[0])
-            assert first_records
-            assert first_stats
-            second_records, second_stats = self.second_process(spider_changes[1], first_records, first_stats)
-            self.assert_stats(second_stats, code)
-            assert second_records
-            assert second_stats
-            for record in second_records:
-                print(record)
-                self.insert(record)
+        self.second_process()
 
         self.third_process()
 
