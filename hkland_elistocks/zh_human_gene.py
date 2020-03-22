@@ -9,13 +9,20 @@ from hkland_elistocks.my_log import logger
 class ZHHumanTools(CommonHumamTools):
     def __init__(self):
         super(ZHHumanTools, self).__init__()
-        self.buy_and_sell_list = self.get_buy_and_sell_list()
-        self.buy_margin_list = self.get_buy_margin_trading_list()
-        self.short_sell_list = self.get_short_sell_list()
-        self.only_sell_list = self.get_only_sell_list()
+
+        # self.buy_and_sell_list = self.get_buy_and_sell_list()
+        # self.buy_margin_list = self.get_buy_margin_trading_list()
+        # self.short_sell_list = self.get_short_sell_list()
+        # self.only_sell_list = self.get_only_sell_list()
+
         self.table_name = 'hkland_sgelistocks'  # 深港通合资格股
         self.change_table_name = 'hkex_lgt_change_of_szse_securities_lists'
         self.market = 90
+
+        self.only_sell_list_table = 'hkex_lgt_special_szse_securities'
+        self.buy_and_sell_list_table = 'hkex_lgt_szse_securities'
+        self.buy_margin_trading_list_table = 'hkex_lgt_special_szse_securities_for_margin_trading'
+        self.short_sell_list = 'hkex_lgt_special_szse_securities_for_short_selling'
 
         self.stats_todonothing = [
             # 'SSE Stock Code and Stock Name are changed to 601360 and 360 SECURITY TECHNOLOGY respectively',
@@ -46,41 +53,41 @@ class ZHHumanTools(CommonHumamTools):
         # self.sentense3 = 'This stock will also be removed from the List of Eligible SSE Securities for Margin Trading and the List of Eligible SSE Securities for Short Selling.'
         self.sentense3 = 'This stock will also be removed from the List of Eligible SZSE Securities for Margin Trading and the List of Eligible SZSE Securities for Short Selling.'
 
-    def get_only_sell_list(self):
-        # 只可卖出清单
-        spider = self.init_sql_pool(self.spider_cfg)
-        sql = 'select distinct(SSESCode) from hkex_lgt_special_szse_securities where Date = (select max(Date) from hkex_lgt_special_szse_securities);'
-        ret = spider.select_all(sql)
-        spider.dispose()
-        lst = [r.get("SSESCode") for r in ret]
-        return lst
-
-    def get_buy_and_sell_list(self):
-        # 可买入以及卖出清单
-        spider = self.init_sql_pool(self.spider_cfg)
-        sql = 'select distinct(SSESCode) from hkex_lgt_szse_securities where Date = (select max(Date) from hkex_lgt_szse_securities);'
-        ret = spider.select_all(sql)
-        spider.dispose()
-        lst = [r.get("SSESCode") for r in ret]
-        return lst
-
-    def get_buy_margin_trading_list(self):
-        # 可进行保证金交易的清单
-        spider = self.init_sql_pool(self.spider_cfg)
-        sql = 'select distinct(SSESCode) from hkex_lgt_special_szse_securities_for_margin_trading where Date = (select max(Date) from hkex_lgt_special_szse_securities_for_margin_trading);'
-        ret = spider.select_all(sql)
-        spider.dispose()
-        lst = [r.get("SSESCode") for r in ret]
-        return lst
-
-    def get_short_sell_list(self):
-        # 可进行担保卖空的清单
-        spider = self.init_sql_pool(self.spider_cfg)
-        sql = 'select distinct(SSESCode) from hkex_lgt_special_szse_securities_for_short_selling where Date = (select max(Date) from hkex_lgt_special_szse_securities_for_short_selling);'
-        ret = spider.select_all(sql)
-        spider.dispose()
-        lst = [r.get("SSESCode") for r in ret]
-        return lst
+    # def get_only_sell_list(self):
+    #     # 只可卖出清单
+    #     spider = self.init_sql_pool(self.spider_cfg)
+    #     sql = 'select distinct(SSESCode) from hkex_lgt_special_szse_securities where Date = (select max(Date) from hkex_lgt_special_szse_securities);'
+    #     ret = spider.select_all(sql)
+    #     spider.dispose()
+    #     lst = [r.get("SSESCode") for r in ret]
+    #     return lst
+    #
+    # def get_buy_and_sell_list(self):
+    #     # 可买入以及卖出清单
+    #     spider = self.init_sql_pool(self.spider_cfg)
+    #     sql = 'select distinct(SSESCode) from hkex_lgt_szse_securities where Date = (select max(Date) from hkex_lgt_szse_securities);'
+    #     ret = spider.select_all(sql)
+    #     spider.dispose()
+    #     lst = [r.get("SSESCode") for r in ret]
+    #     return lst
+    #
+    # def get_buy_margin_trading_list(self):
+    #     # 可进行保证金交易的清单
+    #     spider = self.init_sql_pool(self.spider_cfg)
+    #     sql = 'select distinct(SSESCode) from hkex_lgt_special_szse_securities_for_margin_trading where Date = (select max(Date) from hkex_lgt_special_szse_securities_for_margin_trading);'
+    #     ret = spider.select_all(sql)
+    #     spider.dispose()
+    #     lst = [r.get("SSESCode") for r in ret]
+    #     return lst
+    #
+    # def get_short_sell_list(self):
+    #     # 可进行担保卖空的清单
+    #     spider = self.init_sql_pool(self.spider_cfg)
+    #     sql = 'select distinct(SSESCode) from hkex_lgt_special_szse_securities_for_short_selling where Date = (select max(Date) from hkex_lgt_special_szse_securities_for_short_selling);'
+    #     ret = spider.select_all(sql)
+    #     spider.dispose()
+    #     lst = [r.get("SSESCode") for r in ret]
+    #     return lst
 
     # @property
     # def inner_code_map(self):
@@ -1349,7 +1356,7 @@ class ZHHumanTools(CommonHumamTools):
 
         print(lst)
 
-    def process(self):
+    def _process(self):
         self.sisth_process()
 
         self.fifth_process()
