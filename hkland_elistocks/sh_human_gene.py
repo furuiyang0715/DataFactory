@@ -13,6 +13,11 @@ class SHHumanTools(CommonHumamTools):
             # second
             "601200",
 
+            # third
+            '601313', "601360",
+            "600546",
+            '600368', '600736', '600123', '600282', '600378', '603508', '600702'
+
         }
 
         self.table_name = 'hkland_hgelistocks'   # 沪港通合资格股
@@ -229,11 +234,7 @@ class SHHumanTools(CommonHumamTools):
         lst3 = []
         appear_3_codes = self.select_spider_records_with_a_num(3)
         logger.info("len-3: {}".format(len(appear_3_codes)))  # 166
-
-        appear_3_codes = set(appear_3_codes) - {'601313', "601360",   # 同一只代码 单独处理
-                                                "600546",
-                                                '600368', '600736', '600123', '600282', '600378', '603508', '600702'
-                                                }
+        appear_3_codes = set(appear_3_codes) - self.special_codes
         for code in appear_3_codes:
             print()
             print(code)
@@ -300,8 +301,9 @@ class SHHumanTools(CommonHumamTools):
 
                 stats = {"date": effective_date, "s1": 1, "s2": 0, "s3": 1, "s4": 1}
                 self.assert_stats(stats, secu_code)
+                logger.info(stats)
                 for r in (record1, record2, record3, record4, record5, record6, record7):
-                    print(r)
+                    logger.info(r)
                     self.insert(r)
 
             else:    # 第一步只加入 1
@@ -338,34 +340,28 @@ class SHHumanTools(CommonHumamTools):
                                 "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
                                 'CCASSCode': ccass_code, 'ParValue': face_value}
                             stats = {"date": effective_date, "s1": 0, "s2": 1, "s3": 0, "s4": 0}
+                            logger.info(stats)
                             self.assert_stats(stats, secu_code)
                             for r in [record1, record2, record3, record4]:
-                                print(r)
+                                logger.info(r)
                                 self.insert(r)
                         else:     # 只移除 1 加上 2 这种情况是不合理的
-                            # record1.update({"OutDate": effective_date, 'Flag': 2})
-                            # record4 = {
-                            #     "TradingType": 1, "TargetCategory": 2, "SecuCode": secu_code, 'InDate': effective_date,
-                            #     "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
-                            #     'CCASSCode': ccass_code, 'ParValue': face_value}
-                            # stats = {"date": effective_date, "s1": 0, "s2": 1, "s3": 1, "s4": 1}
-                            # self.assert_stats(stats, secu_code)
-                            # for r in [record1, record2, record3, record4]:
-                            #     self.insert(r)
                             raise Exception
                     else:  # Removal
                         record1.update({"OutDate": effective_date, 'Flag': 2})
                         record2.update({"OutDate": effective_date, 'Flag': 2})
                         record3.update({"OutDate": effective_date, 'Flag': 2})
                         stats = {"date": effective_date, "s1": 0, "s2": 0, "s3": 0, "s4": 0}
+                        logger.info(stats)
                         self.assert_stats(stats, secu_code)
                         for r in [record1, record2, record3]:
-                            print(r)
+                            logger.info(r)
                             self.insert(r)
 
                 elif _change == self.stats_transfer:  # 移除
-                    if self.sentense3 in remarks:
+                    if self.sentense3 in remarks:   # 第一步未加入 1 就移除了 1
                         lst1.append(code)
+
                     else:  # 移除 1  加上 2
                         record1.update({"OutDate": effective_date, 'Flag': 2})
                         record2 = {
@@ -379,7 +375,7 @@ class SHHumanTools(CommonHumamTools):
                         effective_date = change_2.get("EffectiveDate")
 
                         if _change == self.stats_recover:  # 结束 2; 将 1 恢复
-                            if self.sentense3 in remarks:  # 需要恢复 3 4
+                            if self.sentense3 in remarks:  # 需要恢复 3 4（未加入 3 4 却 恢复）
                                 raise Exception("需要恢复 1 3 ")
                             else:
                                 record2.update({"OutDate": effective_date, 'Flag': 2})
@@ -389,31 +385,32 @@ class SHHumanTools(CommonHumamTools):
                                     "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
                                     'CCASSCode': ccass_code, 'ParValue': face_value}
                                 stats = {"date": effective_date, "s1": 1, "s2": 0, "s3": 0, "s4": 0}
+                                logger.info(stats)
                                 try:
                                     self.assert_stats(stats, secu_code)
                                 except:
                                     lst2.append(code)
                                 for r in [record1, record2, record3]:
-                                    print(r)
+                                    logger.info(r)
                                     self.insert(r)
 
                         elif _change == self.stats_removal:  # 移除 2
                             record2.update({"OutDate": effective_date, 'Flag': 2})
-                            for r in [record1, record2]:
-                                print(r)
-                                self.insert(r)
                             stats = {"date": effective_date, "s1": 0, "s2": 0, "s3": 0, "s4": 0}
+                            logger.info(stats)
                             self.assert_stats(stats, secu_code)
-
+                            for r in [record1, record2]:
+                                logger.info(r)
+                                self.insert(r)
                         elif _change == self.stats_todonothing:
                             lst3.append(code)
                         else:
                             raise Exception("inner more choices ")
                 else:
                     raise Exception("more choices")
-        print(lst1)
-        print(lst2)
-        print(lst3)
+        print(lst1)  # 第一步未加入 1 就移除了 1
+        print(lst2)  # error
+        print(lst3)  # nothing
 
     def fourth_process(self):
         appear_4_codes = self.select_spider_records_with_a_num(4)
@@ -1012,9 +1009,9 @@ class SHHumanTools(CommonHumamTools):
     def _process(self):
         # self.first_process()
 
-        self.second_process()
+        # self.second_process()
 
-        # self.third_process()
+        self.third_process()
 
         # self.fourth_process()
 
