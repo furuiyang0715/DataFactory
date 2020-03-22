@@ -4,13 +4,13 @@ ENV TZ=Asia/Shanghai
 
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-RUN mkdir /lgt_scelistocks
+RUN mkdir /hkland_elistocks
 
-WORKDIR /lgt_scelistocks
+WORKDIR /hkland_elistocks
 
-ADD . /lgt_scelistocks
+ADD . /hkland_elistocks
 
-WORKDIR /lgt_scelistocks
+WORKDIR /hkland_elistocks
 
 RUN pip install -r requirements.txt -i https://pypi.douban.com/simple
 
