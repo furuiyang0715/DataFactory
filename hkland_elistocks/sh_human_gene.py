@@ -9,6 +9,11 @@ class SHHumanTools(CommonHumamTools):
         self.buy_and_sell_list_table = 'hkex_lgt_sse_securities'
         self.buy_margin_trading_list_table = 'hkex_lgt_special_sse_securities_for_margin_trading'
         self.short_sell_list_table = 'hkex_lgt_special_sse_securities_for_short_selling'
+        self.special_codes = {
+            # second
+            "601200",
+
+        }
 
         self.table_name = 'hkland_hgelistocks'   # 沪港通合资格股
         self.change_table_name = 'hkex_lgt_change_of_sse_securities_lists'
@@ -164,7 +169,6 @@ class SHHumanTools(CommonHumamTools):
                                   "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code, 'ParValue': face_value}
                     return [second_record, record_new], second_stats
                 else:   # 将 1 3 4 均移出 不合理的数据 因为第一步仅仅加进了 1
-                    logger.warning("请检查数据-1")
                     raise Exception
             elif first_stats.get("s1") == 1 and first_stats.get("s3") == 1:
                 if self.sentense3 in remarks:  # 将 1 3 4 均移出 同时生成 2
@@ -177,7 +181,6 @@ class SHHumanTools(CommonHumamTools):
                     second_stats = {"date": effective_date, "s1": 0, "s2": 1, "s3": 0, "s4": 0}
                     return [first_records, second_stats]
                 else:
-                    logger.warning("请检查数据-2")
                     raise Exception
 
         elif _change == self.stats_add_margin_and_shortsell:   # 将 3 4 加入
@@ -194,27 +197,17 @@ class SHHumanTools(CommonHumamTools):
             first_records.extend([record3, record4])
             second_stats = {"date": effective_date, "s1": 1, "s2": 0, "s3": 1, "s4": 1}
             return first_records, second_stats
-        # elif _change == self.stats_recover:
-        #     if not first_stats.get("s1") and not first_stats.get("s3") and first_stats.get("s2"):
-        #         first_records[0].update({"OutDate": effective_date, "Flag": 2})
-        #         second_stats = {"date": effective_date, "s1": 1, "s2": 0, "s3": 0, "s4": 0}
-        #         return first_records, second_stats
         else:
-            logger.warning("其他情况 << {}".format(_change))
-            logger.warning(remarks)
-            logger.warning(first_records)
-            logger.warning(first_stats)
             return None, None
 
     def second_process(self):
         appear_2_codes = self.select_spider_records_with_a_num(2)
-        print("len-2", len(appear_2_codes))  # 576
-        appear_2_codes = set(appear_2_codes) - {"601200"}
+        logger.info("sh-len-2: {}".format(len(appear_2_codes)))  # 576
+        appear_2_codes = set(appear_2_codes) - self.special_codes
         for code in appear_2_codes:
             print()
-            print(code)
+            logger.info(code)
             spider_changes = self.show_code_spider_records(code)
-
             spider_change = spider_changes[0]
             assert spider_change.get("Ch_ange") == self.stats_addition
             assert len(spider_changes) == 2
@@ -225,8 +218,9 @@ class SHHumanTools(CommonHumamTools):
             self.assert_stats(second_stats, code)
             assert second_records
             assert second_stats
+            logger.info(second_stats)
             for record in second_records:
-                print(record)
+                logger.info(record)
                 self.insert(record)
 
     def third_process(self):
@@ -1016,9 +1010,9 @@ class SHHumanTools(CommonHumamTools):
                                     self.insert(record)
 
     def _process(self):
-        self.first_process()
+        # self.first_process()
 
-        # self.second_process()
+        self.second_process()
 
         # self.third_process()
 
