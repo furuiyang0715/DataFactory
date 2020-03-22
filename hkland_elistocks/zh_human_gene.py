@@ -184,7 +184,7 @@ class ZHHumanTools(CommonHumamTools):
         for code in codes:
             if code in ["000931", "300236", '000918', '002477', '000418']:
                 print()
-                print(code)
+                logger.info(code)
                 spider_changes = self.show_code_spider_records(code)
                 assert len(spider_changes) == 5
                 change = spider_changes[0]
@@ -275,9 +275,10 @@ class ZHHumanTools(CommonHumamTools):
                             "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
                             'CCASSCode': ccass_code, 'ParValue': face_value}
                         stats = {"date": effective_date, "s1": 1, "s2": 0, "s3": 1, "s4": 1}
+                        logger.info(stats)
                         self.assert_stats(stats, secu_code)
                         for r in (record1, record2, record3, record4, record5, record6, record7):
-                            print(r)
+                            logger.info(r)
                             self.insert(r)
 
                     elif code in ("000918"):    # 加上 3 4
@@ -312,10 +313,11 @@ class ZHHumanTools(CommonHumamTools):
                             'CCASSCode': ccass_code, 'ParValue': face_value}
 
                         stats = {"date": effective_date, "s1": 0, "s2": 1, "s3": 0, "s4": 0}
+                        logger.info(stats)
                         self.assert_stats(stats, secu_code)
 
                         for r in (record1, record2, record3, record4, record5, record6):
-                            print(r)
+                            logger.info(r)
                             self.insert(r)
 
                 elif code in ('002477', '000418'):   # 加入 3 4
@@ -367,14 +369,15 @@ class ZHHumanTools(CommonHumamTools):
                     assert _change == self.stats_removal
                     record4.update({"OutDate": effective_date, 'Flag': 2})
                     stats = {"date": effective_date, "s1": 0, "s2": 0, "s3": 0, "s4": 0}
+                    logger.info(stats)
                     self.assert_stats(stats, secu_code)
                     for r in (record1, record2, record3, record4):
-                        print(r)
+                        logger.info(r)
                         self.insert(r)
 
             elif code in ['000422']:
                 print()
-                print(code)
+                logger.info(code)
                 spider_changes = self.show_code_spider_records(code)
                 # print(pprint.pformat(spider_changes))
                 assert len(spider_changes) == 5
@@ -435,11 +438,11 @@ class ZHHumanTools(CommonHumamTools):
                     "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
                     'CCASSCode': ccass_code, 'ParValue': face_value}
 
-                # stats = {"date": effective_date, "s1": 0, "s2": 1, "s3": 0, "s4": 0}
                 stats = {"date": effective_date, "s1": 0, "s2": 1, "s3": 0, "s4": 0}   # TODO
+                logger.info(stats)
                 self.assert_stats(stats, secu_code)
                 for r in (record1, record2, record3, record4, record5, record6, record7):
-                    print(r)
+                    logger.info(r)
                     self.insert(r)
 
             else:
@@ -1180,9 +1183,9 @@ class ZHHumanTools(CommonHumamTools):
     def _process(self):
         # self.sisth_process()
 
-        # self.fifth_process()
+        self.fifth_process()
 
-        self.fourth_process()
+        # self.fourth_process()
 
         # self.third_process()
 
