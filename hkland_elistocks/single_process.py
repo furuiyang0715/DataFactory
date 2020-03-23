@@ -331,15 +331,15 @@ def run_000333():
 
     # 加 1 3 4
     record1 = {
-        "TradingType": 1, "TargetCategory": 1, "SecuCode": secu_code, 'InDate': effective_date,
+        "TradingType": 3, "TargetCategory": 1, "SecuCode": secu_code, 'InDate': effective_date,
         "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code,
         'ParValue': face_value}
     record2 = {
-        "TradingType": 1, "TargetCategory": 3, "SecuCode": secu_code, 'InDate': effective_date, "OutDate": None,
+        "TradingType": 3, "TargetCategory": 3, "SecuCode": secu_code, 'InDate': effective_date, "OutDate": None,
         'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code,
         'ParValue': face_value}
     record3 = {
-        "TradingType": 1, "TargetCategory": 4, "SecuCode": secu_code, 'InDate': effective_date, "OutDate": None,
+        "TradingType": 3, "TargetCategory": 4, "SecuCode": secu_code, 'InDate': effective_date, "OutDate": None,
         'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code,
         'ParValue': face_value}
 
@@ -363,15 +363,15 @@ def run_000022():
     effective_date = change.get("EffectiveDate")
     # 加 1 3 4
     record1 = {
-        "TradingType": 1, "TargetCategory": 1, "SecuCode": secu_code, 'InDate': effective_date,
+        "TradingType": 3, "TargetCategory": 1, "SecuCode": secu_code, 'InDate': effective_date,
         "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code,
         'ParValue': face_value}
     record2 = {
-        "TradingType": 1, "TargetCategory": 3, "SecuCode": secu_code, 'InDate': effective_date, "OutDate": None,
+        "TradingType": 3, "TargetCategory": 3, "SecuCode": secu_code, 'InDate': effective_date, "OutDate": None,
         'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code,
         'ParValue': face_value}
     record3 = {
-        "TradingType": 1, "TargetCategory": 4, "SecuCode": secu_code, 'InDate': effective_date, "OutDate": None,
+        "TradingType": 3, "TargetCategory": 4, "SecuCode": secu_code, 'InDate': effective_date, "OutDate": None,
         'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code,
         'ParValue': face_value}
     # 改名 SZSE Stock Code and Stock Name are changed to 1872
@@ -405,15 +405,15 @@ def run_002008():
     effective_date = change.get("EffectiveDate")
     # 加 1 3 4
     record1 = {
-        "TradingType": 1, "TargetCategory": 1, "SecuCode": secu_code, 'InDate': effective_date,
+        "TradingType": 3, "TargetCategory": 1, "SecuCode": secu_code, 'InDate': effective_date,
         "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code,
         'ParValue': face_value}
     record2 = {
-        "TradingType": 1, "TargetCategory": 3, "SecuCode": secu_code, 'InDate': effective_date, "OutDate": None,
+        "TradingType": 3, "TargetCategory": 3, "SecuCode": secu_code, 'InDate': effective_date, "OutDate": None,
         'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code,
         'ParValue': face_value}
     record3 = {
-        "TradingType": 1, "TargetCategory": 4, "SecuCode": secu_code, 'InDate': effective_date, "OutDate": None,
+        "TradingType": 3, "TargetCategory": 4, "SecuCode": secu_code, 'InDate': effective_date, "OutDate": None,
         'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code,
         'ParValue': face_value}
     stats = {"date": effective_date, "s1": 1, "s2": 0, "s3": 1, "s4": 1}
@@ -436,15 +436,15 @@ def run_000043():
     effective_date = change.get("EffectiveDate")
     # 加 1 3 4
     record1 = {
-        "TradingType": 1, "TargetCategory": 1, "SecuCode": secu_code, 'InDate': effective_date,
+        "TradingType": 3, "TargetCategory": 1, "SecuCode": secu_code, 'InDate': effective_date,
         "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code,
         'ParValue': face_value}
     record2 = {
-        "TradingType": 1, "TargetCategory": 3, "SecuCode": secu_code, 'InDate': effective_date, "OutDate": None,
+        "TradingType": 3, "TargetCategory": 3, "SecuCode": secu_code, 'InDate': effective_date, "OutDate": None,
         'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code,
         'ParValue': face_value}
     record3 = {
-        "TradingType": 1, "TargetCategory": 4, "SecuCode": secu_code, 'InDate': effective_date, "OutDate": None,
+        "TradingType": 3, "TargetCategory": 4, "SecuCode": secu_code, 'InDate': effective_date, "OutDate": None,
         'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code,
         'ParValue': face_value}
 
@@ -455,7 +455,7 @@ def run_000043():
     record2.update({"OutDate": effective_date, "Flag": 2})
     record3.update({"OutDate": effective_date, "Flag": 2})
     record4 = {
-        "TradingType": 1, "TargetCategory": 2, "SecuCode": secu_code, 'InDate': effective_date, "OutDate": None,
+        "TradingType": 3, "TargetCategory": 2, "SecuCode": secu_code, 'InDate': effective_date, "OutDate": None,
         'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code,
         'ParValue': face_value}
 
@@ -464,15 +464,15 @@ def run_000043():
     effective_date = change.get("EffectiveDate")
     record4.update({"OutDate": effective_date, "Flag": 2})
     record5 = {
-        "TradingType": 1, "TargetCategory": 1, "SecuCode": secu_code, 'InDate': effective_date,
+        "TradingType": 3, "TargetCategory": 1, "SecuCode": secu_code, 'InDate': effective_date,
         "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code,
         'ParValue': face_value}
     record6 = {
-        "TradingType": 1, "TargetCategory": 3, "SecuCode": secu_code, 'InDate': effective_date, "OutDate": None,
+        "TradingType": 3, "TargetCategory": 3, "SecuCode": secu_code, 'InDate': effective_date, "OutDate": None,
         'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code,
         'ParValue': face_value}
     record7 = {
-        "TradingType": 1, "TargetCategory": 4, "SecuCode": secu_code, 'InDate': effective_date, "OutDate": None,
+        "TradingType": 3, "TargetCategory": 4, "SecuCode": secu_code, 'InDate': effective_date, "OutDate": None,
         'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code,
         'ParValue': face_value}
 
@@ -483,7 +483,7 @@ def run_000043():
     record6.update({"OutDate": effective_date, "Flag": 2})
     record7.update({"OutDate": effective_date, "Flag": 2})
     record8 = {
-        "TradingType": 1, "TargetCategory": 2, "SecuCode": secu_code, 'InDate': effective_date, "OutDate": None,
+        "TradingType": 3, "TargetCategory": 2, "SecuCode": secu_code, 'InDate': effective_date, "OutDate": None,
         'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code,
         'ParValue': face_value}
 
@@ -492,15 +492,15 @@ def run_000043():
     effective_date = change.get("EffectiveDate")
     record8.update({"OutDate": effective_date, "Flag": 2})
     record9 = {
-        "TradingType": 1, "TargetCategory": 1, "SecuCode": secu_code, 'InDate': effective_date,
+        "TradingType": 3, "TargetCategory": 1, "SecuCode": secu_code, 'InDate': effective_date,
         "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code,
         'ParValue': face_value}
     record10 = {
-        "TradingType": 1, "TargetCategory": 3, "SecuCode": secu_code, 'InDate': effective_date, "OutDate": None,
+        "TradingType": 3, "TargetCategory": 3, "SecuCode": secu_code, 'InDate': effective_date, "OutDate": None,
         'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code,
         'ParValue': face_value}
     record11 = {
-        "TradingType": 1, "TargetCategory": 4, "SecuCode": secu_code, 'InDate': effective_date, "OutDate": None,
+        "TradingType": 3, "TargetCategory": 4, "SecuCode": secu_code, 'InDate': effective_date, "OutDate": None,
         'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code,
         'ParValue': face_value}
 
@@ -516,12 +516,17 @@ def run_000043():
 
 
 def fix():
-    process_600368()
-    process_600546()
-    process_601313()
-    process_601200()
-    process_600009()
-    run_002008()
-    run_000333()
-    run_000022()
-    run_000043()
+    # process_600368()
+    # process_600546()
+    # process_601313()
+    # process_601200()
+    # process_600009()
+    # run_002008()
+    # run_000333()
+    # run_000022()
+    # run_000043()
+
+    pass
+
+
+# fix()

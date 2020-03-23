@@ -308,9 +308,9 @@ class ZHHumanTools(CommonHumamTools):
                         # print(remarks)   # 移除 1 3 4 添加一条 2
 
                         assert _change == self.stats_transfer and self.sentense3 in remarks
-                        record3.update({"OutDate": effective_date, 'Flag': 1})
-                        record4.update({"OutDate": effective_date, 'Flag': 1})
-                        record5.update({"OutDate": effective_date, 'Flag': 1})
+                        record3.update({"OutDate": effective_date, 'Flag': 2})
+                        record4.update({"OutDate": effective_date, 'Flag': 2})
+                        record5.update({"OutDate": effective_date, 'Flag': 2})
 
                         record6 = {
                             "TradingType": 3, "TargetCategory": 2, "SecuCode": secu_code, 'InDate': effective_date,
@@ -779,6 +779,7 @@ class ZHHumanTools(CommonHumamTools):
                             assert _change == self.stats_recover
                             assert self.sentense1 not in remarks
                             # print("恢复 1 , 结束 2")
+                            record4.update({"OutDate": effective_date, 'Flag': 2})
                             record5 = {
                                 "TradingType": 3, "TargetCategory": 1, "SecuCode": secu_code, 'InDate': effective_date,
                                 "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
