@@ -1187,14 +1187,14 @@ class ZHHumanTools(CommonHumamTools):
                 raise
 
     def _process(self):
-        self.sisth_process()
+        # self.sisth_process()
 
         self.fifth_process()
 
-        self.fourth_process()
+        # self.fourth_process()
 
-        self.third_process()
+        # self.third_process()
 
-        self.second_process()
+        # self.second_process()
 
-        self.first_process()
+        # self.first_process()

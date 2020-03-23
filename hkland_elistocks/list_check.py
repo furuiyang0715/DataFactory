@@ -265,13 +265,3 @@ if __name__ == "__main__":
     run_4()
     print()
 
-
-# TODO {'000333', '002008', '000022', '000043'} 这几个港股的 TradingType = 1 应该是 3
-# 直接在数据库中更新
-# select * from  hkland_sgelistocks where SecuCode = '000333';
-# update hkland_sgelistocks set TradingType = 3 where SecuCode = '000333';
-# 是单独插入的处理 没改成 3 线上删除重跑吧
-
-
-# TODO  zh 的 000918 需要删除重新生成
-# TODO  zh 的 000418 需要删除重新生成
