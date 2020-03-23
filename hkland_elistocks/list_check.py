@@ -87,7 +87,7 @@ def demo_2():
     # print(len(ret))  # 334
 
     print(ret - list_1)   # set()
-    print(list_1 - ret)   # set()
+    print(list_1 - ret)   # set() 清单里面有 但是变更里面没有的情况
 
 
 def demo_3():
@@ -253,15 +253,16 @@ if __name__ == "__main__":
     # demo_4()
     # print()
 
-    run_1()
-    print()
+    # run_1()
+    # print()
+    #
+    # run_2()
+    # print()
+    #
+    # run_3()
+    # print()
+    #
+    # run_4()
+    # print()
 
-    run_2()
-    print()
-
-    run_3()
-    print()
-
-    run_4()
-    print()
-
+    pass 
