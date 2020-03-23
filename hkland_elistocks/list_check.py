@@ -1,10 +1,11 @@
-from hkland_component.sql_pool import PyMysqlPoolBase
+
 from hkland_elistocks.configs import TARGET_HOST, TARGET_PORT, TARGET_USER, TARGET_PASSWD, TARGET_DB, SPIDER_HOST, \
     SPIDER_PORT, SPIDER_USER, SPIDER_PASSWD, SPIDER_DB, JUY_HOST, JUY_PORT, JUY_USER, JUY_PASSWD, JUY_DB
 from hkland_elistocks.sh_human_gene import SHHumanTools
 
 
 # 目标数据库 意思是规整完成的数据要插入的数据库
+from hkland_elistocks.sql_pool import PyMysqlPoolBase
 from hkland_elistocks.zh_human_gene import ZHHumanTools
 
 target_cfg = {
@@ -236,6 +237,32 @@ def sync_from_juyuan(codes, source_table):
     juyuan.dispose()
 
 
+def list_check():
+    demo_1()
+    print()
+
+    demo_2()
+    print()
+
+    demo_3()
+    print()
+
+    demo_4()
+    print()
+
+    run_1()
+    print()
+
+    run_2()
+    print()
+
+    run_3()
+    print()
+
+    run_4()
+    print()
+
+
 if __name__ == "__main__":
     # codes = {'600378', '600736', '600282', '600123', '600702', '603508'}
     # source_table = 'lc_shscelistocks'
@@ -265,4 +292,4 @@ if __name__ == "__main__":
     # run_4()
     # print()
 
-    pass 
+    pass
