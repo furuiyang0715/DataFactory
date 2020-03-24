@@ -14,19 +14,18 @@ from hkland_elistocks.zh_human_gene import ZHHumanTools
             '600368', '600736', '600123', '600282', '600378', '603508', '600702',  # 没啥逻辑硬伤不知道为啥单独拿出来了 已处理 
             
             # fourth 
-            "600009",  # 已处理 
+            "600009",  # 已处理 含有状态 5 
 
         }
         
         self.special_codes = {
             # first
-            '001914',   # 000043 --> 001914  
+            '001914',   # 000043 --> 001914  已处理 
             '001872',   # 000022 --> 001872  已处理 
             # second
-            "000333",   # 已处理 
-            "000022",   # 已处理 
+            "000333",   # 已处理 含有状态 5 
             # third
-            "002008",  # 已处理 
+            "002008",   # 已处理 
         }
 '''
 # select * from hkex_lgt_change_of_sse_securities_lists where  SSESCode = 601200 and Time = '2020-03-18' order by EffectiveDate\G
@@ -307,9 +306,24 @@ def run_000333():
         'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code,
         'ParValue': face_value}
 
+    # 'Buy orders suspended',
+    change = spider_changes[1]
+    _change = change.get("Ch_ange")
+    effective_date = change.get("EffectiveDate")
+    record4 = {
+        "TradingType": 3, "TargetCategory": 5, "SecuCode": secu_code, 'InDate': effective_date, "OutDate": None,
+        'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code,
+        'ParValue': face_value}
+
+    # 'Buy orders resumed',
+    change = spider_changes[2]
+    _change = change.get("Ch_ange")
+    effective_date = change.get("EffectiveDate")
+    record4.update({"OutDate": effective_date, "Flag": 2})
+
     stats = {"date": effective_date, "s1": 1, "s2": 0, "s3": 1, "s4": 1}
     zh.assert_stats(stats, secu_code)
-    for r in (record1, record2, record3):
+    for r in (record1, record2, record3, record4):
         print(r)
         zh.insert(r)
 
@@ -317,7 +331,7 @@ def run_000333():
 def run_000022():
     zh = ZHHumanTools()
     spider_changes = zh.show_code_spider_records("000022")
-    # print(pprint.pformat(spider_changes))
+    print(pprint.pformat(spider_changes))
     change = spider_changes[0]
     _change = change.get("Ch_ange")
     remarks = change.get("Remarks")
@@ -400,9 +414,24 @@ def run_002008():
         "TradingType": 3, "TargetCategory": 4, "SecuCode": secu_code, 'InDate': effective_date, "OutDate": None,
         'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code,
         'ParValue': face_value}
+
+    change = spider_changes[1]
+    _change = change.get("Ch_ange")
+    effective_date = change.get("EffectiveDate")
+
+    record4 = {
+        "TradingType": 3, "TargetCategory": 5, "SecuCode": secu_code, 'InDate': effective_date, "OutDate": None,
+        'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code,
+        'ParValue': face_value}
+
+    change = spider_changes[2]
+    _change = change.get("Ch_ange")
+    effective_date = change.get("EffectiveDate")
+    record4.update({ "OutDate": effective_date, "Flag": 2})
+
     stats = {"date": effective_date, "s1": 1, "s2": 0, "s3": 1, "s4": 1}
     zh.assert_stats(stats, secu_code)
-    for r in (record1, record2, record3):
+    for r in (record1, record2, record3, record4):
         print(r)
         zh.insert(r)
 
@@ -512,7 +541,7 @@ def run_000043():
         print(r)
         zh.insert(r)
 
-    # 将最后 8 9 10 的状态更新为 2 因为将其状态转义给了新的编码 001914 就将其上一个状态结束
+    # 将最后 9 10 11 的状态更新为 2 因为将其状态转义给了新的编码 001914 就将其上一个状态结束
     record9.update({'Flag': 2, "OutDate": effective_date})
     record10.update({'Flag': 2, "OutDate": effective_date})
     record11.update({'Flag': 2, "OutDate": effective_date})
