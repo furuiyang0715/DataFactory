@@ -1,3 +1,5 @@
+import datetime
+import pprint
 import traceback
 
 import pymysql
@@ -193,7 +195,7 @@ class CommonHumamTools(object):
         target = self.init_sql_pool(self.target_cfg)
         try:
             count = target.insert(insert_sql, value)
-            print("insert count:  {}".format(count))
+            logger.info("replace count:  {}".format(count))
         except pymysql.err.IntegrityError as e:
             traceback.print_exc()
         except Exception as e:
@@ -217,24 +219,49 @@ class CommonHumamTools(object):
         target.dispose()
 
     def update_code_info(self, code, current_records):
+        # print(pprint.pformat(current_records))
+        for c in current_records:
+            in_date = c.get("InDate")
+            if isinstance(in_date, datetime.date):
+                in_date = datetime.datetime(in_date.year, in_date.month, in_date.day)
+                c.update({"InDate": in_date})
+
+            out_date = c.get("OutDate")
+            if isinstance(out_date, datetime.date):
+                out_date = datetime.datetime(out_date.year, out_date.month, out_date.day)
+                c.update({"OutDate": out_date})
+
         history_records = self.get_history_records(code)
-        to_insert = []
-        to_delete = []
-        for r in current_records:
-            if r not in history_records:
-                to_insert.append(r)
+        # print(pprint.pformat(history_records))
 
-        for h in history_records:
-            _id = h.pop("ID")
-            if h not in current_records:
-                to_delete.append(_id)
-        logger.info("to_delete: ".format(to_delete))
-        logger.info("to_insert: ".format(to_insert))
-        for _id in to_delete:
-            self.delete_with_id(_id)
+        if not history_records:
+            for c in current_records:
+                self.insert(c)
+        elif not current_records:
+            for h in history_records:
+                _id = h.pop("ID")
+                self.delete_with_id(_id)
+        else: 
+            to_insert = []
+            to_delete = []
 
-        for i in to_insert:
-            self.insert(i)
+            for h in history_records:
+                _id = h.pop("ID")
+                if h not in current_records:
+                    to_delete.append(_id)
+
+            for r in current_records:
+                if r not in history_records:
+                    to_insert.append(r)
+
+            logger.info("to_delete: {}".format(to_delete))
+            logger.info("to_insert: {}".format(to_insert))
+
+            for _id in to_delete:
+                self.delete_with_id(_id)
+
+            for i in to_insert:
+                self.insert(i)
 
     def assert_stats(self, stats, secu_code):
         """
@@ -268,5 +295,5 @@ class CommonHumamTools(object):
         sql = 'delete from {} where SecuCode in {}; '.format(self.table_name, tuple(codes))
         target = self.init_sql_pool(self.target_cfg)
         ret = target.delete(sql)
-        print("delete count: {}".format(ret))
+        logger.info("delete count: {}".format(ret))
         target.dispose()

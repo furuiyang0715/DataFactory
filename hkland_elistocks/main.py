@@ -9,10 +9,10 @@ from hkland_elistocks.zh_human_gene import ZHHumanTools
 
 
 def main():
-    sh = SHHumanTools()
-    if LOCAL:
-        sh.create_target_table()
-    sh._process()
+    # sh = SHHumanTools()
+    # if LOCAL:
+    #     sh.create_target_table()
+    # sh._process()
 
 
     zh = ZHHumanTools()
@@ -21,9 +21,9 @@ def main():
     zh._process()
 
 
-    fix()
-
-    list_check()
+    # fix()
+    #
+    # list_check()
 
 
 main()

@@ -1147,7 +1147,7 @@ class ZHHumanTools(CommonHumamTools):
 
     def first_process(self):
         codes = self.select_spider_records_with_a_num(1)
-        logger.info("zh len-1: {}".format(len(codes)))  # 362
+        logger.info("ZH LEN-1: {}".format(len(codes)))  # 362
         for code in set(codes) - self.special_codes:
             print()
             logger.info(code)
@@ -1173,7 +1173,13 @@ class ZHHumanTools(CommonHumamTools):
                         r.update({"TradingType": 3, "SecuCode": secu_code, "InnerCode": inner_code,
                                   "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code, 'ParValue': face_value})
                         logger.info(r)
-                        self.insert(r)
+                    self.update_code_info(secu_code, [r1, r2, r3])
+
+                    # for r in (r1, r2, r3):
+                    #     r.update({"TradingType": 3, "SecuCode": secu_code, "InnerCode": inner_code,
+                    #               "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code, 'ParValue': face_value})
+                    #     logger.info(r)
+                    #     self.insert(r)
                 else:
                     r1 = {"TargetCategory": 1, 'InDate': effective_date, "OutDate": None, 'Flag': 1}
                     stats = {"date": effective_date, "s1": 1, "s2": 0, "s3": 0, "s4": 0}
@@ -1182,7 +1188,8 @@ class ZHHumanTools(CommonHumamTools):
                     r1.update({"TradingType": 3, "SecuCode": secu_code, "InnerCode": inner_code,
                               "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code, 'ParValue': face_value})
                     logger.info(r1)
-                    self.insert(r1)
+                    self.update_code_info(secu_code, [r1])
+                    # self.insert(r1)
             else:
                 raise
 
@@ -1191,10 +1198,10 @@ class ZHHumanTools(CommonHumamTools):
 
         # self.fifth_process()
 
-        self.fourth_process()
+        # self.fourth_process()
 
         # self.third_process()
 
         # self.second_process()
 
-        # self.first_process()
+        self.first_process()
