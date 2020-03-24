@@ -10,6 +10,7 @@ class ZHHumanTools(CommonHumamTools):
         self.table_name = 'hkland_sgelistocks'  # 深港通合资格股
         self.change_table_name = 'hkex_lgt_change_of_szse_securities_lists'
         self.market = 90
+        self.trade_type = 3
         self.special_codes = {
             # first
             '001914',   # 000043 --> 001914
@@ -1050,16 +1051,13 @@ class ZHHumanTools(CommonHumamTools):
                     raise Exception
 
     def second_process(self):
-        lst = []
         codes = self.select_spider_records_with_a_num(2)
-        logger.info("zh-len2: {}".format(len(codes)))    # 743
+        logger.info("ZH-LEN2: {}".format(len(codes)))
         codes = set(codes) - self.special_codes
         for code in codes:
             print()
             logger.info(code)
             spider_changes = self.show_code_spider_records(code)
-
-            # print(pprint.pformat(spider_changes))
 
             change = spider_changes[0]
             _change = change.get("Ch_ange")
@@ -1077,7 +1075,7 @@ class ZHHumanTools(CommonHumamTools):
 
             if _change == self.stats_addition:
                 if self.sentense1 in remarks or self.sentense2 in remarks:
-                    print("1: add 1 3 4", "\n", "2: del 1 3 4; add 2")
+                    logger.info("1: add 1 3 4; || 2: del 1 3 4, add 2")
                     assert _change_1 == self.stats_transfer
                     r1 = {"TargetCategory": 1, 'InDate': effective_date, "OutDate": None, 'Flag': 1}
                     r2 = {"TargetCategory": 3, 'InDate': effective_date, "OutDate": None, 'Flag': 1}
@@ -1091,51 +1089,51 @@ class ZHHumanTools(CommonHumamTools):
                     logger.info(stats)
                     self.assert_stats(stats, secu_code)
                     for r in (r1, r2, r3, r4):
-                        r.update({"TradingType": 3, "SecuCode": secu_code, "InnerCode": inner_code,
+                        r.update({"TradingType": self.trade_type, "SecuCode": secu_code, "InnerCode": inner_code,
                                   "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code, 'ParValue': face_value})
                         logger.info(r)
-                        self.insert(r)
+                    self.update_code_info(secu_code, [r1, r2, r3, r4])
+
                 else:
-                    print("1: add just 1")
+                    logger.info("1: add just 1")
                     r1 = {"TargetCategory": 1, 'InDate': effective_date, "OutDate": None, 'Flag': 1}
                     if _change_1 == self.stats_add_margin_and_shortsell:
-                        print("2: add 3 4")
+                        logger.info("2: add 3 4")
                         r2 = {"TargetCategory": 3, 'InDate': effective_date_1, "OutDate": None, 'Flag': 1}
                         r3 = {"TargetCategory": 4, 'InDate': effective_date_1, "OutDate": None, 'Flag': 1}
                         stats = {"date": effective_date_1, "s1": 1, "s2": 0, "s3": 1, "s4": 1}
                         logger.info(stats)
                         self.assert_stats(stats, secu_code)
                         for r in (r1, r2, r3):
-                            r.update({"TradingType": 3, "SecuCode": secu_code, "InnerCode": inner_code,
+                            r.update({"TradingType": self.trade_type, "SecuCode": secu_code, "InnerCode": inner_code,
                                       "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code, 'ParValue': face_value})
                             logger.info(r)
-                            self.insert(r)
+                        self.update_code_info(secu_code, [r1, r2, r3])
+
                     elif _change_1 == self.stats_transfer:
-                        print("2: del 1 add 2 ")
+                        logger.info("2: del 1 add 2 ")
                         r1.update({"OutDate": effective_date_1, 'Flag': 2})
                         r2 = {"TargetCategory": 2, 'InDate': effective_date_1, "OutDate": None, 'Flag': 1}
                         stats = {"date": effective_date_1, "s1": 0, "s2": 1, "s3": 0, "s4": 0}
                         logger.info(stats)
                         self.assert_stats(stats, secu_code)
                         for r in (r1, r2):
-                            r.update({"TradingType": 3, "SecuCode": secu_code, "InnerCode": inner_code,
+                            r.update({"TradingType": self.trade_type, "SecuCode": secu_code, "InnerCode": inner_code,
                                       "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code, 'ParValue': face_value})
                             logger.info(r)
-                            self.insert(r)
+                        self.update_code_info(secu_code, [r1, r2])
+
                     elif _change_1 == self.stats_removal:
-                        print("2: del 1")
+                        logger.info("2: del 1")
                         r1.update({"OutDate": effective_date_1, 'Flag': 2})
                         stats = {"date": effective_date_1, "s1": 0, "s2": 0, "s3": 0, "s4": 0}
                         logger.info(stats)
                         self.assert_stats(stats, secu_code)
-                        r1.update({"TradingType": 3, "SecuCode": secu_code, "InnerCode": inner_code,
+                        r1.update({"TradingType": self.trade_type, "SecuCode": secu_code, "InnerCode": inner_code,
                                   "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code, 'ParValue': face_value})
                         logger.info(r1)
-                        self.insert(r1)
-                    elif _change_1 in self.stats_todonothing:
-                        lst.append(code)
+                        self.update_code_info(secu_code, [r1])
                     else:
-                        print(_change_1)
                         raise Exception
             elif _change == self.stats_transfer:
                 raise Exception
@@ -1143,7 +1141,6 @@ class ZHHumanTools(CommonHumamTools):
                 raise Exception
             else:
                 raise Exception
-        print(lst)  # []
 
     def first_process(self):
         codes = self.select_spider_records_with_a_num(1)
@@ -1170,7 +1167,7 @@ class ZHHumanTools(CommonHumamTools):
                     logger.info(stats)
                     self.assert_stats(stats, secu_code)
                     for r in (r1, r2, r3):
-                        r.update({"TradingType": 3, "SecuCode": secu_code, "InnerCode": inner_code,
+                        r.update({"TradingType": self.trade_type, "SecuCode": secu_code, "InnerCode": inner_code,
                                   "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code, 'ParValue': face_value})
                         logger.info(r)
                     self.update_code_info(secu_code, [r1, r2, r3])
@@ -1179,7 +1176,7 @@ class ZHHumanTools(CommonHumamTools):
                     stats = {"date": effective_date, "s1": 1, "s2": 0, "s3": 0, "s4": 0}
                     logger.info(stats)
                     self.assert_stats(stats, secu_code)
-                    r1.update({"TradingType": 3, "SecuCode": secu_code, "InnerCode": inner_code,
+                    r1.update({"TradingType": self.trade_type, "SecuCode": secu_code, "InnerCode": inner_code,
                               "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code, 'ParValue': face_value})
                     logger.info(r1)
                     self.update_code_info(secu_code, [r1])
@@ -1195,6 +1192,6 @@ class ZHHumanTools(CommonHumamTools):
 
         # self.third_process()
 
-        # self.second_process()
+        self.second_process()
 
-        self.first_process()
+        # self.first_process()
