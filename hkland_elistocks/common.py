@@ -4,6 +4,7 @@ import pymysql
 
 from hkland_elistocks.configs import TARGET_HOST, TARGET_PORT, TARGET_USER, TARGET_PASSWD, TARGET_DB, SPIDER_HOST, \
     SPIDER_PORT, SPIDER_USER, SPIDER_PASSWD, SPIDER_DB, JUY_HOST, JUY_PORT, JUY_USER, JUY_PASSWD, JUY_DB
+from hkland_elistocks.my_log import logger
 from hkland_elistocks.sql_pool import PyMysqlPoolBase
 
 
@@ -202,6 +203,39 @@ class CommonHumamTools(object):
         finally:
             target.dispose()
 
+    def get_history_records(self, code):
+        sql = 'select ID, TradingType,TargetCategory,InnerCode,SecuCode,SecuAbbr,InDate,OutDate,Flag,CCASSCode, ParValue from {} where SecuCode = {} ;'.format(self.table_name, code)
+        target = self.init_sql_pool(self.target_cfg)
+        ret = target.select_all(sql)
+        return ret
+
+    def delete_with_id(self, _id):
+        sql = '''delete from {} where id = {}; '''.format(self.table_name, _id)
+        target = self.init_sql_pool(self.target_cfg)
+        ret = target.delete(sql)
+        logger.info("delete with id ret: {}".format(ret))
+        target.dispose()
+
+    def update_code_info(self, code, current_records):
+        history_records = self.get_history_records(code)
+        to_insert = []
+        to_delete = []
+        for r in current_records:
+            if r not in history_records:
+                to_insert.append(r)
+
+        for h in history_records:
+            _id = h.pop("ID")
+            if h not in current_records:
+                to_delete.append(_id)
+        logger.info("to_delete: ".format(to_delete))
+        logger.info("to_insert: ".format(to_insert))
+        for _id in to_delete:
+            self.delete_with_id(_id)
+
+        for i in to_insert:
+            self.insert(i)
+
     def assert_stats(self, stats, secu_code):
         """
         判断当前状态与清单是否一致
@@ -230,11 +264,9 @@ class CommonHumamTools(object):
             assert secu_code not in self.short_sell_list
 
     def delete_codes_records(self, codes):
-        # 删除codes对应的记录
+        """删除 codes 对应的记录"""
         sql = 'delete from {} where SecuCode in {}; '.format(self.table_name, tuple(codes))
         target = self.init_sql_pool(self.target_cfg)
-        # print(sql)
         ret = target.delete(sql)
         print("delete count: {}".format(ret))
         target.dispose()
-

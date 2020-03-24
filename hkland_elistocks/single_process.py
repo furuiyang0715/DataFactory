@@ -595,5 +595,10 @@ def special_zh():
     run_000043()
 
 
-special_sh()
-special_zh()
+def fix():
+    special_sh()
+    special_zh()
+
+
+if __name__ == "__main__":
+    fix()
