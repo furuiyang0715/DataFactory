@@ -25,7 +25,7 @@ from hkland_elistocks.zh_human_gene import ZHHumanTools
             # second
             "000333",   # 已处理 含有状态 5 
             # third
-            "002008",   # 已处理 
+            "002008",   # 已处理 含有状态 5 
         }
 '''
 # select * from hkex_lgt_change_of_sse_securities_lists where  SSESCode = 601200 and Time = '2020-03-18' order by EffectiveDate\G
@@ -278,6 +278,28 @@ def process_600009():
     for r in (record1, record2, record3, record4):
         print(r)
         sh.insert(r)
+
+
+def special_sh():
+    special_codes = {
+        # second
+        "601200",  # 首次是加入 2  已处理
+
+        # third
+        '601313',  # 改名为 "601360", 已处理
+        "600546",  # 移除 1 的时候, 即使不明说 也要移除 3 4, 已处理
+        '600368', '600736', '600123', '600282', '600378', '603508', '600702',  # 没啥逻辑硬伤不知道为啥单独拿出来了 已处理
+
+        # fourth
+        "600009",  # 已处理 含有状态 5
+    }
+    sh = SHHumanTools()
+    sh.delete_codes_records(special_codes)
+    process_600368()
+    process_600546()
+    process_601313()
+    process_601200()
+    process_600009()
 
 
 def run_000333():
@@ -553,19 +575,25 @@ def run_000043():
         zh.insert(r)
 
 
-def fix():
-    # process_600368()
-    # process_600546()
-    # process_601313()
-    # process_601200()
-    # process_600009()
+def special_zh():
+    special_codes = {
+        # first
+        '001914',  # 000043 --> 001914  已处理
+        '001872',  # 000022 --> 001872  已处理
+        # second
+        "000333",  # 已处理 含有状态 5
+        # third
+        "002008",  # 已处理 含有状态 5
+    }
 
-    # run_002008()
-    # run_000333()
-    # run_000022()
-    # run_000043()
+    zh = ZHHumanTools()
+    zh.delete_codes_records(special_codes)
 
-    pass
+    run_002008()
+    run_000333()
+    run_000022()
+    run_000043()
 
 
-fix()
+special_sh()
+special_zh()

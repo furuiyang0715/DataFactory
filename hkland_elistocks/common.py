@@ -192,6 +192,7 @@ class CommonHumamTools(object):
         target = self.init_sql_pool(self.target_cfg)
         try:
             count = target.insert(insert_sql, value)
+            print("insert count:  {}".format(count))
         except pymysql.err.IntegrityError as e:
             traceback.print_exc()
         except Exception as e:
@@ -227,4 +228,13 @@ class CommonHumamTools(object):
             assert secu_code in self.short_sell_list
         else:
             assert secu_code not in self.short_sell_list
+
+    def delete_codes_records(self, codes):
+        # 删除codes对应的记录
+        sql = 'delete from {} where SecuCode in {}; '.format(self.table_name, tuple(codes))
+        target = self.init_sql_pool(self.target_cfg)
+        # print(sql)
+        ret = target.delete(sql)
+        print("delete count: {}".format(ret))
+        target.dispose()
 

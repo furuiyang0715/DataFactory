@@ -1479,10 +1479,9 @@ class ZHHumanTools(CommonHumamTools):
     def delete_codes_records(self, codes):
         # 删除codes对应的记录
         sql = 'delete from {} where SecuCode in {}; '.format(self.table_name, tuple(codes))
-        print(sql)
         target = self.init_sql_pool(self.target_cfg)
         ret = target.delete(sql)
-        print(ret)
+        logger.info("delete count: {}".format(ret))
         target.dispose()
 
     def _process(self):
