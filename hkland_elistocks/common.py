@@ -187,6 +187,16 @@ class CommonHumamTools(object):
         return ret
 
     def insert(self, data):
+        in_date = data.get("InDate")
+        if isinstance(in_date, datetime.date):
+            in_date = datetime.datetime(in_date.year, in_date.month, in_date.day)
+            data.update({"InDate": in_date})
+
+        out_date = data.get("OutDate")
+        if isinstance(out_date, datetime.date):
+            out_date = datetime.datetime(out_date.year, out_date.month, out_date.day)
+            data.update({"OutDate": out_date})
+
         fields = sorted(data.keys())
         columns = ", ".join(fields)
         placeholders = ', '.join(['%s'] * len(data))
@@ -241,7 +251,7 @@ class CommonHumamTools(object):
             for h in history_records:
                 _id = h.pop("ID")
                 self.delete_with_id(_id)
-        else: 
+        else:
             to_insert = []
             to_delete = []
 

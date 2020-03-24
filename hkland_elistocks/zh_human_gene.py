@@ -1174,12 +1174,6 @@ class ZHHumanTools(CommonHumamTools):
                                   "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code, 'ParValue': face_value})
                         logger.info(r)
                     self.update_code_info(secu_code, [r1, r2, r3])
-
-                    # for r in (r1, r2, r3):
-                    #     r.update({"TradingType": 3, "SecuCode": secu_code, "InnerCode": inner_code,
-                    #               "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code, 'ParValue': face_value})
-                    #     logger.info(r)
-                    #     self.insert(r)
                 else:
                     r1 = {"TargetCategory": 1, 'InDate': effective_date, "OutDate": None, 'Flag': 1}
                     stats = {"date": effective_date, "s1": 1, "s2": 0, "s3": 0, "s4": 0}
@@ -1189,7 +1183,6 @@ class ZHHumanTools(CommonHumamTools):
                               "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code, 'ParValue': face_value})
                     logger.info(r1)
                     self.update_code_info(secu_code, [r1])
-                    # self.insert(r1)
             else:
                 raise
 
