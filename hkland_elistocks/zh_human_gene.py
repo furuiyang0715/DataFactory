@@ -67,122 +67,120 @@ class ZHHumanTools(CommonHumamTools):
         ret = target.insert(sql)
         target.dispose()
 
-    def sisth_process(self):
-        codes = self.select_spider_records_with_a_num(6)
-        logger.info("len-6: {}".format(codes))   # ['000043']
-        spider_changes = self.show_code_spider_records(codes[0])
-        for change in spider_changes:
-            print(change)
-        print()
-
-        change = spider_changes[0]
-        _change = change.get("Ch_ange")
-        remarks = change.get("Remarks")
-        effective_date = change.get("EffectiveDate")
-
-        secu_code = change.get("SSESCode")
-        inner_code, secu_abbr = self.get_juyuan_inner_code(secu_code)
-        # print(">> ", inner_code)
-        ccass_code, face_value = self.get_ccas_code(secu_code)
-
-        record1 = {
-            "TradingType": 3, "TargetCategory": 1, "SecuCode": secu_code, 'InDate': effective_date,
-            "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
-            'CCASSCode': ccass_code, 'ParValue': face_value}
-        record2 = {
-            "TradingType": 3, "TargetCategory": 3, "SecuCode": secu_code, 'InDate': effective_date,
-            "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
-            'CCASSCode': ccass_code, 'ParValue': face_value}
-        record3 = {
-            "TradingType": 3, "TargetCategory": 4, "SecuCode": secu_code, 'InDate': effective_date,
-            "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
-            'CCASSCode': ccass_code, 'ParValue': face_value}
-
-        change_1 = spider_changes[1]
-        _change = change_1.get("Ch_ange")
-        remarks = change_1.get("Remarks")
-        effective_date = change_1.get("EffectiveDate")
-
-        record1.update({"OutDate": effective_date, 'Flag': 2})
-        record2.update({"OutDate": effective_date, 'Flag': 2})
-        record3.update({"OutDate": effective_date, 'Flag': 2})
-        record4 = {
-            "TradingType": 3, "TargetCategory": 2, "SecuCode": secu_code, 'InDate': effective_date,
-            "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
-            'CCASSCode': ccass_code, 'ParValue': face_value}
-
-        change_2 = spider_changes[2]
-        _change = change_2.get("Ch_ange")
-        remarks = change_2.get("Remarks")
-        effective_date = change_2.get("EffectiveDate")
-
-        record5 = {
-            "TradingType": 3, "TargetCategory": 1, "SecuCode": secu_code, 'InDate': effective_date,
-            "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
-            'CCASSCode': ccass_code, 'ParValue': face_value}
-        record6 = {
-            "TradingType": 3, "TargetCategory": 3, "SecuCode": secu_code, 'InDate': effective_date,
-            "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
-            'CCASSCode': ccass_code, 'ParValue': face_value}
-        record7 = {
-            "TradingType": 3, "TargetCategory": 4, "SecuCode": secu_code, 'InDate': effective_date,
-            "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
-            'CCASSCode': ccass_code, 'ParValue': face_value}
-        record4.update({"OutDate": effective_date, 'Flag': 2})
-
-        change_3 = spider_changes[3]
-        _change = change_3.get("Ch_ange")
-        remarks = change_3.get("Remarks")
-        effective_date = change_3.get("EffectiveDate")
-
-        record5.update({"OutDate": effective_date, 'Flag': 2})
-        record6.update({"OutDate": effective_date, 'Flag': 2})
-        record7.update({"OutDate": effective_date, 'Flag': 2})
-        record8 = {
-            "TradingType": 3, "TargetCategory": 2, "SecuCode": secu_code, 'InDate': effective_date,
-            "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
-            'CCASSCode': ccass_code, 'ParValue': face_value}
-
-        change_4 = spider_changes[4]
-        _change = change_4.get("Ch_ange")
-        remarks = change_4.get("Remarks")
-        effective_date = change_4.get("EffectiveDate")
-
-        # SZSE Stock Code and Stock Name are changed to 001914 and CHINA MERCHANTS PPTY OPERATION&SERVICE respectively
-        # Change is resulted from the announcement issued on the SZSE website on 6 December 2019 by that listed company. For details, please refer to http://www.szse.cn/disclosure/listed/bulletinDetail/index.html?401ef940-f509-4c81-a73c-75b60dd905b9 (Chinese Version Only).
-        # 此处将 secu_code 改为 001914
-        # 所以最后一次插入的代码是 001914
-        secu_code = '001914'
-        inner_code, secu_abbr = self.get_juyuan_inner_code(secu_code)
-        # print(">> ", inner_code)
-
-        change_5 = spider_changes[5]
-        _change = change_5.get("Ch_ange")
-        remarks = change_5.get("Remarks")
-        effective_date = change_5.get("EffectiveDate")
-
-        record8.update({"OutDate": effective_date, 'Flag': 2})
-        record9 = {
-            "TradingType": 3, "TargetCategory": 1, "SecuCode": secu_code, 'InDate': effective_date,
-            "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
-            'CCASSCode': ccass_code, 'ParValue': face_value}
-        record10 = {
-            "TradingType": 3, "TargetCategory": 3, "SecuCode": secu_code, 'InDate': effective_date,
-            "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
-            'CCASSCode': ccass_code, 'ParValue': face_value}
-        record11 = {
-            "TradingType": 3, "TargetCategory": 4, "SecuCode": secu_code, 'InDate': effective_date,
-            "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
-            'CCASSCode': ccass_code, 'ParValue': face_value}
-
-        stats = {"date": effective_date, "s1": 1, "s2": 0, "s3": 1, "s4": 1}
-        logger.info(stats)
-        self.assert_stats(stats, secu_code)
-
-        for r in [record1, record2, record3, record4, record5, record6, record7, record8, record9, record10, record11]:
-            r.update({"InnerCode": inner_code})
-            logger.info(r)
-            self.insert(r)
+    # def sisth_process(self):
+    #     codes = self.select_spider_records_with_a_num(6)
+    #     logger.info("LEN-6: {}".format(codes))   # ['000043']
+    #     spider_changes = self.show_code_spider_records(codes[0])
+    #     for change in spider_changes:
+    #         print(change)
+    #     print()
+    #
+    #     change = spider_changes[0]
+    #     _change = change.get("Ch_ange")
+    #     remarks = change.get("Remarks")
+    #     effective_date = change.get("EffectiveDate")
+    #
+    #     secu_code = change.get("SSESCode")
+    #     inner_code, secu_abbr = self.get_juyuan_inner_code(secu_code)
+    #     ccass_code, face_value = self.get_ccas_code(secu_code)
+    #
+    #     record1 = {
+    #         "TradingType": self.trade_type, "TargetCategory": 1, "SecuCode": secu_code, 'InDate': effective_date,
+    #         "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
+    #         'CCASSCode': ccass_code, 'ParValue': face_value}
+    #     record2 = {
+    #         "TradingType": self.trade_type, "TargetCategory": 3, "SecuCode": secu_code, 'InDate': effective_date,
+    #         "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
+    #         'CCASSCode': ccass_code, 'ParValue': face_value}
+    #     record3 = {
+    #         "TradingType": self.trade_type, "TargetCategory": 4, "SecuCode": secu_code, 'InDate': effective_date,
+    #         "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
+    #         'CCASSCode': ccass_code, 'ParValue': face_value}
+    #
+    #     change_1 = spider_changes[1]
+    #     _change = change_1.get("Ch_ange")
+    #     remarks = change_1.get("Remarks")
+    #     effective_date = change_1.get("EffectiveDate")
+    #
+    #     record1.update({"OutDate": effective_date, 'Flag': 2})
+    #     record2.update({"OutDate": effective_date, 'Flag': 2})
+    #     record3.update({"OutDate": effective_date, 'Flag': 2})
+    #     record4 = {
+    #         "TradingType": self.trade_type, "TargetCategory": 2, "SecuCode": secu_code, 'InDate': effective_date,
+    #         "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
+    #         'CCASSCode': ccass_code, 'ParValue': face_value}
+    #
+    #     change_2 = spider_changes[2]
+    #     _change = change_2.get("Ch_ange")
+    #     remarks = change_2.get("Remarks")
+    #     effective_date = change_2.get("EffectiveDate")
+    #
+    #     record5 = {
+    #         "TradingType": self.trade_type, "TargetCategory": 1, "SecuCode": secu_code, 'InDate': effective_date,
+    #         "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
+    #         'CCASSCode': ccass_code, 'ParValue': face_value}
+    #     record6 = {
+    #         "TradingType": self.trade_type, "TargetCategory": 3, "SecuCode": secu_code, 'InDate': effective_date,
+    #         "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
+    #         'CCASSCode': ccass_code, 'ParValue': face_value}
+    #     record7 = {
+    #         "TradingType": self.trade_type, "TargetCategory": 4, "SecuCode": secu_code, 'InDate': effective_date,
+    #         "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
+    #         'CCASSCode': ccass_code, 'ParValue': face_value}
+    #     record4.update({"OutDate": effective_date, 'Flag': 2})
+    #
+    #     change_3 = spider_changes[3]
+    #     _change = change_3.get("Ch_ange")
+    #     remarks = change_3.get("Remarks")
+    #     effective_date = change_3.get("EffectiveDate")
+    #
+    #     record5.update({"OutDate": effective_date, 'Flag': 2})
+    #     record6.update({"OutDate": effective_date, 'Flag': 2})
+    #     record7.update({"OutDate": effective_date, 'Flag': 2})
+    #     record8 = {
+    #         "TradingType": self.trade_type, "TargetCategory": 2, "SecuCode": secu_code, 'InDate': effective_date,
+    #         "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
+    #         'CCASSCode': ccass_code, 'ParValue': face_value}
+    #
+    #     change_4 = spider_changes[4]
+    #     _change = change_4.get("Ch_ange")
+    #     remarks = change_4.get("Remarks")
+    #     effective_date = change_4.get("EffectiveDate")
+    #
+    #     # SZSE Stock Code and Stock Name are changed to 001914 and CHINA MERCHANTS PPTY OPERATION&SERVICE respectively
+    #     # Change is resulted from the announcement issued on the SZSE website on 6 December 2019 by that listed company. For details, please refer to http://www.szse.cn/disclosure/listed/bulletinDetail/index.html?401ef940-f509-4c81-a73c-75b60dd905b9 (Chinese Version Only).
+    #     # 此处将 secu_code 改为 001914
+    #     # 所以最后一次插入的代码是 001914
+    #     secu_code = '001914'
+    #     inner_code, secu_abbr = self.get_juyuan_inner_code(secu_code)
+    #
+    #     change_5 = spider_changes[5]
+    #     _change = change_5.get("Ch_ange")
+    #     remarks = change_5.get("Remarks")
+    #     effective_date = change_5.get("EffectiveDate")
+    #
+    #     record8.update({"OutDate": effective_date, 'Flag': 2})
+    #     record9 = {
+    #         "TradingType": 3, "TargetCategory": 1, "SecuCode": secu_code, 'InDate': effective_date,
+    #         "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
+    #         'CCASSCode': ccass_code, 'ParValue': face_value}
+    #     record10 = {
+    #         "TradingType": 3, "TargetCategory": 3, "SecuCode": secu_code, 'InDate': effective_date,
+    #         "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
+    #         'CCASSCode': ccass_code, 'ParValue': face_value}
+    #     record11 = {
+    #         "TradingType": 3, "TargetCategory": 4, "SecuCode": secu_code, 'InDate': effective_date,
+    #         "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
+    #         'CCASSCode': ccass_code, 'ParValue': face_value}
+    #
+    #     stats = {"date": effective_date, "s1": 1, "s2": 0, "s3": 1, "s4": 1}
+    #     logger.info(stats)
+    #     self.assert_stats(stats, secu_code)
+    #
+    #     for r in [record1, record2, record3, record4, record5, record6, record7, record8, record9, record10, record11]:
+    #         r.update({"InnerCode": inner_code})
+    #         logger.info(r)
+    #         self.insert(r)
 
     def fifth_process(self):
         codes = self.select_spider_records_with_a_num(5)
@@ -1201,16 +1199,15 @@ class ZHHumanTools(CommonHumamTools):
                 raise
 
     def _process(self):
-        # self.sisth_process()
 
         self.fifth_process()
 
-        # self.fourth_process()
+        self.fourth_process()
 
-        # self.third_process()
+        self.third_process()
 
-        # self.second_process()
+        self.second_process()
 
-        # self.first_process()
+        self.first_process()
 
         pass
