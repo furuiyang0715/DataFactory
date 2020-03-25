@@ -47,6 +47,7 @@ class SHHumanTools(CommonHumamTools):
         self.stats_remove_margin_and_shortsell = 'Remove from List of Eligible SSE Securities for Margin Trading and List of Eligible SSE Securities for Short Selling'
 
         self.sentense1 = 'This stock will also be added to the List of Eligible SSE Securities for Margin Trading and the List of Eligible SSE Securities for Short Selling as it is also included in SSE stock list for margin trading and shortselling.'
+        # self.sentense4 = 'This stock will also be added to the List of Eligible SSE Securities for Margin Trading and the List of Eligible SSE Securities for Short Selling as it is also included in SSE stock list for margin trading and shortselling.'
         self.sentense2 = 'Initial list of securities eligible for buy and sell'
         self.sentense3 = 'This stock will also be removed from the List of Eligible SSE Securities for Margin Trading and the List of Eligible SSE Securities for Short Selling.'
 

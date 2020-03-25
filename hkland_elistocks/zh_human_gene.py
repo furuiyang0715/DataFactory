@@ -456,7 +456,7 @@ class ZHHumanTools(CommonHumamTools):
 
     def fourth_process(self):
         codes = self.select_spider_records_with_a_num(4)
-        logger.info("zh-len-4:{}".format(codes))
+        logger.info("ZH-LEN-4:{}".format(codes))
         for code in codes:
             if code in ("002367", "001696", "002210"):
                 print()
@@ -479,9 +479,9 @@ class ZHHumanTools(CommonHumamTools):
                 assert _change == self.stats_addition and self.sentense1 not in remarks and self.sentense2 not in remarks
 
                 record1 = {
-                    "TradingType": 3, "TargetCategory": 1, "SecuCode": secu_code, 'InDate': effective_date,
-                    "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
-                    'CCASSCode': ccass_code, 'ParValue': face_value}
+                    "TradingType": self.trade_type, "TargetCategory": 1, "SecuCode": secu_code,
+                    'InDate': effective_date, "OutDate": None, 'Flag': 1, "InnerCode": inner_code,
+                    "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code, 'ParValue': face_value}
 
                 change_1 = spider_changes[1]
                 _change = change_1.get("Ch_ange")
@@ -491,11 +491,11 @@ class ZHHumanTools(CommonHumamTools):
                 assert _change == self.stats_add_margin_and_shortsell
 
                 record2 = {
-                    "TradingType": 3, "TargetCategory": 3, "SecuCode": secu_code, 'InDate': effective_date,
+                    "TradingType": self.trade_type, "TargetCategory": 3, "SecuCode": secu_code, 'InDate': effective_date,
                     "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
                     'CCASSCode': ccass_code, 'ParValue': face_value}
                 record3 = {
-                    "TradingType": 3, "TargetCategory": 4, "SecuCode": secu_code, 'InDate': effective_date,
+                    "TradingType": self.trade_type, "TargetCategory": 4, "SecuCode": secu_code, 'InDate': effective_date,
                     "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
                     'CCASSCode': ccass_code, 'ParValue': face_value}
 
@@ -507,9 +507,9 @@ class ZHHumanTools(CommonHumamTools):
                 if code in ("002367", "001696"):
                     assert _change == self.stats_transfer and self.sentense3 in remarks
                     record4 = {
-                        "TradingType": 3, "TargetCategory": 2, "SecuCode": secu_code, 'InDate': effective_date,
-                        "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
-                        'CCASSCode': ccass_code, 'ParValue': face_value}
+                        "TradingType": self.trade_type, "TargetCategory": 2, "SecuCode": secu_code,
+                        'InDate': effective_date, "OutDate": None, 'Flag': 1, "InnerCode": inner_code,
+                        "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code, 'ParValue': face_value}
                     record1.update({"OutDate": effective_date, 'Flag': 2})
                     record2.update({"OutDate": effective_date, 'Flag': 2})
                     record3.update({"OutDate": effective_date, 'Flag': 2})
@@ -523,26 +523,26 @@ class ZHHumanTools(CommonHumamTools):
 
                     record4.update({"OutDate": effective_date, 'Flag': 2})
                     record5 = {
-                        "TradingType": 3, "TargetCategory": 1, "SecuCode": secu_code, 'InDate': effective_date,
-                        "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
-                        'CCASSCode': ccass_code, 'ParValue': face_value}
+                        "TradingType": self.trade_type, "TargetCategory": 1, "SecuCode": secu_code,
+                        'InDate': effective_date, "OutDate": None, 'Flag': 1, "InnerCode": inner_code,
+                        "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code, 'ParValue': face_value}
                     record6 = {
-                        "TradingType": 3, "TargetCategory": 3, "SecuCode": secu_code, 'InDate': effective_date,
-                        "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
-                        'CCASSCode': ccass_code, 'ParValue': face_value}
+                        "TradingType": self.trade_type, "TargetCategory": 3, "SecuCode": secu_code,
+                        'InDate': effective_date, "OutDate": None, 'Flag': 1, "InnerCode": inner_code,
+                        "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code, 'ParValue': face_value}
                     record7 = {
-                        "TradingType": 3, "TargetCategory": 4, "SecuCode": secu_code, 'InDate': effective_date,
-                        "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
-                        'CCASSCode': ccass_code, 'ParValue': face_value}
+                        "TradingType": self.trade_type, "TargetCategory": 4, "SecuCode": secu_code,
+                        'InDate': effective_date, "OutDate": None, 'Flag': 1, "InnerCode": inner_code,
+                        "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code, 'ParValue': face_value}
 
                     stats = {"date": effective_date, "s1": 1, "s2": 0, "s3": 1, "s4": 1}
                     logger.info(stats)
                     self.assert_stats(stats, secu_code)
                     for r in (record1, record2, record3, record4, record5, record6, record7):
                         logger.info(r)
-                        self.insert(r)
+                    self.update_code_info(secu_code, [record1, record2, record3, record4, record5, record6, record7])
 
-                elif code in ("002210"):
+                elif code in {"002210", }:    # This is a big bug  TODO
                     print()
                     logger.info(code)
                     assert _change == self.stats_remove_margin_and_shortsell
@@ -557,16 +557,16 @@ class ZHHumanTools(CommonHumamTools):
                     assert _change == self.stats_transfer and self.sentense3 not in remarks
                     record1.update({"OutDate": effective_date, 'Flag': 2})
                     record4 = {
-                        "TradingType": 3, "TargetCategory": 2, "SecuCode": secu_code, 'InDate': effective_date,
-                        "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
-                        'CCASSCode': ccass_code, 'ParValue': face_value}
+                        "TradingType": self.trade_type, "TargetCategory": 2, "SecuCode": secu_code,
+                        'InDate': effective_date, "OutDate": None, 'Flag': 1, "InnerCode": inner_code,
+                        "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code, 'ParValue': face_value}
 
                     stats = {"date": effective_date, "s1": 0, "s2": 1, "s3": 0, "s4": 0}
                     logger.info(stats)
                     self.assert_stats(stats, secu_code)
                     for r in (record1, record2, record3, record4):
                         logger.info(r)
-                        self.insert(r)
+                    self.update_code_info(secu_code, [record1, record2, record3, record4])
 
             elif code in {'002210',  '000652', '002045',  '002135', '002334', '002649', '002342', '002083', '002510', '002564', '000523', '002021', "000498", "002192", "000016", "000070", "000301", "000861", "000936", "002100", "002124", "002446", "002567", "002792",'300348', '300352', '002741', "002782", "000652", "002045", "002135", '002334', '002649', "002342", "000532",  "002564", "002510"}:
                 print()
@@ -589,9 +589,9 @@ class ZHHumanTools(CommonHumamTools):
                 assert _change in self.stats_addition
                 assert self.sentense1 not in remarks
                 record1 = {
-                    "TradingType": 3, "TargetCategory": 1, "SecuCode": secu_code, 'InDate': effective_date,
-                    "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
-                    'CCASSCode': ccass_code, 'ParValue': face_value}
+                    "TradingType": self.trade_type, "TargetCategory": 1, "SecuCode": secu_code,
+                    'InDate': effective_date, "OutDate": None, 'Flag': 1, "InnerCode": inner_code,
+                    "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code, 'ParValue': face_value}
 
                 change_1 = spider_changes[1]
                 _change = change_1.get("Ch_ange")
@@ -605,9 +605,9 @@ class ZHHumanTools(CommonHumamTools):
                 assert self.sentense3 not in remarks
                 record1.update({"OutDate": effective_date, 'Flag': 2})
                 record2 = {
-                    "TradingType": 3, "TargetCategory": 2, "SecuCode": secu_code, 'InDate': effective_date,
-                    "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
-                    'CCASSCode': ccass_code, 'ParValue': face_value}
+                    "TradingType": self.trade_type, "TargetCategory": 2, "SecuCode": secu_code,
+                    'InDate': effective_date, "OutDate": None, 'Flag': 1, "InnerCode": inner_code,
+                    "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code, 'ParValue': face_value}
 
                 change_2 = spider_changes[2]
                 _change = change_2.get("Ch_ange")
@@ -620,9 +620,9 @@ class ZHHumanTools(CommonHumamTools):
                 assert _change == self.stats_recover
 
                 record3 = {
-                    "TradingType": 3, "TargetCategory": 1, "SecuCode": secu_code, 'InDate': effective_date,
-                    "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
-                    'CCASSCode': ccass_code, 'ParValue': face_value}
+                    "TradingType": self.trade_type, "TargetCategory": 1, "SecuCode": secu_code,
+                    'InDate': effective_date, "OutDate": None, 'Flag': 1, "InnerCode": inner_code,
+                    "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code, 'ParValue': face_value}
                 record2.update({"OutDate": effective_date, 'Flag': 2})
 
                 change_3 = spider_changes[3]
@@ -636,29 +636,30 @@ class ZHHumanTools(CommonHumamTools):
                 if _change == self.stats_transfer:
                     record3.update({"OutDate": effective_date, 'Flag': 2})
                     record4 = {
-                        "TradingType": 3, "TargetCategory": 2, "SecuCode": secu_code, 'InDate': effective_date,
-                        "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
-                        'CCASSCode': ccass_code, 'ParValue': face_value}
+                        "TradingType": self.trade_type, "TargetCategory": 2, "SecuCode": secu_code,
+                        'InDate': effective_date, "OutDate": None, 'Flag': 1, "InnerCode": inner_code,
+                        "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code, 'ParValue': face_value}
                     stats = {"date": effective_date, "s1": 0, "s2": 1, "s3": 0, "s4": 0}
                     logger.info(stats)
                     self.assert_stats(stats, secu_code)
                     for r in (record1, record2, record3, record4):
                         logger.info(r)
-                        self.insert(r)
+                    self.update_code_info(secu_code, [record1, record2, record3, record4])
+
                 elif _change == self.stats_add_margin_and_shortsell:
                     record4 = {
-                        "TradingType": 3, "TargetCategory": 3, "SecuCode": secu_code, 'InDate': effective_date,
-                        "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
-                        'CCASSCode': ccass_code, 'ParValue': face_value}
+                        "TradingType": self.trade_type, "TargetCategory": 3, "SecuCode": secu_code,
+                        'InDate': effective_date, "OutDate": None, 'Flag': 1, "InnerCode": inner_code,
+                        "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code, 'ParValue': face_value}
                     record5 = {
-                        "TradingType": 3, "TargetCategory": 4, "SecuCode": secu_code, 'InDate': effective_date,
-                        "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
-                        'CCASSCode': ccass_code, 'ParValue': face_value}
+                        "TradingType": self.trade_type, "TargetCategory": 4, "SecuCode": secu_code,
+                        'InDate': effective_date, "OutDate": None, 'Flag': 1, "InnerCode": inner_code,
+                        "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code, 'ParValue': face_value}
                     stats = {"date": effective_date, "s1": 1, "s2": 0, "s3": 1, "s4": 1}
                     self.assert_stats(stats, secu_code)
                     for r in (record1, record2, record3, record4, record5):
                         logger.info(r)
-                        self.insert(r)
+                    self.update_code_info(secu_code, [record1, record2, record3, record4, record5])
                 else:
                     raise Exception("请检查数据")
 
@@ -690,17 +691,17 @@ class ZHHumanTools(CommonHumamTools):
                 effective_date = change_1.get("EffectiveDate")
 
                 record1 = {
-                    "TradingType": 3, "TargetCategory": 1, "SecuCode": secu_code, 'InDate': effective_date,
-                    "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
-                    'CCASSCode': ccass_code, 'ParValue': face_value}
+                    "TradingType": self.trade_type, "TargetCategory": 1, "SecuCode": secu_code,
+                    'InDate': effective_date, "OutDate": None, 'Flag': 1, "InnerCode": inner_code,
+                    "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code, 'ParValue': face_value}
                 record2 = {
-                    "TradingType": 3, "TargetCategory": 3, "SecuCode": secu_code, 'InDate': effective_date,
-                    "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
-                    'CCASSCode': ccass_code, 'ParValue': face_value}
+                    "TradingType": self.trade_type, "TargetCategory": 3, "SecuCode": secu_code,
+                    'InDate': effective_date, "OutDate": None, 'Flag': 1, "InnerCode": inner_code,
+                    "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code, 'ParValue': face_value}
                 record3 = {
-                    "TradingType": 3, "TargetCategory": 4, "SecuCode": secu_code, 'InDate': effective_date,
-                    "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
-                    'CCASSCode': ccass_code, 'ParValue': face_value}
+                    "TradingType": self.trade_type, "TargetCategory": 4, "SecuCode": secu_code,
+                    'InDate': effective_date, "OutDate": None, 'Flag': 1, "InnerCode": inner_code,
+                    "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code, 'ParValue': face_value}
 
                 # print("2")
                 # print(_change)
@@ -722,11 +723,11 @@ class ZHHumanTools(CommonHumamTools):
                     if _change == self.stats_add_margin_and_shortsell:
                         # print("加上 3 4 ")
                         record4 = {
-                            "TradingType": 3, "TargetCategory": 3, "SecuCode": secu_code, 'InDate': effective_date,
-                            "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
-                            'CCASSCode': ccass_code, 'ParValue': face_value}
+                            "TradingType": self.trade_type, "TargetCategory": 3, "SecuCode": secu_code,
+                            'InDate': effective_date, "OutDate": None, 'Flag': 1, "InnerCode": inner_code,
+                            "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code, 'ParValue': face_value}
                         record5 = {
-                            "TradingType": 3, "TargetCategory": 4, "SecuCode": secu_code, 'InDate': effective_date,
+                            "TradingType": self.trade_type, "TargetCategory": 4, "SecuCode": secu_code, 'InDate': effective_date,
                             "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
                             'CCASSCode': ccass_code, 'ParValue': face_value}
 
@@ -741,7 +742,7 @@ class ZHHumanTools(CommonHumamTools):
                         record4.update({"OutDate": effective_date, 'Flag': 2})
                         record5.update({"OutDate": effective_date, 'Flag': 2})
                         record6 = {
-                            "TradingType": 3, "TargetCategory": 2, "SecuCode": secu_code, 'InDate': effective_date,
+                            "TradingType": self.trade_type, "TargetCategory": 2, "SecuCode": secu_code, 'InDate': effective_date,
                             "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
                             'CCASSCode': ccass_code, 'ParValue': face_value}
 
@@ -750,14 +751,14 @@ class ZHHumanTools(CommonHumamTools):
                         self.assert_stats(stats, secu_code)
                         for r in (record1, record2, record3, record4, record5, record6):
                             logger.info(r)
-                            self.insert(r)
+                        self.update_code_info(secu_code, [record1, record2, record3, record4, record5, record6])
 
                     elif _change == self.stats_transfer:
                         assert self.sentense3 not in remarks
-                        # print("移出 1, 生成 2")
+                        logger.info("移出 1, 生成 2")
                         record1.update({"OutDate": effective_date, 'Flag': 2})
                         record4 = {
-                            "TradingType": 3, "TargetCategory": 2, "SecuCode": secu_code, 'InDate': effective_date,
+                            "TradingType": self.trade_type, "TargetCategory": 2, "SecuCode": secu_code, 'InDate': effective_date,
                             "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
                             'CCASSCode': ccass_code, 'ParValue': face_value}
 
@@ -769,17 +770,17 @@ class ZHHumanTools(CommonHumamTools):
                         # print(remarks)
 
                         if _change == self.stats_removal:
-                            # print("移出 2 ")
+                            logger.info("移出 2 ")
                             record4.update({"OutDate": effective_date, 'Flag': 2})
                             stats = {"date": effective_date, "s1": 0, "s2": 0, "s3": 0, "s4": 0}
                             self.assert_stats(stats, secu_code)
                             for r in (record1, record2, record3, record4):
                                 logger.info(r)
-                                self.insert(r)
+                            self.update_code_info(secu_code, [record1, record2, record3, record4])
                         else:
                             assert _change == self.stats_recover
                             assert self.sentense1 not in remarks
-                            # print("恢复 1 , 结束 2")
+                            logger.info("恢复 1 , 结束 2")
                             record4.update({"OutDate": effective_date, 'Flag': 2})
                             record5 = {
                                 "TradingType": 3, "TargetCategory": 1, "SecuCode": secu_code, 'InDate': effective_date,
@@ -789,11 +790,11 @@ class ZHHumanTools(CommonHumamTools):
                             self.assert_stats(stats, secu_code)
                             for r in (record1, record2, record3, record4, record5):
                                 logger.info(r)
-                                self.insert(r)
+                            self.update_code_info(secu_code, [record1, record2, record3, record4, record5])
                     else:
                         raise Exception("error")
                 elif _change == self.stats_transfer and self.sentense3 in remarks:
-                    # print("移出 1 3 4 生成 2 ")
+                    logger.info("移出 1 3 4 生成 2 ")
                     change_2 = spider_changes[2]
                     _change = change_2.get("Ch_ange")
                     remarks = change_2.get("Remarks")
@@ -805,7 +806,7 @@ class ZHHumanTools(CommonHumamTools):
                     record2.update({"OutDate": effective_date, 'Flag': 2})
                     record3.update({"OutDate": effective_date, 'Flag': 2})
                     record4 = {
-                        "TradingType": 3, "TargetCategory": 2, "SecuCode": secu_code, 'InDate': effective_date,
+                        "TradingType": self.trade_type, "TargetCategory": 2, "SecuCode": secu_code, 'InDate': effective_date,
                         "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
                         'CCASSCode': ccass_code, 'ParValue': face_value}
 
@@ -813,7 +814,7 @@ class ZHHumanTools(CommonHumamTools):
                     assert self.sentense1 not in remarks
                     # print("恢复 1, 结束 2")
                     record5 = {
-                        "TradingType": 3, "TargetCategory": 1, "SecuCode": secu_code, 'InDate': effective_date,
+                        "TradingType": self.trade_type, "TargetCategory": 1, "SecuCode": secu_code, 'InDate': effective_date,
                         "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
                         'CCASSCode': ccass_code, 'ParValue': face_value}
                     record4.update({"OutDate": effective_date, 'Flag': 2})
@@ -829,7 +830,7 @@ class ZHHumanTools(CommonHumamTools):
                     assert _change == self.stats_transfer    # 移出 1 生成 2
                     record5.update({"OutDate": effective_date, 'Flag': 2})
                     record6 = {
-                        "TradingType": 3, "TargetCategory": 2, "SecuCode": secu_code, 'InDate': effective_date,
+                        "TradingType": self.trade_type, "TargetCategory": 2, "SecuCode": secu_code, 'InDate': effective_date,
                         "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
                         'CCASSCode': ccass_code, 'ParValue': face_value}
 
@@ -838,7 +839,7 @@ class ZHHumanTools(CommonHumamTools):
                     self.assert_stats(stats, secu_code)
                     for r in (record1, record2, record3, record4, record5, record6):
                         logger.info(r)
-                        self.insert(r)
+                    self.update_code_info(secu_code, [record1, record2, record3, record4, record5, record6])
                 else:
                     raise Exception("请检查数据")
 
@@ -1190,10 +1191,12 @@ class ZHHumanTools(CommonHumamTools):
 
         # self.fifth_process()
 
-        # self.fourth_process()
+        self.fourth_process()
 
-        self.third_process()
+        # self.third_process()
 
         # self.second_process()
 
         # self.first_process()
+
+        pass
