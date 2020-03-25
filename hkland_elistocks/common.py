@@ -300,10 +300,10 @@ class CommonHumamTools(object):
         else:
             assert secu_code not in self.short_sell_list
 
-    def delete_codes_records(self, codes):
-        """删除 codes 对应的记录"""
-        sql = 'delete from {} where SecuCode in {}; '.format(self.table_name, tuple(codes))
-        target = self.init_sql_pool(self.target_cfg)
-        ret = target.delete(sql)
-        logger.info("delete count: {}".format(ret))
-        target.dispose()
+    # def delete_codes_records(self, codes):
+    #     """删除 codes 对应的记录"""
+    #     sql = 'delete from {} where SecuCode in {}; '.format(self.table_name, tuple(codes))
+    #     target = self.init_sql_pool(self.target_cfg)
+    #     ret = target.delete(sql)
+    #     logger.info("delete count: {}".format(ret))
+    #     target.dispose()

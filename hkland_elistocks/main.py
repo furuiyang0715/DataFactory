@@ -15,15 +15,15 @@ def main():
     sh._process()
 
 
-    # zh = ZHHumanTools()
-    # if LOCAL:
-    #     zh.create_target_table()
-    # zh._process()
+    zh = ZHHumanTools()
+    if LOCAL:
+        zh.create_target_table()
+    zh._process()
 
 
-    # fix()
-    #
-    # list_check()
+    fix()
+
+    list_check()
 
 
 main()

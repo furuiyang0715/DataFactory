@@ -630,7 +630,7 @@ class SHHumanTools(CommonHumamTools):
 
     def fifth_process(self):
         appear_5_codes = self.select_spider_records_with_a_num(5)
-        logger.info("len-5: {}".format(len(appear_5_codes)))  # 10
+        logger.info("SH-LEN-5: {}".format(len(appear_5_codes)))  # 10
         for code in appear_5_codes:
             print()
             logger.info(code)
@@ -648,7 +648,7 @@ class SHHumanTools(CommonHumamTools):
             if _change == self.stats_addition:
                 assert self.sentense1 not in remarks
                 record1 = {
-                    "TradingType": 1, "TargetCategory": 1, "SecuCode": secu_code, 'InDate': effective_date,
+                    "TradingType": self.trade_type, "TargetCategory": 1, "SecuCode": secu_code, 'InDate': effective_date,
                     "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
                     'CCASSCode': ccass_code, 'ParValue': face_value}
 
@@ -660,11 +660,11 @@ class SHHumanTools(CommonHumamTools):
                 if _change == self.stats_add_margin_and_shortsell:
                     # 将 3 4  也添加进来
                     record2 = {
-                        "TradingType": 1, "TargetCategory": 3, "SecuCode": secu_code, 'InDate': effective_date,
+                        "TradingType": self.trade_type, "TargetCategory": 3, "SecuCode": secu_code, 'InDate': effective_date,
                         "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
                         'CCASSCode': ccass_code, 'ParValue': face_value}
                     record3 = {
-                        "TradingType": 1, "TargetCategory": 4, "SecuCode": secu_code, 'InDate': effective_date,
+                        "TradingType": self.trade_type, "TargetCategory": 4, "SecuCode": secu_code, 'InDate': effective_date,
                         "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
                         'CCASSCode': ccass_code, 'ParValue': face_value}
 
@@ -679,7 +679,7 @@ class SHHumanTools(CommonHumamTools):
                         record2.update({"OutDate": effective_date, 'Flag': 2})
                         record3.update({"OutDate": effective_date, 'Flag': 2})
                         record4 = {
-                            "TradingType": 1, "TargetCategory": 2, "SecuCode": secu_code, 'InDate': effective_date,
+                            "TradingType": self.trade_type, "TargetCategory": 2, "SecuCode": secu_code, 'InDate': effective_date,
                             "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
                             'CCASSCode': ccass_code, 'ParValue': face_value}
 
@@ -692,17 +692,17 @@ class SHHumanTools(CommonHumamTools):
                             # 将 1 3 4 全部恢复, 2 结束
                             if self.sentense1 in remarks:
                                 record5 = {
-                                    "TradingType": 1, "TargetCategory": 1, "SecuCode": secu_code,
+                                    "TradingType": self.trade_type, "TargetCategory": 1, "SecuCode": secu_code,
                                     'InDate': effective_date,
                                     "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
                                     'CCASSCode': ccass_code, 'ParValue': face_value}
                                 record6 = {
-                                    "TradingType": 1, "TargetCategory": 3, "SecuCode": secu_code,
+                                    "TradingType": self.trade_type, "TargetCategory": 3, "SecuCode": secu_code,
                                     'InDate': effective_date,
                                     "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
                                     'CCASSCode': ccass_code, 'ParValue': face_value}
                                 record7 = {
-                                    "TradingType": 1, "TargetCategory": 4, "SecuCode": secu_code,
+                                    "TradingType": self.trade_type, "TargetCategory": 4, "SecuCode": secu_code,
                                     'InDate': effective_date,
                                     "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
                                     'CCASSCode': ccass_code, 'ParValue': face_value}
@@ -718,7 +718,7 @@ class SHHumanTools(CommonHumamTools):
                                     record6.update({"OutDate": effective_date, 'Flag': 2})
                                     record7.update({"OutDate": effective_date, 'Flag': 2})
                                     record8 = {
-                                        "TradingType": 1, "TargetCategory": 2, "SecuCode": secu_code,
+                                        "TradingType": self.trade_type, "TargetCategory": 2, "SecuCode": secu_code,
                                         'InDate': effective_date,
                                         "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
                                         'CCASSCode': ccass_code, 'ParValue': face_value}
@@ -727,10 +727,10 @@ class SHHumanTools(CommonHumamTools):
                                     self.assert_stats(stats, secu_code)
                                     for r in [record1, record2, record3, record4, record5, record6, record7, record8]:
                                         logger.info(r)
-                                        self.insert(r)
+                                    self.update_code_info(secu_code, [record1, record2, record3, record4, record5, record6, record7, record8])
                             else:   # 将 1 恢复 2 结束 3 4 不变 # 600675 601005 603188
                                 record5 = {
-                                    "TradingType": 1, "TargetCategory": 1, "SecuCode": secu_code,
+                                    "TradingType": self.trade_type, "TargetCategory": 1, "SecuCode": secu_code,
                                     'InDate': effective_date,
                                     "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
                                     'CCASSCode': ccass_code, 'ParValue': face_value}
@@ -745,7 +745,7 @@ class SHHumanTools(CommonHumamTools):
                                 if _change == self.stats_transfer:
                                     record5.update({"OutDate": effective_date, 'Flag': 2})
                                     record6 = {
-                                        "TradingType": 1, "TargetCategory": 2, "SecuCode": secu_code,
+                                        "TradingType": self.trade_type, "TargetCategory": 2, "SecuCode": secu_code,
                                         'InDate': effective_date,
                                         "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
                                         'CCASSCode': ccass_code, 'ParValue': face_value}
@@ -754,16 +754,16 @@ class SHHumanTools(CommonHumamTools):
                                     self.assert_stats(stats, secu_code)
                                     for r in (record1, record2, record3, record4, record5, record6):
                                         logger.info(r)
-                                        self.insert(r)
+                                    self.update_code_info(secu_code, [record1, record2, record3, record4, record5, record6])
 
                                 elif _change == self.stats_add_margin_and_shortsell:    # 添加 3 4
                                     record6 = {
-                                        "TradingType": 1, "TargetCategory": 3, "SecuCode": secu_code,
+                                        "TradingType": self.trade_type, "TargetCategory": 3, "SecuCode": secu_code,
                                         'InDate': effective_date,
                                         "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
                                         'CCASSCode': ccass_code, 'ParValue': face_value}
                                     record7 = {
-                                        "TradingType": 1, "TargetCategory": 4, "SecuCode": secu_code,
+                                        "TradingType": self.trade_type, "TargetCategory": 4, "SecuCode": secu_code,
                                         'InDate': effective_date,
                                         "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
                                         'CCASSCode': ccass_code, 'ParValue': face_value}
@@ -772,7 +772,7 @@ class SHHumanTools(CommonHumamTools):
                                     self.assert_stats(stats, secu_code)
                                     for r in [record1, record2, record3, record4, record5, record6, record7]:
                                         logger.info(r)
-                                        self.insert(r)
+                                    self.update_code_info(secu_code, [record1, record2, record3, record4, record5, record6, record7])
                                 else:
                                     raise Exception("5 more choice")
                         else:
@@ -790,7 +790,7 @@ class SHHumanTools(CommonHumamTools):
                         assert _change == self.stats_transfer    # 将 1 移除 生成 2
                         record1.update({"OutDate": effective_date, 'Flag': 2})
                         record4 = {
-                            "TradingType": 1, "TargetCategory": 2, "SecuCode": secu_code, 'InDate': effective_date,
+                            "TradingType": self.trade_type, "TargetCategory": 2, "SecuCode": secu_code, 'InDate': effective_date,
                             "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
                             'CCASSCode': ccass_code, 'ParValue': face_value}
 
@@ -806,13 +806,13 @@ class SHHumanTools(CommonHumamTools):
                         self.assert_stats(stats, secu_code)
                         for r in [record1, record2, record3, record4]:
                             logger.info(r)
-                            self.insert(r)
+                        self.update_code_info(secu_code, [record1, record2, record3, record4])
                     else:
                         raise Exception("3 more choice")
                 elif _change == self.stats_transfer:
                     record1.update({"OutDate": effective_date, 'Flag': 2})
                     record2 = {
-                        "TradingType": 1, "TargetCategory": 2, "SecuCode": secu_code, 'InDate': effective_date,
+                        "TradingType": self.trade_type, "TargetCategory": 2, "SecuCode": secu_code, 'InDate': effective_date,
                         "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
                         'CCASSCode': ccass_code, 'ParValue': face_value}
 
@@ -825,17 +825,17 @@ class SHHumanTools(CommonHumamTools):
                     if self.sentense1 in remarks:  # 将 1 3 4  全部加入  结束 2
                         record2.update({"OutDate": effective_date, 'Flag': 2})
                         record3 = {
-                            "TradingType": 1, "TargetCategory": 1, "SecuCode": secu_code,
+                            "TradingType": self.trade_type, "TargetCategory": 1, "SecuCode": secu_code,
                             'InDate': effective_date,
                             "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
                             'CCASSCode': ccass_code, 'ParValue': face_value}
                         record4 = {
-                            "TradingType": 1, "TargetCategory": 3, "SecuCode": secu_code,
+                            "TradingType": self.trade_type, "TargetCategory": 3, "SecuCode": secu_code,
                             'InDate': effective_date,
                             "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
                             'CCASSCode': ccass_code, 'ParValue': face_value}
                         record5 = {
-                            "TradingType": 1, "TargetCategory": 4, "SecuCode": secu_code,
+                            "TradingType": self.trade_type, "TargetCategory": 4, "SecuCode": secu_code,
                             'InDate': effective_date,
                             "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
                             'CCASSCode': ccass_code, 'ParValue': face_value}
@@ -853,7 +853,7 @@ class SHHumanTools(CommonHumamTools):
                         record4.update({"OutDate": effective_date, 'Flag': 2})
                         record5.update({"OutDate": effective_date, 'Flag': 2})
                         record6 = {
-                            "TradingType": 1, "TargetCategory": 2, "SecuCode": secu_code, 'InDate': effective_date,
+                            "TradingType": self.trade_type, "TargetCategory": 2, "SecuCode": secu_code, 'InDate': effective_date,
                             "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
                             'CCASSCode': ccass_code, 'ParValue': face_value}
 
@@ -867,17 +867,17 @@ class SHHumanTools(CommonHumamTools):
                         # 恢复     1 3 4  结束 2
                         record6.update({"OutDate": effective_date, 'Flag': 2})
                         record7 = {
-                            "TradingType": 1, "TargetCategory": 1, "SecuCode": secu_code,
+                            "TradingType": self.trade_type, "TargetCategory": 1, "SecuCode": secu_code,
                             'InDate': effective_date,
                             "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
                             'CCASSCode': ccass_code, 'ParValue': face_value}
                         record8 = {
-                            "TradingType": 1, "TargetCategory": 3, "SecuCode": secu_code,
+                            "TradingType": self.trade_type, "TargetCategory": 3, "SecuCode": secu_code,
                             'InDate': effective_date,
                             "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
                             'CCASSCode': ccass_code, 'ParValue': face_value}
                         record9 = {
-                            "TradingType": 1, "TargetCategory": 4, "SecuCode": secu_code,
+                            "TradingType": self.trade_type, "TargetCategory": 4, "SecuCode": secu_code,
                             'InDate': effective_date,
                             "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
                             'CCASSCode': ccass_code, 'ParValue': face_value}
@@ -888,12 +888,12 @@ class SHHumanTools(CommonHumamTools):
 
                         for r in [record1, record2, record3, record4, record5, record6, record7, record8, record9]:
                             logger.info(r)
-                            self.insert(r)
+                        self.update_code_info(secu_code, [record1, record2, record3, record4, record5, record6, record7, record8, record9])
                     else:
                         # 仅将 1 加入 结束 2
                         record2.update({"OutDate": effective_date, 'Flag': 2})
                         record3 = {
-                            "TradingType": 1, "TargetCategory": 1, "SecuCode": secu_code,
+                            "TradingType": self.trade_type, "TargetCategory": 1, "SecuCode": secu_code,
                             'InDate': effective_date,
                             "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
                             'CCASSCode': ccass_code, 'ParValue': face_value}
@@ -907,12 +907,12 @@ class SHHumanTools(CommonHumamTools):
                         assert _change == self.stats_add_margin_and_shortsell
                         # 将 3 4 加入
                         record4 = {
-                            "TradingType": 1, "TargetCategory": 3, "SecuCode": secu_code,
+                            "TradingType": self.trade_type, "TargetCategory": 3, "SecuCode": secu_code,
                             'InDate': effective_date,
                             "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
                             'CCASSCode': ccass_code, 'ParValue': face_value}
                         record5 = {
-                            "TradingType": 1, "TargetCategory": 4, "SecuCode": secu_code,
+                            "TradingType": self.trade_type, "TargetCategory": 4, "SecuCode": secu_code,
                             'InDate': effective_date,
                             "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
                             'CCASSCode': ccass_code, 'ParValue': face_value}
@@ -930,7 +930,7 @@ class SHHumanTools(CommonHumamTools):
                         record4.update({"OutDate": effective_date, 'Flag': 2})
                         record5.update({"OutDate": effective_date, 'Flag': 2})
                         record6 = {
-                            "TradingType": 1, "TargetCategory": 2, "SecuCode": secu_code, 'InDate': effective_date,
+                            "TradingType": self.trade_type, "TargetCategory": 2, "SecuCode": secu_code, 'InDate': effective_date,
                             "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
                             'CCASSCode': ccass_code, 'ParValue': face_value}
 
@@ -939,7 +939,7 @@ class SHHumanTools(CommonHumamTools):
                         self.assert_stats(stats, secu_code)
                         for r in [record1, record2, record3, record4, record5, record6]:
                             logger.info(r)
-                            self.insert(r)
+                        self.update_code_info(secu_code, [record1, record2, record3, record4, record5, record6])
                 else:
                     raise Exception("2 more choices")
             else:
@@ -947,7 +947,7 @@ class SHHumanTools(CommonHumamTools):
 
     def sixth_process(self):
         appear_6_codes = self.select_spider_records_with_a_num(6)
-        logger.info("len-6: {}".format(len(appear_6_codes)))   # 1
+        logger.info("SH-LEN-6: {}".format(len(appear_6_codes)))   # 1
         code = appear_6_codes[0]
         spider_changes = self.show_code_spider_records(code)
         for c in spider_changes:
@@ -964,7 +964,7 @@ class SHHumanTools(CommonHumamTools):
         effective_date = change.get("EffectiveDate")
         if _change == self.stats_addition:
             record1 = {
-                "TradingType": 1, "TargetCategory": 1, "SecuCode": secu_code, 'InDate': effective_date,
+                "TradingType": self.trade_type, "TargetCategory": 1, "SecuCode": secu_code, 'InDate': effective_date,
                 "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
                 'CCASSCode': ccass_code, 'ParValue': face_value}
 
@@ -976,7 +976,7 @@ class SHHumanTools(CommonHumamTools):
                 # 将 1 移出
                 record1.update({"OutDate": effective_date, 'Flag': 2})
                 record2 = {
-                    "TradingType": 1, "TargetCategory": 2, "SecuCode": secu_code, 'InDate': effective_date,
+                    "TradingType": self.trade_type, "TargetCategory": 2, "SecuCode": secu_code, 'InDate': effective_date,
                     "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
                     'CCASSCode': ccass_code, 'ParValue': face_value}
 
@@ -990,7 +990,7 @@ class SHHumanTools(CommonHumamTools):
                     # 将 1 恢复
                     record2.update({"OutDate": effective_date, "Flag": 2})
                     record3 = {
-                        "TradingType": 1, "TargetCategory": 1, "SecuCode": secu_code, 'InDate': effective_date,
+                        "TradingType": self.trade_type, "TargetCategory": 1, "SecuCode": secu_code, 'InDate': effective_date,
                         "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
                         'CCASSCode': ccass_code, 'ParValue': face_value}
 
@@ -1004,7 +1004,7 @@ class SHHumanTools(CommonHumamTools):
                         # 将 1 移出
                         record3.update({"OutDate": effective_date, "Flag": 2})
                         record4 = {
-                            "TradingType": 1, "TargetCategory": 2, "SecuCode": secu_code, 'InDate': effective_date,
+                            "TradingType": self.trade_type, "TargetCategory": 2, "SecuCode": secu_code, 'InDate': effective_date,
                             "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
                             'CCASSCode': ccass_code, 'ParValue': face_value}
 
@@ -1015,7 +1015,7 @@ class SHHumanTools(CommonHumamTools):
                         if _change == self.stats_recover:
                             record4.update({"OutDate": effective_date, "Flag": 2})
                             record5 = {
-                                "TradingType": 1, "TargetCategory": 1, "SecuCode": secu_code, 'InDate': effective_date,
+                                "TradingType": self.trade_type, "TargetCategory": 1, "SecuCode": secu_code, 'InDate': effective_date,
                                 "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
                                 'CCASSCode': ccass_code, 'ParValue': face_value}
 
@@ -1026,7 +1026,7 @@ class SHHumanTools(CommonHumamTools):
                             if _change == self.stats_transfer:
                                 record5.update({"OutDate": effective_date, 'Flag': 2})
                                 record6 = {
-                                    "TradingType": 1, "TargetCategory": 2, "SecuCode": secu_code,
+                                    "TradingType": self.trade_type, "TargetCategory": 2, "SecuCode": secu_code,
                                     'InDate': effective_date,
                                     "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr,
                                     'CCASSCode': ccass_code, 'ParValue': face_value}
@@ -1034,7 +1034,7 @@ class SHHumanTools(CommonHumamTools):
                                                   secu_code)
                                 for record in [record1, record2, record3, record4, record5, record6]:
                                     logger.info(record)
-                                    self.insert(record)
+                                self.update_code_info(secu_code, [record1, record2, record3, record4, record5, record6])
 
     def _process(self):
         # self.first_process()
@@ -1043,10 +1043,10 @@ class SHHumanTools(CommonHumamTools):
 
         # self.third_process()
 
-        self.fourth_process()
-        #
+        # self.fourth_process()
+
         # self.fifth_process()
-        #
-        # self.sixth_process()
+
+        self.sixth_process()
 
         pass

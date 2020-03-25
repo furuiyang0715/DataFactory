@@ -1,3 +1,4 @@
+import copy
 import pprint
 
 from hkland_elistocks.sh_human_gene import SHHumanTools
@@ -39,7 +40,7 @@ def process_601200():
     # 首次是加入 2
     sh = SHHumanTools()
     spider_changes = sh.show_code_spider_records("601200")
-    print(pprint.pformat(spider_changes))
+    # print(pprint.pformat(spider_changes))
     change = spider_changes[0]
     _change = change.get("Ch_ange")
     remarks = change.get("Remarks")
@@ -65,13 +66,13 @@ def process_601200():
     sh.assert_stats(stats, secu_code)
     for r in (record1, record2):
         print(r)
-        sh.insert(r)
+    sh.update_code_info(secu_code, [record1, record2])
 
 
 def process_601313():
     sh = SHHumanTools()
     spider_changes = sh.show_code_spider_records("601313")
-    print(pprint.pformat(spider_changes))
+    # print(pprint.pformat(spider_changes))
     change = spider_changes[0]
     _change = change.get("Ch_ange")
     remarks = change.get("Remarks")
@@ -94,52 +95,60 @@ def process_601313():
         'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code,
         'ParValue': face_value}
 
-    # stats = {"date": effective_date, "s1": 0, "s2": 1, "s3": 0, "s4": 0}
-    # sh.assert_stats(stats, secu_code)
-
-    # 改名为 601360
-    # 改名之后, Flag 的状态始终置为 2
+    # 改名为 601360 改名之后, 将之前的 Flag 的状态始终置为 2
     record2.update({'Flag': 2})
+    # 生成一个新的记录
+    record3 = copy.deepcopy(record2)    # TODO  import
     secu_code = "601360"
+    # 更改新记录的名称
+    record3.update({"SecuCode": secu_code})
+
     inner_code, secu_abbr = sh.get_juyuan_inner_code(secu_code)
+
+    # 将更名之前的数据进行插入
+    for r in (record1, record2):
+        r.update({"InnerCode": inner_code, "SecuAbbr": secu_abbr})
+        print(r)
+    sh.update_code_info(record1.get("SecuCode"), [record1, record2])
+
     ccass_code, face_value = sh.get_ccas_code(secu_code)
     spider_changes = sh.show_code_spider_records("601360")
-    # print(pprint.pformat(spider_changes))
 
     change = spider_changes[1]
     effective_date = change.get("EffectiveDate")
     # 恢复 1 结束 2
-    record3 = {
+    record4 = {
         "TradingType": 1, "TargetCategory": 1, "SecuCode": secu_code, 'InDate': effective_date, "OutDate": None,
         'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code,
         'ParValue': face_value}
-    record2.update({"OutDate": effective_date, "Flag": 2})
+    record3.update({"OutDate": effective_date, "Flag": 2})
 
     # 加上 3 4
     change = spider_changes[2]
     effective_date = change.get("EffectiveDate")
-    record4 = {
+    record5 = {
         "TradingType": 1, "TargetCategory": 3, "SecuCode": secu_code, 'InDate': effective_date, "OutDate": None,
         'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code,
         'ParValue': face_value}
-    record5 = {
+    record6 = {
         "TradingType": 1, "TargetCategory": 4, "SecuCode": secu_code, 'InDate': effective_date, "OutDate": None,
         'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code,
         'ParValue': face_value}
 
-    for r in [record1, record2, record3, record4, record5]:
-        r.update({"InnerCode": inner_code, "SecuAbbr": secu_abbr})
-        print(r)
-        sh.insert(r)
-
     stats = {"date": effective_date, "s1": 1, "s2": 0, "s3": 1, "s4": 1}
     sh.assert_stats(stats, secu_code)
+
+    for r in [record3, record4, record5, record6]:
+        r.update({"InnerCode": inner_code, "SecuAbbr": secu_abbr})
+        print(r)
+
+    sh.update_code_info(secu_code, [record3, record4, record5, record6])
 
 
 def process_600546():
     sh = SHHumanTools()
     spider_changes = sh.show_code_spider_records("600546")
-    print(pprint.pformat(spider_changes))
+    # print(pprint.pformat(spider_changes))
     change = spider_changes[0]
     _change = change.get("Ch_ange")
     remarks = change.get("Remarks")
@@ -177,65 +186,66 @@ def process_600546():
     sh.assert_stats(stats, secu_code)
     for r in (record1, record2, record3, record4):
         print(r)
-        sh.insert(r)
+
+    sh.update_code_info(secu_code, [record1, record2, record3, record4])
 
 
-def process_600368():
-    sh = SHHumanTools()
-    for code in ('600368', '600736', '600123', '600282', '600378', '603508', '600702'):
-        spider_changes = sh.show_code_spider_records("600368")
-        print("\n", code)
-        print(pprint.pformat(spider_changes))
-        change = spider_changes[0]
-        _change = change.get("Ch_ange")
-        remarks = change.get("Remarks")
-        secu_code = change.get("SSESCode")
-        inner_code, secu_abbr = sh.get_juyuan_inner_code(secu_code)
-        ccass_code, face_value = sh.get_ccas_code(secu_code)
-        effective_date = change.get("EffectiveDate")
-        # 加1
-        record1 = {
-            "TradingType": 1, "TargetCategory": 1, "SecuCode": secu_code, 'InDate': effective_date,
-            "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code,
-            'ParValue': face_value}
-
-        # 移除 1 生成 2
-        change = spider_changes[1]
-        effective_date = change.get("EffectiveDate")
-        record1.update({"OutDate": effective_date, "Flag": 2})
-        record2 = {
-            "TradingType": 1, "TargetCategory": 2, "SecuCode": secu_code, 'InDate': effective_date, "OutDate": None,
-            'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code,
-            'ParValue': face_value}
-
-        # 加入 1 3 4 结束 2
-        change = spider_changes[2]
-        effective_date = change.get("EffectiveDate")
-        record2.update({"OutDate": effective_date, "Flag": 2})
-        record3 = {
-            "TradingType": 1, "TargetCategory": 1, "SecuCode": secu_code, 'InDate': effective_date,
-            "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code,
-            'ParValue': face_value}
-        record4 = {
-            "TradingType": 1, "TargetCategory": 3, "SecuCode": secu_code, 'InDate': effective_date, "OutDate": None,
-            'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code,
-            'ParValue': face_value}
-        record5 = {
-            "TradingType": 1, "TargetCategory": 4, "SecuCode": secu_code, 'InDate': effective_date, "OutDate": None,
-            'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code,
-            'ParValue': face_value}
-
-        stats = {"date": effective_date, "s1": 1, "s2": 0, "s3": 1, "s4": 1}
-        sh.assert_stats(stats, secu_code)
-        for r in (record1, record2, record3, record4, record5):
-            print(r)
-            sh.insert(r)
+# def process_600368():
+#     sh = SHHumanTools()
+#     for code in ('600368', '600736', '600123', '600282', '600378', '603508', '600702'):
+#         spider_changes = sh.show_code_spider_records("600368")
+#         print("\n", code)
+#         print(pprint.pformat(spider_changes))
+#         change = spider_changes[0]
+#         _change = change.get("Ch_ange")
+#         remarks = change.get("Remarks")
+#         secu_code = change.get("SSESCode")
+#         inner_code, secu_abbr = sh.get_juyuan_inner_code(secu_code)
+#         ccass_code, face_value = sh.get_ccas_code(secu_code)
+#         effective_date = change.get("EffectiveDate")
+#         # 加1
+#         record1 = {
+#             "TradingType": 1, "TargetCategory": 1, "SecuCode": secu_code, 'InDate': effective_date,
+#             "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code,
+#             'ParValue': face_value}
+#
+#         # 移除 1 生成 2
+#         change = spider_changes[1]
+#         effective_date = change.get("EffectiveDate")
+#         record1.update({"OutDate": effective_date, "Flag": 2})
+#         record2 = {
+#             "TradingType": 1, "TargetCategory": 2, "SecuCode": secu_code, 'InDate': effective_date, "OutDate": None,
+#             'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code,
+#             'ParValue': face_value}
+#
+#         # 加入 1 3 4 结束 2
+#         change = spider_changes[2]
+#         effective_date = change.get("EffectiveDate")
+#         record2.update({"OutDate": effective_date, "Flag": 2})
+#         record3 = {
+#             "TradingType": 1, "TargetCategory": 1, "SecuCode": secu_code, 'InDate': effective_date,
+#             "OutDate": None, 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code,
+#             'ParValue': face_value}
+#         record4 = {
+#             "TradingType": 1, "TargetCategory": 3, "SecuCode": secu_code, 'InDate': effective_date, "OutDate": None,
+#             'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code,
+#             'ParValue': face_value}
+#         record5 = {
+#             "TradingType": 1, "TargetCategory": 4, "SecuCode": secu_code, 'InDate': effective_date, "OutDate": None,
+#             'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code,
+#             'ParValue': face_value}
+#
+#         stats = {"date": effective_date, "s1": 1, "s2": 0, "s3": 1, "s4": 1}
+#         sh.assert_stats(stats, secu_code)
+#         for r in (record1, record2, record3, record4, record5):
+#             print(r)
+#             sh.insert(r)
 
 
 def process_600009():
     sh = SHHumanTools()
     spider_changes = sh.show_code_spider_records("600009")
-    print(pprint.pformat(spider_changes))
+    # print(pprint.pformat(spider_changes))
     change = spider_changes[0]
     _change = change.get("Ch_ange")
     remarks = change.get("Remarks")
@@ -277,7 +287,7 @@ def process_600009():
     sh.assert_stats(stats, secu_code)
     for r in (record1, record2, record3, record4):
         print(r)
-        sh.insert(r)
+    sh.update_code_info(secu_code, [record1, record2, record3, record4])
 
 
 def special_sh():
@@ -288,24 +298,21 @@ def special_sh():
         # third
         '601313',  # 改名为 "601360", 已处理
         "600546",  # 移除 1 的时候, 即使不明说 也要移除 3 4, 已处理
-        '600368', '600736', '600123', '600282', '600378', '603508', '600702',  # 没啥逻辑硬伤不知道为啥单独拿出来了 已处理
+        # '600368', '600736', '600123', '600282', '600378', '603508', '600702',  # 没啥逻辑硬伤不知道为啥单独拿出来了 已处理
 
         # fourth
         "600009",  # 已处理 含有状态 5
     }
-    sh = SHHumanTools()
-    sh.delete_codes_records(special_codes)
-    process_600368()
-    process_600546()
+    # process_600546()
     process_601313()
-    process_601200()
-    process_600009()
+    # process_601200()
+    # process_600009()
 
 
 def run_000333():
     zh = ZHHumanTools()
     spider_changes = zh.show_code_spider_records("000333")
-    print(pprint.pformat(spider_changes))
+    # print(pprint.pformat(spider_changes))
     change = spider_changes[0]
     _change = change.get("Ch_ange")
     remarks = change.get("Remarks")
@@ -347,13 +354,13 @@ def run_000333():
     zh.assert_stats(stats, secu_code)
     for r in (record1, record2, record3, record4):
         print(r)
-        zh.insert(r)
+    zh.update_code_info(secu_code, [record1, record2, record3, record4])
 
 
 def run_000022():
     zh = ZHHumanTools()
     spider_changes = zh.show_code_spider_records("000022")
-    print(pprint.pformat(spider_changes))
+    # print(pprint.pformat(spider_changes))
     change = spider_changes[0]
     _change = change.get("Ch_ange")
     remarks = change.get("Remarks")
@@ -405,17 +412,17 @@ def run_000022():
         # 内部编码更新为聚源最新的
         r.update({"InnerCode": inner_code, "SecuAbbr": secu_abbr})
         print(r)
-        zh.insert(r)
+    zh.update_code_info(record1.get("SecuCode"), [record1, record2, record3])
 
     for r in (record_1, record_2, record_3):
         print(r)
-        zh.insert(r)
+    zh.update_code_info(secu_code, [record_1, record_2, record_3])
 
 
 def run_002008():
     zh = ZHHumanTools()
     spider_changes = zh.show_code_spider_records("002008")
-    print(pprint.pformat(spider_changes))
+    # print(pprint.pformat(spider_changes))
     change = spider_changes[0]
     _change = change.get("Ch_ange")
     remarks = change.get("Remarks")
@@ -455,13 +462,13 @@ def run_002008():
     zh.assert_stats(stats, secu_code)
     for r in (record1, record2, record3, record4):
         print(r)
-        zh.insert(r)
+    zh.update_code_info(secu_code, [record1, record2, record3, record4])
 
 
 def run_000043():
     zh = ZHHumanTools()
     spider_changes = zh.show_code_spider_records("000043")
-    print(pprint.pformat(spider_changes))
+    # print(pprint.pformat(spider_changes))
     change = spider_changes[0]
     _change = change.get("Ch_ange")
     remarks = change.get("Remarks")
@@ -561,7 +568,7 @@ def run_000043():
     zh.assert_stats(stats, secu_code)
     for r in (record_1, record_2, record_3):
         print(r)
-        zh.insert(r)
+    zh.update_code_info(record_1.get("SecuCode"), [record_1, record_2, record_3])
 
     # 将最后 9 10 11 的状态更新为 2 因为将其状态转义给了新的编码 001914 就将其上一个状态结束
     record9.update({'Flag': 2, "OutDate": effective_date})
@@ -572,7 +579,7 @@ def run_000043():
         # 将之前的聚源内部编码以及简称进行更新 因为现在的可能找不到了
         r.update({"InnerCode": inner_code, "SecuAbbr": secu_abbr})
         print(r)
-        zh.insert(r)
+    zh.update_code_info(record1.get("SecuCode"), [record1, record2, record3, record4, record5, record6, record7, record8, record9, record10, record11])
 
 
 def special_zh():
@@ -585,10 +592,6 @@ def special_zh():
         # third
         "002008",  # 已处理 含有状态 5
     }
-
-    zh = ZHHumanTools()
-    zh.delete_codes_records(special_codes)
-
     run_002008()
     run_000333()
     run_000022()
@@ -597,7 +600,7 @@ def special_zh():
 
 def fix():
     special_sh()
-    special_zh()
+    # special_zh()
 
 
 if __name__ == "__main__":
