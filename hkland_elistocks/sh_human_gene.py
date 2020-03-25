@@ -177,7 +177,7 @@ class SHHumanTools(CommonHumamTools):
                     second_record = first_records[0]
                     second_record.update({"OutDate": effective_date, 'Flag': 2})
                     second_stats = {"date": effective_date, "s1": 0, "s2": 1, "s3": 0, "s4": 0}
-                    record_new = {"TradingType": 1, "TargetCategory": 2, "SecuCode": secu_code,
+                    record_new = {"TradingType": self.trade_type, "TargetCategory": 2, "SecuCode": secu_code,
                                   'InDate': effective_date, "OutDate": None, 'Flag': 1, "InnerCode": inner_code,
                                   "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code, 'ParValue': face_value}
                     return [second_record, record_new], second_stats
@@ -187,7 +187,7 @@ class SHHumanTools(CommonHumamTools):
                 if self.sentense3 in remarks:  # 将 1 3 4 均移出 同时生成 2
                     for record in first_records:
                         record.update({"OutDate": effective_date, 'Flag': 2})
-                    record_new = {"TradingType": 1, "TargetCategory": 2, "SecuCode": secu_code,
+                    record_new = {"TradingType": self.trade_type, "TargetCategory": 2, "SecuCode": secu_code,
                                   'InDate': effective_date, "OutDate": None, 'Flag': 1, "InnerCode": inner_code,
                                   "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code, 'ParValue': face_value}
                     first_records.append(record_new)
@@ -200,11 +200,11 @@ class SHHumanTools(CommonHumamTools):
             assert first_stats.get("s1") == 1 and first_stats.get("s3") == 0 and first_stats.get("s4") == 0
             # 第一次将 1 加入, 第二次 将 3、4 加入的情况
             record3 = {
-                "TradingType": 1, "TargetCategory": 3, "SecuCode": secu_code, 'InDate': effective_date, "OutDate": None,
+                "TradingType": self.trade_type, "TargetCategory": 3, "SecuCode": secu_code, 'InDate': effective_date, "OutDate": None,
                 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code,
                 'ParValue': face_value}
             record4 = {
-                "TradingType": 1, "TargetCategory": 4, "SecuCode": secu_code, 'InDate': effective_date, "OutDate": None,
+                "TradingType": self.trade_type, "TargetCategory": 4, "SecuCode": secu_code, 'InDate': effective_date, "OutDate": None,
                 'Flag': 1, "InnerCode": inner_code, "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code,
                 'ParValue': face_value}
             first_records.extend([record3, record4])
@@ -215,7 +215,7 @@ class SHHumanTools(CommonHumamTools):
 
     def second_process(self):
         appear_2_codes = self.select_spider_records_with_a_num(2)
-        logger.info("sh-len-2: {}".format(len(appear_2_codes)))  # 576
+        logger.info("SH-LEN-2: {}".format(len(appear_2_codes)))  # 576
         appear_2_codes = set(appear_2_codes) - self.special_codes
         for code in appear_2_codes:
             print()
@@ -234,7 +234,8 @@ class SHHumanTools(CommonHumamTools):
             logger.info(second_stats)
             for record in second_records:
                 logger.info(record)
-                self.insert(record)
+                # self.insert(record)
+            self.update_code_info(code, second_records)
 
     def third_process(self):
         lst1 = []
@@ -1020,10 +1021,10 @@ class SHHumanTools(CommonHumamTools):
                                     self.insert(record)
 
     def _process(self):
-        self.first_process()
+        # self.first_process()
 
-        # self.second_process()
-        #
+        self.second_process()
+
         # self.third_process()
         #
         # self.fourth_process()
@@ -1031,3 +1032,5 @@ class SHHumanTools(CommonHumamTools):
         # self.fifth_process()
         #
         # self.sixth_process()
+
+        pass
