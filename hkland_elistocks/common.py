@@ -172,6 +172,7 @@ class CommonHumamTools(object):
     def show_code_spider_records(self, code):
         sql = 'select SSESCode, EffectiveDate, Ch_ange, Remarks from {} where Time = (select max(Time) from {}) and SSESCode = "{}" order by EffectiveDate;'.format(
             self.change_table_name, self.change_table_name, code)
+        print(sql)
         spider = self.init_sql_pool(self.spider_cfg)
         ret = spider.select_all(sql)
         spider.dispose()

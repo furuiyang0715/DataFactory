@@ -1037,15 +1037,15 @@ class SHHumanTools(CommonHumamTools):
                                 self.update_code_info(secu_code, [record1, record2, record3, record4, record5, record6])
 
     def _process(self):
-        # self.first_process()
+        self.first_process()
 
-        # self.second_process()
+        self.second_process()
 
-        # self.third_process()
+        self.third_process()
 
-        # self.fourth_process()
+        self.fourth_process()
 
-        # self.fifth_process()
+        self.fifth_process()
 
         self.sixth_process()
 

@@ -460,9 +460,9 @@ class ZHHumanTools(CommonHumamTools):
                 stats = {"date": effective_date, "s1": 0, "s2": 1, "s3": 0, "s4": 0}
                 logger.info(stats)
                 self.assert_stats(stats, secu_code)
-                for r in (record1, record2, record3, record4, record5, record6, record7):
+                for r in (record1, record2, record3, record4, record5, record6, record7, record8):
                     logger.info(r)
-                self.update_code_info(secu_code, [record1, record2, record3, record4, record5, record6, record7])
+                self.update_code_info(secu_code, [record1, record2, record3, record4, record5, record6, record7, record8])
             else:
                 raise Exception
 
@@ -1160,10 +1160,12 @@ class ZHHumanTools(CommonHumamTools):
     def first_process(self):
         codes = self.select_spider_records_with_a_num(1)
         logger.info("ZH LEN-1: {}".format(len(codes)))  # 362
-        for code in set(codes) - self.special_codes:
+        codes = set(codes) - self.special_codes
+        for code in codes:
             print()
             logger.info(code)
             spider_changes = self.show_code_spider_records(code)
+            assert len(spider_changes) == 1
             change = spider_changes[0]
             _change = change.get("Ch_ange")
             remarks = change.get("Remarks")
