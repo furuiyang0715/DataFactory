@@ -268,17 +268,17 @@ if __name__ == "__main__":
     # source_table = 'lc_shscelistocks'
     # sync_from_juyuan(codes, source_table)
 
-    # demo_1()
-    # print()
-    #
-    # demo_2()
-    # print()
-    #
-    # demo_3()
-    # print()
-    #
-    # demo_4()
-    # print()
+    demo_1()
+    print()
+
+    demo_2()
+    print()
+
+    demo_3()
+    print()
+
+    demo_4()
+    print()
 
     # run_1()
     # print()
