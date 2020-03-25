@@ -847,7 +847,7 @@ class ZHHumanTools(CommonHumamTools):
 
     def third_process(self):
         codes = self.select_spider_records_with_a_num(3)
-        logger.info("zh-len3:{}".format(len(codes)))  # 99
+        logger.info("ZH-LEN3:{}".format(len(codes)))  # 99
         codes = set(codes) - self.special_codes
         for code in codes:
             print()
@@ -874,23 +874,22 @@ class ZHHumanTools(CommonHumamTools):
             remarks_2 = change_2.get("Remarks")
             effective_date_2 = change_2.get("EffectiveDate")
 
-            # print(_change, "\n", _change_1, "\n", _change_2)
             assert _change == self.stats_addition
             if self.sentense1 in remarks or self.sentense2 in remarks:
-                print("step 1, add 1 3 4")
+                logger.info("step 1, add 1 3 4")
                 r1 = {"TargetCategory": 1, 'InDate': effective_date, "OutDate": None, 'Flag': 1}
                 r2 = {"TargetCategory": 3, 'InDate': effective_date, "OutDate": None, 'Flag': 1}
                 r3 = {"TargetCategory": 4, 'InDate': effective_date, "OutDate": None, 'Flag': 1}
 
                 if _change_1 == self.stats_transfer and self.sentense3 in remarks_1:
-                    print("step 2, del 1 3 4, add 2")
+                    logger.info("step 2, del 1 3 4, add 2")
                     r1.update({"OutDate": effective_date_1, 'Flag': 2})
                     r2.update({"OutDate": effective_date_1, 'Flag': 2})
                     r3.update({"OutDate": effective_date_1, 'Flag': 2})
                     r4 = {"TargetCategory": 2, 'InDate': effective_date_1, "OutDate": None, 'Flag': 1}
 
                     if _change_2 == self.stats_recover and self.sentense1 in remarks_2 or self.sentense2 in remarks_2:
-                        print("step 3, stop 2, add 1 3 4")
+                        logger.info("step 3, stop 2, add 1 3 4")
                         r4.update({"OutDate": effective_date_2, 'Flag': 2})
                         r5 = {"TargetCategory": 1, 'InDate': effective_date_2, "OutDate": None, 'Flag': 1}
                         r6 = {"TargetCategory": 3, 'InDate': effective_date_2, "OutDate": None, 'Flag': 1}
@@ -901,12 +900,13 @@ class ZHHumanTools(CommonHumamTools):
                         self.assert_stats(stats, secu_code)
 
                         for r in (r1, r2, r3, r4, r5, r6, r7):
-                            r.update({"TradingType": 3, "SecuCode": secu_code, "InnerCode": inner_code, "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code, 'ParValue': face_value})
+                            r.update({"TradingType": self.trade_type, "SecuCode": secu_code, "InnerCode": inner_code,
+                                      "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code, 'ParValue': face_value})
                             logger.info(r)
-                            self.insert(r)
+                        self.update_code_info(secu_code, [r1, r2, r3, r4, r5, r6, r7])
 
                     elif _change_2 == self.stats_recover and self.sentense1 not in remarks_2 and self.sentense2 not in remarks_2:
-                        print("step 3, stop 2, add 1")
+                        logger.info("step 3, stop 2, add 1")
                         r4.update({"OutDate": effective_date_2, 'Flag': 2})
                         r5 = {"TargetCategory": 1, 'InDate': effective_date_2, "OutDate": None, 'Flag': 1}
 
@@ -915,13 +915,13 @@ class ZHHumanTools(CommonHumamTools):
                         self.assert_stats(stats, secu_code)
 
                         for r in (r1, r2, r3, r4, r5):
-                            r.update({"TradingType": 3, "SecuCode": secu_code, "InnerCode": inner_code,
+                            r.update({"TradingType": self.trade_type, "SecuCode": secu_code, "InnerCode": inner_code,
                                       "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code, 'ParValue': face_value})
                             logger.info(r)
-                            self.insert(r)
+                        self.update_code_info(secu_code, [r1, r2, r3, r4, r5])
 
                     elif _change_2 == self.stats_removal:
-                        print("step 3, del 2")
+                        logger.info("step 3, del 2")
                         r4.update({"OutDate": effective_date_2, 'Flag': 2})
 
                         stats = {"date": effective_date_2, "s1": 0, "s2": 0, "s3": 0, "s4": 0}
@@ -929,53 +929,55 @@ class ZHHumanTools(CommonHumamTools):
                         self.assert_stats(stats, secu_code)
 
                         for r in (r1, r2, r3, r4):
-                            r.update({"TradingType": 3, "SecuCode": secu_code, "InnerCode": inner_code,
+                            r.update({"TradingType": self.trade_type, "SecuCode": secu_code, "InnerCode": inner_code,
                                       "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code, 'ParValue': face_value})
                             logger.info(r)
-                            self.insert(r)
+                        self.update_code_info(secu_code, [r1, r2, r3, r4])
                     else:
                         raise Exception
                 elif _change_1 == self.stats_transfer and self.sentense3 not in remarks_1:
                     raise Exception("1 是否是 3 4 的必要条件")
                 elif _change_1 == self.stats_remove_margin_and_shortsell:
-                    print("step 2, del 3 4")
+                    logger.info("step 2, del 3 4")
                     r2.update({"OutDate": effective_date_1, 'Flag': 2})
                     r3.update({"OutDate": effective_date_1, 'Flag': 2})
                     if _change_2 == self.stats_transfer:
-                        print("step 3, del 1, add 2")
+                        logger.info("step 3, del 1, add 2")
                         r1.update({"OutDate": effective_date_2, 'Flag': 2})
                         r4 = {"TargetCategory": 2, 'InDate': effective_date_2, "OutDate": None, 'Flag': 1}
                         stats = {"date": effective_date_2, "s1": 0, "s2": 1, "s3": 0, "s4": 0}
                         logger.info(stats)
                         self.assert_stats(stats, secu_code)
                         for r in (r1, r2, r3, r4):
-                            r.update({"TradingType": 3, "SecuCode": secu_code, "InnerCode": inner_code, "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code, 'ParValue': face_value})
+                            r.update({"TradingType": self.trade_type, "SecuCode": secu_code, "InnerCode": inner_code,
+                                      "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code, 'ParValue': face_value})
                             logger.info(r)
-                            self.insert(r)
+                        self.update_code_info(secu_code, [r1, r2, r3, r4])
                     elif _change_2 == self.stats_add_margin_and_shortsell:
-                        print("step 3, add 3 4 ")
+                        logger.info("step 3, add 3 4 ")
                         r4 = {"TargetCategory": 3, 'InDate': effective_date_2, "OutDate": None, 'Flag': 1}
                         r5 = {"TargetCategory": 4, 'InDate': effective_date_2, "OutDate": None, 'Flag': 1}
                         stats = {"date": effective_date_2, "s1": 1, "s2": 0, "s3": 1, "s4": 1}
                         logger.info(stats)
                         self.assert_stats(stats, secu_code)
                         for r in (r1, r2, r3, r4, r5):
-                            r.update({"TradingType": 3, "SecuCode": secu_code, "InnerCode": inner_code, "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code, 'ParValue': face_value})
+                            r.update({"TradingType": self.trade_type, "SecuCode": secu_code, "InnerCode": inner_code,
+                                      "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code, 'ParValue': face_value})
                             logger.info(r)
-                            self.insert(r)
+                        self.update_code_info(secu_code, [r1, r2, r3, r4, r5])
                     else:
                         raise Exception
                 else:
                     raise Exception
             else:
-                print("step 1, add 1 only")
+                logger.info("step 1, add 1 only")
                 r1 = {"TargetCategory": 1, 'InDate': effective_date, "OutDate": None, 'Flag': 1}
                 if _change_1 == self.stats_transfer and self.sentense3 not in remarks_1:
-                    print("step 2, del 1, add 2")
+                    logger.info("step 2, del 1, add 2")
                     r1.update({"OutDate": effective_date_1, 'Flag': 2})
                     r2 = {"TargetCategory": 2, 'InDate': effective_date_1, "OutDate": None, 'Flag': 1}
                     if _change_2 == self.stats_recover and self.sentense1 in remarks_2 or self.sentense2 in remarks_2:
-                        print("step 3, add 1 3 4 , del 2")
+                        logger.info("step 3, add 1 3 4 , del 2")
                         r3 = {"TargetCategory": 1, 'InDate': effective_date_2, "OutDate": None, 'Flag': 1}
                         r4 = {"TargetCategory": 3, 'InDate': effective_date_2, "OutDate": None, 'Flag': 1}
                         r5 = {"TargetCategory": 4, 'InDate': effective_date_2, "OutDate": None, 'Flag': 1}
@@ -984,42 +986,42 @@ class ZHHumanTools(CommonHumamTools):
                         logger.info(stats)
                         self.assert_stats(stats, secu_code)
                         for r in (r1, r2, r3, r4, r5):
-                            r.update({"TradingType": 3, "SecuCode": secu_code, "InnerCode": inner_code,
+                            r.update({"TradingType": self.trade_type, "SecuCode": secu_code, "InnerCode": inner_code,
                                       "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code, 'ParValue': face_value})
                             logger.info(r)
-                            self.insert(r)
+                        self.update_code_info(secu_code, [r1, r2, r3, r4, r5])
                     elif _change_2 == self.stats_removal:
-                        print("step 3, del2")
+                        logger.info("step 3, del2")
                         r2.update({"OutDate": effective_date_2, 'Flag': 2})
                         stats = {"date": effective_date_2, "s1": 0, "s2": 0, "s3": 0, "s4": 0}
                         logger.info(stats)
                         self.assert_stats(stats, secu_code)
                         for r in (r1, r2):
-                            r.update({"TradingType": 3, "SecuCode": secu_code, "InnerCode": inner_code,
+                            r.update({"TradingType": self.trade_type, "SecuCode": secu_code, "InnerCode": inner_code,
                                       "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code, 'ParValue': face_value})
                             logger.info(r)
-                            self.insert(r)
+                        self.update_code_info(secu_code, [r1, r2])
                     elif _change_2 == self.stats_recover:
-                        print("step3 add 1, del2")
+                        logger.info("step3 add 1, del2")
                         r3 = {"TargetCategory": 1, 'InDate': effective_date_2, "OutDate": None, 'Flag': 1}
                         r2.update({"OutDate": effective_date_2, 'Flag': 2})
                         stats = {"date": effective_date_2, "s1": 1, "s2": 0, "s3": 0, "s4": 0}
                         logger.info(stats)
                         self.assert_stats(stats, secu_code)
                         for r in (r1, r2, r3):
-                            r.update({"TradingType": 3, "SecuCode": secu_code, "InnerCode": inner_code,
+                            r.update({"TradingType": self.trade_type, "SecuCode": secu_code, "InnerCode": inner_code,
                                       "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code, 'ParValue': face_value})
                             logger.info(r)
-                            self.insert(r)
+                        self.update_code_info(secu_code, [r1, r2, r3])
 
                 elif _change_1 == self.stats_add_margin_and_shortsell:
-                    print("step 2, add 3 4")
+                    logger.info("step 2, add 3 4")
                     r2 = {"TargetCategory": 3, 'InDate': effective_date_1, "OutDate": None, 'Flag': 1}
                     r3 = {"TargetCategory": 4, 'InDate': effective_date_1, "OutDate": None, 'Flag': 1}
 
                     assert _change_2 == self.stats_transfer
                     if self.sentense3 in remarks_1:
-                        print("step 3, del 1 3 4, add 2")
+                        logger.info("step 3, del 1 3 4, add 2")
                         r1.update({"OutDate": effective_date_2, 'Flag': 2})
                         r2.update({"OutDate": effective_date_2, 'Flag': 2})
                         r3.update({"OutDate": effective_date_2, 'Flag': 2})
@@ -1028,12 +1030,12 @@ class ZHHumanTools(CommonHumamTools):
                         logger.info(stats)
                         self.assert_stats(stats, secu_code)
                         for r in (r1, r2, r3):
-                            r.update({"TradingType": 3, "SecuCode": secu_code, "InnerCode": inner_code,
+                            r.update({"TradingType": self.trade_type, "SecuCode": secu_code, "InnerCode": inner_code,
                                       "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code, 'ParValue': face_value})
                             logger.info(r)
-                            self.insert(r)
+                        self.update_code_info(secu_code, [r1, r2, r3])
                     else:
-                        print("step 3, del 1, add 2")
+                        logger.info("step 3, del 1, add 2")
                         assert self.sentense3 in remarks_2
                         r1.update({"OutDate": effective_date_2, 'Flag': 2})
                         r2.update({"OutDate": effective_date_2, 'Flag': 2})
@@ -1043,17 +1045,17 @@ class ZHHumanTools(CommonHumamTools):
                         logger.info(stats)
                         self.assert_stats(stats, secu_code)
                         for r in (r1, r2, r3):
-                            r.update({"TradingType": 3, "SecuCode": secu_code, "InnerCode": inner_code,
+                            r.update({"TradingType": self.trade_type, "SecuCode": secu_code, "InnerCode": inner_code,
                                       "SecuAbbr": secu_abbr, 'CCASSCode': ccass_code, 'ParValue': face_value})
                             logger.info(r)
-                            self.insert(r)
+                        self.update_code_info(secu_code, [r1, r2, r3])
                 else:
                     raise Exception
 
     def second_process(self):
         codes = self.select_spider_records_with_a_num(2)
         logger.info("ZH-LEN2: {}".format(len(codes)))
-        codes = set(codes) - self.special_codes
+        codes = sorted(list(set(codes) - self.special_codes))
         for code in codes:
             print()
             logger.info(code)
@@ -1190,8 +1192,8 @@ class ZHHumanTools(CommonHumamTools):
 
         # self.fourth_process()
 
-        # self.third_process()
+        self.third_process()
 
-        self.second_process()
+        # self.second_process()
 
         # self.first_process()
