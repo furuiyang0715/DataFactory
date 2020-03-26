@@ -187,6 +187,13 @@ class CommonHumamTools(object):
         ret = [r.get('SSESCode') for r in ret]
         return ret
 
+    def select_latest_records(self):
+        sql = '''select * from {} where Time = (select max(Time) from {}); '''.format(self.change_table_name, self.change_table_name)
+        spider = self.init_sql_pool(self.spider_cfg)
+        ret = spider.select_all(sql)
+        spider.dispose()
+        return ret
+
     def insert(self, data):
         in_date = data.get("InDate")
         if isinstance(in_date, datetime.date):

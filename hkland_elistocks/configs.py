@@ -10,6 +10,9 @@ cf.read(os.path.join(thisdir, '.conf'))
 # 是否本地 默认是在本地运行
 LOCAL = int(env.get("LOCAL", 1))
 
+# 是否是首次运行
+FIRST = int(env.get("FIRST", 0))
+
 # 聚源
 JUY_HOST = env.get("JUY_HOST", cf.get('juyuan', 'JUY_HOST'))
 JUY_PORT = int(env.get("JUY_PORT", cf.get('juyuan', 'JUY_PORT')))
