@@ -1,5 +1,6 @@
 import datetime
 import functools
+import os
 import pickle
 import sys
 import time
@@ -43,14 +44,33 @@ def check_ins_diff(ins):
     latest_records = ins.select_latest_records()
 
     try:
-        with open(ins.change_table_name + ".pickle", 'rb') as f:
+        with open(os.path.join("/hkland_elistocks", ins.change_table_name.upper() + ".pickle"), 'rb') as f:
             content = f.read()
             origin_records = pickle.loads(content)
     except:
+        traceback.print_exc()
         origin_records = []
 
-    with open(ins.change_table_name.upper() + ".pickle", 'wb+') as f:
+    with open(os.path.join("/hkland_elistocks", ins.change_table_name.upper() + ".pickle"), 'wb+') as f:
         f.write(pickle.dumps(latest_records))
+
+    # 对于 origin_records 以及 latest_records 都去除时间 Time 进行比较
+    for r in origin_records:
+        r.pop("id")
+        r.pop("Time")
+        r.pop("CREATETIMEJZ")
+        r.pop("ItemID")
+        r.pop("UPDATETIMEJZ")
+
+    for r in latest_records:
+        r.pop("id")
+        r.pop("Time")
+        r.pop("CREATETIMEJZ")
+        r.pop("ItemID")
+        r.pop("UPDATETIMEJZ")
+
+    logger.info(f"Length of origin records: {len(origin_records)}")
+    logger.info(f"Length of latest records: {len(latest_records)}")
 
     to_delete = []
     to_insert = []
@@ -91,8 +111,8 @@ def task():
         zh = ZHHumanTools()
         zh_to_delete, zh_to_insert = check_ins_diff(zh)
 
-        logger.info(f"sh_to_delete: {sh_to_delete}, sh_to_insert: {sh_to_insert} ")
-        logger.info(f"zh_to_delete: {zh_to_delete}, zh_to_insert: {zh_to_insert} ")
+        logger.info(f"sh_to_delete: {len(sh_to_delete)}, sh_to_insert: {len(sh_to_insert)} ")
+        logger.info(f"zh_to_delete: {len(zh_to_delete)}, zh_to_insert: {len(zh_to_insert)} ")
 
         if not sh_to_insert and not sh_to_delete and not zh_to_insert and not zh_to_delete:
             logger.info("无增量")
