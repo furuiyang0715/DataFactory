@@ -391,13 +391,13 @@ class EMLGTNanBeiXiangZiJin(object):
         update_fields = ['DateTime', 'ShHkFlow', 'ShHkBalance', 'SzHkFlow', 'SzHkBalance', 'Netinflow', 'Category', 'HashID']
         product = self._init_pool(self.product_cfg)
         for data in south_datas:
-            self.hash_row(data)
+            # self.hash_row(data)    # 使用默认的 None 值
             data['Category'] = 1
             self.psave(product, data, self.product_table_name, update_fields)
 
         north_datas = self.sync_north()
         for data in north_datas:
-            self.hash_row(data)
+            # self.hash_row(data)   # 使用默认的 None 值
             data['Category'] = 2
             self.psave(product, data, self.product_table_name, update_fields)
 
