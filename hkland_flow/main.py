@@ -20,8 +20,9 @@ def main():
     schedule.every(5).seconds.do(sync_task)
 
     while True:
+        print("当前调度系统中的任务列表是{}".format(schedule.jobs))
         schedule.run_pending()
-        time.sleep(180)
+        time.sleep(1)
 
 
 if __name__ == "__main__":
