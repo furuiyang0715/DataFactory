@@ -44,6 +44,7 @@ class EMLGTNanBeiXiangZiJin(object):
         self.south_table_name = 'lgt_south_money_data'
         self.north_table_name = 'lgt_north_money_data'
         self.product_table_name = 'hkland_flow'
+        self.today = datetime.datetime.today().strftime("%Y-%m-%d")
 
     def _init_pool(self, cfg: dict):
         """
@@ -102,6 +103,9 @@ class EMLGTNanBeiXiangZiJin(object):
         _cur_year = datetime.datetime.now().year   # FIXME 不太严谨
         _cur_moment_str = str(_cur_year) + "-" + n2s_date
         logger.info("获取到的南向数据的时间是 {}".format(_cur_moment_str))
+        if _cur_moment_str != self.today:
+            logger.warning("今天无南向数据 ")
+            return
 
         items = []
         for data_str in n2s:
@@ -142,6 +146,9 @@ class EMLGTNanBeiXiangZiJin(object):
         _cur_year = datetime.datetime.now().year   # FIXME 不太严谨
         _cur_moment_str = str(_cur_year) + "-" + s2n_date
         logger.info("获取到的北向数据的时间是 {}".format(_cur_moment_str))
+        if _cur_moment_str != self.today:
+            logger.warning("今天无北向数据")
+            return
 
         items = []
         for data_str in s2n:
@@ -385,7 +392,7 @@ class EMLGTNanBeiXiangZiJin(object):
 
     def sync(self):
         self._create_pro_table()
-        start_time = datetime.datetime.now() - datetime.timedelta(days=1)
+        start_time = datetime.datetime.now() - datetime.timedelta(hours=1)
         end_time = datetime.datetime.now()
         south_datas = self.sync_south(start_time, end_time)
         update_fields = ['DateTime', 'ShHkFlow', 'ShHkBalance', 'SzHkFlow', 'SzHkBalance', 'Netinflow', 'Category', 'HashID']
@@ -408,5 +415,6 @@ if __name__ == "__main__":
     eml = EMLGTNanBeiXiangZiJin()
     eml.start()
     print("Time-spider: {}".format(now() - t1))
-    eml.sync()
-    print("Time-process: {}".format(now() - t1))
+
+    # eml.sync()
+    # print("Time-process: {}".format(now() - t1))
