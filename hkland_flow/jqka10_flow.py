@@ -1,6 +1,7 @@
 import datetime
 import logging
 import re
+import traceback
 
 import execjs
 import requests
@@ -85,7 +86,7 @@ class SFLgthisdataspiderSpider(object):
 
     def _create_table(self):
         sql_s = '''
-        CREATE TABLE `lgt_south_money_data_10jqka` (
+        CREATE TABLE IF NOT EXISTS `lgt_south_money_data_10jqka` (
           `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
           `Date` datetime NOT NULL COMMENT '日期',
           `Flow` decimal(19,4) DEFAULT NULL COMMENT '当日资金流入(亿元）',
@@ -100,7 +101,7 @@ class SFLgthisdataspiderSpider(object):
         '''
 
         sql_n = '''
-        CREATE TABLE `lgt_north_money_data_10jqka` (
+        CREATE TABLE IF NOT EXISTS `lgt_north_money_data_10jqka` (
           `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
           `Date` datetime NOT NULL COMMENT '日期',
           `Flow` decimal(19,4) DEFAULT NULL COMMENT '当日资金流入(亿元）',
@@ -128,6 +129,41 @@ class SFLgthisdataspiderSpider(object):
         ret = True if dc.select_one(sql).get('IfTradingDay') == 1 else False
         return ret
 
+    def contract_sql(self, to_insert: dict, table: str, update_fields: list):
+        ks = []
+        vs = []
+        for k in to_insert:
+            ks.append(k)
+            vs.append(to_insert.get(k))
+        fields_str = "(" + ",".join(ks) + ")"
+        values_str = "(" + "%s," * (len(vs) - 1) + "%s" + ")"
+        base_sql = '''INSERT INTO `{}` '''.format(table) + fields_str + ''' values ''' + values_str
+        on_update_sql = ''' ON DUPLICATE KEY UPDATE '''
+        update_vs = []
+        for update_field in update_fields:
+            on_update_sql += '{}=%s,'.format(update_field)
+            update_vs.append(to_insert.get(update_field))
+        on_update_sql = on_update_sql.rstrip(",")
+        sql = base_sql + on_update_sql + """;"""
+        vs.extend(update_vs)
+        return sql, tuple(vs)
+
+    def _save(self, to_insert, table, update_fields: list):
+        spider = self._init_pool(self.spider_cfg)
+        try:
+            insert_sql, values = self.contract_sql(to_insert, table, update_fields)
+            count = spider.insert(insert_sql, values)
+        except:
+            traceback.print_exc()
+            logger.warning("失败")
+            count = None
+        else:
+            if count:
+                logger.info("更入新数据 {}".format(to_insert))
+        finally:
+            spider.dispose()
+        return count
+
     def _start(self):
         self._create_table()
         for category in self.category_map:
@@ -149,6 +185,8 @@ class SFLgthisdataspiderSpider(object):
                         item['Category'] = self.category_map.get(category)[0]
                         item['CategoryCode'] = category
                         # print(item)
+                        table = "lgt_north_money_data_10jqka" if self.category_map.get(category)[1] in (1, 3) else "lgt_south_money_data_10jqka"
+                        self._save(item, table, update_fields=['Date', 'Flow', 'Balance', 'Category', 'CategoryCode'])
 
 
 if __name__ == "__main__":
