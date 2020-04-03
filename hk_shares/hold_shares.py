@@ -7,10 +7,11 @@ import traceback
 import requests
 import opencc
 from lxml import html
-from hkland_flow.configs import (SPIDER_MYSQL_HOST, SPIDER_MYSQL_PORT, SPIDER_MYSQL_USER, SPIDER_MYSQL_PASSWORD,
-                                 SPIDER_MYSQL_DB, PRODUCT_MYSQL_HOST, PRODUCT_MYSQL_PORT, PRODUCT_MYSQL_USER,
-                                 PRODUCT_MYSQL_PASSWORD, PRODUCT_MYSQL_DB)
-from hkland_flow.sql_pool import PyMysqlPoolBase
+
+from hk_shares.configs import (SPIDER_MYSQL_HOST, SPIDER_MYSQL_PORT, SPIDER_MYSQL_USER, SPIDER_MYSQL_PASSWORD,
+                               SPIDER_MYSQL_DB, PRODUCT_MYSQL_HOST, PRODUCT_MYSQL_PORT, PRODUCT_MYSQL_USER,
+                               PRODUCT_MYSQL_PASSWORD, PRODUCT_MYSQL_DB)
+from hk_shares.sql_pool import PyMysqlPoolBase
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -78,6 +79,28 @@ class HoldShares(object):
         pool = PyMysqlPoolBase(**cfg)
         return pool
 
+    def _create_table(self):
+        sql = '''
+        CREATE TABLE IF NOT EXISTS `hold_shares_{}` (
+          `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+          `SecuCode` varchar(10) COLLATE utf8_bin NOT NULL COMMENT '股票交易代码',
+          `SecuName` varchar(50) COLLATE utf8_bin DEFAULT NULL COMMENT '股票名称',
+          `Holding` decimal(19,2) DEFAULT NULL COMMENT '于中央结算系统的持股量',
+          `Percent` decimal(9,4) DEFAULT NULL COMMENT '{}',
+          `Date` date DEFAULT NULL COMMENT '日期',
+          `ItemID` varchar(50) COLLATE utf8_bin DEFAULT NULL COMMENT 'itemid',
+          `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
+          `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          PRIMARY KEY (`id`),
+          UNIQUE KEY `unique_key` (`SecuCode`,`Date`,`ItemID`),
+          KEY `SecuCode` (`SecuCode`),
+          KEY `update_time` (`UPDATETIMEJZ`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='{}持股记录（HKEX）'; 
+        '''.format(self.type, self.percent_comment, self.type_name)
+        spider = self._init_pool(self.spider_cfg)
+        spider.insert(sql)
+        spider.dispose()
+
     def contract_sql(self, to_insert: dict, table: str):
         ks = []
         vs = []
@@ -94,14 +117,16 @@ class HoldShares(object):
             insert_sql, values = self.contract_sql(to_insert, table)
             count = sql_pool.insert(insert_sql, values)
         except:
-            traceback.print_exc()
+            # traceback.print_exc()
             logger.warning("失败")
+            logger.info(to_insert)
         else:
             logger.info("更入新数据 {}".format(to_insert))
             sql_pool.end()
             return count
 
-    def start_request(self):
+    def _start(self):
+        self._create_table()
         resp = requests.post(self.url, data=self.post_params)
         if resp.status_code == 200:
             body = resp.text
@@ -149,30 +174,14 @@ class HoldShares(object):
                 self._save(spider, item, self.table)
                 # 将其存入爬虫数据库 hold_shares_sh hold_shares_sz hold_shares_hk
 
-    def _create_table(self):
-        sql = '''
-        CREATE TABLE IF NOT EXISTS `hold_shares_{}` (
-          `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-          `SecuCode` varchar(10) COLLATE utf8_bin NOT NULL COMMENT '股票交易代码',
-          `SecuName` varchar(50) COLLATE utf8_bin DEFAULT NULL COMMENT '股票名称',
-          `Holding` decimal(19,2) DEFAULT NULL COMMENT '于中央结算系统的持股量',
-          `Percent` decimal(9,4) DEFAULT NULL COMMENT '{}',
-          `Date` date DEFAULT NULL COMMENT '日期',
-          `ItemID` varchar(50) COLLATE utf8_bin DEFAULT NULL COMMENT 'itemid',
-          `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
-          `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-          PRIMARY KEY (`id`),
-          UNIQUE KEY `unique_key` (`SecuCode`,`Date`,`ItemID`),
-          KEY `SecuCode` (`SecuCode`),
-          KEY `update_time` (`UPDATETIMEJZ`)
-        ) ENGINE=InnoDB AUTO_INCREMENT=13280743 DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='{}持股记录（HKEX）'; 
-        '''.format(self.type, self.percent_comment, self.type_name)
-        spider = self._init_pool(self.spider_cfg)
-        spider.insert(sql)
-        spider.dispose()
+    def start(self):
+        try:
+            self._start()
+        except:
+            traceback.print_exc()
 
+    # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>> 数据加工处理分界线 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     # 生成正式库中的两个 hkland_shares hkland_hkshares
-    # 后续数据流程略
     def _create_product_table(self):
         sql = '''
         CREATE TABLE IF NOT EXISTS `hkland_shares` (
@@ -214,7 +223,7 @@ class HoldShares(object):
 
 
 if __name__ == "__main__":
+    # 可开多线程 不要求太实时 就顺序执行
     for type in ("sh", "sz", "hk"):
         h = HoldShares(type)
-        h._create_table()
-        h.start_request()
+        h.start()
