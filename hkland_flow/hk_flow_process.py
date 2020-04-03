@@ -285,8 +285,6 @@ class EMLGTNanBeiXiangZiJin(object):
     # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> 数据加工处理分割线 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
     def sync_south(self, start_time, end_time):
-        # start_time = datetime.datetime.now() - datetime.timedelta(days=1)
-        # end_time = datetime.datetime.now()
         fields_map = {
             "Date": "DateTime",
             "HKHFlow": "ShHkFlow",
@@ -307,11 +305,6 @@ class EMLGTNanBeiXiangZiJin(object):
         south_datas = spider.select_all(as_str)
         spider.dispose()
         return south_datas
-
-    def origin_south(self, start_time, end_time):
-        fields = ["DateTime", "ShHkFlow", "ShHkBalance", "SzHkFlow", "SzHkBalance", "Netinflow", "CMFID", "CMFTime"]
-        sql = ('select ' + ",".join(fields)).rstrip(",") + ' from {} where Date > "{}" and Date < "{}";'.format(
-            self.product_table_name, start_time, end_time)
 
     def sync_north(self):
         start_time = datetime.datetime.now() - datetime.timedelta(days=1)
@@ -337,16 +330,16 @@ class EMLGTNanBeiXiangZiJin(object):
         spider.dispose()
         return north_datas
 
-    def hash_row(self, data):
-        values = sorted([str(value) for value in data.values()])
-        hash_str = ''
-        for value in values:
-            hash_str += value
-        md5 = hashlib.md5()
-        md5.update(hash_str.encode())
-        hash_value = md5.hexdigest()
-        data["HashID"] = hash_value
-        return data
+    # def hash_row(self, data):
+    #     values = sorted([str(value) for value in data.values()])
+    #     hash_str = ''
+    #     for value in values:
+    #         hash_str += value
+    #     md5 = hashlib.md5()
+    #     md5.update(hash_str.encode())
+    #     hash_value = md5.hexdigest()
+    #     data["HashID"] = hash_value
+    #     return data
 
     def _create_pro_table(self):
         """创建正式库的表"""
@@ -394,19 +387,32 @@ class EMLGTNanBeiXiangZiJin(object):
         self._create_pro_table()
         start_time = datetime.datetime.now() - datetime.timedelta(hours=1)
         end_time = datetime.datetime.now()
-        south_datas = self.sync_south(start_time, end_time)
-        update_fields = ['DateTime', 'ShHkFlow', 'ShHkBalance', 'SzHkFlow', 'SzHkBalance', 'Netinflow', 'Category', 'HashID']
+
+        update_fields = ['DateTime', 'ShHkFlow', 'ShHkBalance', 'SzHkFlow', 'SzHkBalance', 'Netinflow', 'Category']
         product = self._init_pool(self.product_cfg)
-        for data in south_datas:
-            # self.hash_row(data)    # 使用默认的 None 值
-            data['Category'] = 1
-            self.psave(product, data, self.product_table_name, update_fields)
+
+        south_datas = self.sync_south(start_time, end_time)
+        if not south_datas:
+            logger.warning("今日无爬虫南向数据")
+        else:
+            for data in south_datas:
+                # self.hash_row(data)    # 使用默认的 None 值
+                data['Category'] = 1
+                self.psave(product, data, self.product_table_name, update_fields)
 
         north_datas = self.sync_north()
-        for data in north_datas:
-            # self.hash_row(data)   # 使用默认的 None 值
-            data['Category'] = 2
-            self.psave(product, data, self.product_table_name, update_fields)
+        if not north_datas:
+            logger.warning("今日无爬虫北向数据")
+        else:
+            for data in north_datas:
+                # self.hash_row(data)   # 使用默认的 None 值
+                data['Category'] = 2
+                self.psave(product, data, self.product_table_name, update_fields)
+
+        try:
+            product.dispose()
+        except:
+            pass
 
 
 if __name__ == "__main__":
@@ -416,5 +422,5 @@ if __name__ == "__main__":
     eml.start()
     print("Time-spider: {}".format(now() - t1))
 
-    # eml.sync()
-    # print("Time-process: {}".format(now() - t1))
+    eml.sync()
+    print("Time-process: {}".format(now() - t1))
