@@ -1,3 +1,4 @@
+import datetime
 import re
 
 import execjs
@@ -17,15 +18,16 @@ class SFLgthisdataspiderSpider(object):
             'Connection': 'keep-alive',
         }
         self.base_url = 'http://data.10jqka.com.cn/hgt/{}/'
-        self.category_lst = ['hgtb',   # '沪股通'
-                             'ggtb',   # '港股通(沪)'
-                             'sgtb',   # '深股通'
-                             'ggtbs',  # '港股通(深)'
-                             ]
+        self.category_map = {
+            'hgtb': '沪股通',
+            'ggtb': '港股通(沪)',
+            'sgtb': '深股通',
+            'ggtbs': '港股通(深)',
+        }
+        self.today = datetime.datetime.today().strftime("%Y-%m-%d")
 
     @property
     def cookies(self):
-        """由于同花顺生成cookie的文件是不变的, 所以直接用文件保存方便获取"""
         with open('jqka.js', 'r') as f:
             jscont = f.read()
         cont = execjs.compile(jscont)
@@ -40,14 +42,24 @@ class SFLgthisdataspiderSpider(object):
         if resp.status_code == 200:
             return resp.text
 
+    def _check_if_trading_today(self):
+        pass
+
     def _start(self):
-        for category in self.category_lst:
+        for category in self.category_map:
             url = self.base_url.format(category)
             page = self.get(url)
             ret = re.findall(r"var dataDay = (.*);", page)
             if ret:
                 datas = eval(ret[0])[0]
-                print(datas)
+                for data in datas:
+                    item = dict()
+                    item['Date'] = self.today + " " + data[0]
+                    item['Flow'] = float(data[1])
+                    item['Balance'] = float(data[2])
+                    item['Category'] = self.category_map.get(category)
+                    item['CategoryCode'] = category
+                    print(item)
 
 
 if __name__ == "__main__":
