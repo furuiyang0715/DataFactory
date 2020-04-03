@@ -80,11 +80,12 @@ class HoldShares(object):
         return pool
 
     def _create_table(self):
+        # SHOUGANG CONCORD INTERNATIONAL ENTERPRISES CO LTD-TEMPORARY COUNTER    # length = 67 50-->100
         sql = '''
         CREATE TABLE IF NOT EXISTS `hold_shares_{}` (
           `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
           `SecuCode` varchar(10) COLLATE utf8_bin NOT NULL COMMENT '股票交易代码',
-          `SecuName` varchar(50) COLLATE utf8_bin DEFAULT NULL COMMENT '股票名称',
+          `SecuName` varchar(100) COLLATE utf8_bin DEFAULT NULL COMMENT '股票名称',
           `Holding` decimal(19,2) DEFAULT NULL COMMENT '于中央结算系统的持股量',
           `Percent` decimal(9,4) DEFAULT NULL COMMENT '{}',
           `Date` date DEFAULT NULL COMMENT '日期',

@@ -44,6 +44,7 @@ class EMLGTNanBeiXiangZiJin(object):
         self.south_table_name = 'lgt_south_money_data'
         self.north_table_name = 'lgt_north_money_data'
         self.product_table_name = 'hkland_flow'
+        self.tool_table_name = 'base_table_updatetime'
         self.today = datetime.datetime.today().strftime("%Y-%m-%d")
 
     def _init_pool(self, cfg: dict):
@@ -364,8 +365,22 @@ class EMLGTNanBeiXiangZiJin(object):
           KEY `DateTime` (`DateTime`) USING BTREE
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='陆港通-实时资金流向';
         '''.format(self.product_table_name)
+
+        # 创建工具表
+        tool_sql = '''
+        CREATE TABLE IF NOT EXISTS `{}` (
+          `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+          `TableName` varchar(100) NOT NULL COMMENT '表名',
+          `LastUpdateTime` datetime NOT NULL COMMENT '最后更新时间',
+          `IsValid` tinyint(4) DEFAULT '1' COMMENT '是否有效',
+          PRIMARY KEY (`id`),
+          UNIQUE KEY `u1` (`TableName`) USING BTREE
+        ) ENGINE=InnoDB AUTO_INCREMENT=18063 DEFAULT CHARSET=utf8 COMMENT='每个表的最后更新时间';
+        '''.format(self.tool_table_name)
+
         product = self._init_pool(self.product_cfg)
         product.insert(sql)
+        product.insert(tool_sql)    # 一般只执行一次
         product.dispose()
 
     def psave(self, client, to_insert, table, update_fields):
@@ -413,6 +428,26 @@ class EMLGTNanBeiXiangZiJin(object):
             product.dispose()
         except:
             pass
+
+        self.refresh_update_time()
+
+    def refresh_update_time(self):
+        product = self._init_pool(self.product_cfg)
+        sql = '''select max(UPDATETIMEJZ) as max_dt from {}; '''.format(self.product_table_name)
+        max_dt = product.select_one(sql).get("max_dt")
+        logger.info("最新的更新时间是{}".format(max_dt))
+
+        # refresh_sql = '''update {} set LastUpdateTime='{}' where TableName = '{}'; '''.format(
+        #     self.tool_table_name, max_dt, self.product_table_name)
+        # count = product.update(refresh_sql)
+        # if count:
+        #     logger.info("刷新时间戳成功")
+
+        refresh_sql = '''replace into {} (id,TableName, LastUpdateTime,IsValid) values (1, "hkland_flow", '{}', 1); 
+        '''.format(self.tool_table_name, max_dt)
+        count = product.update(refresh_sql)
+        logger.info(count)   # 1 首次插入 2 替换插入
+        product.dispose()
 
 
 if __name__ == "__main__":
