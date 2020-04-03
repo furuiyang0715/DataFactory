@@ -5,6 +5,5 @@ __pycache__
 *.csv
 *.log
 *.xls
-*.txt
 *.log.*
 *.pickle
