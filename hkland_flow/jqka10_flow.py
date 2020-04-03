@@ -5,7 +5,8 @@ import re
 import execjs
 import requests
 
-from hkland_flow.configs import DC_HOST, DC_PORT, DC_USER, DC_DB, DC_PASSWD
+from hkland_flow.configs import DC_HOST, DC_PORT, DC_USER, DC_DB, DC_PASSWD, SPIDER_MYSQL_HOST, SPIDER_MYSQL_PORT, \
+    SPIDER_MYSQL_USER, SPIDER_MYSQL_PASSWORD, SPIDER_MYSQL_DB
 from hkland_flow.sql_pool import PyMysqlPoolBase
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -19,6 +20,14 @@ class SFLgthisdataspiderSpider(object):
         "user": DC_USER,
         "password": DC_PASSWD,
         "db": DC_DB,
+    }
+
+    spider_cfg = {
+        "host": SPIDER_MYSQL_HOST,
+        "port": SPIDER_MYSQL_PORT,
+        "user": SPIDER_MYSQL_USER,
+        "password": SPIDER_MYSQL_PASSWORD,
+        "db": SPIDER_MYSQL_DB,
     }
 
     def __init__(self):
@@ -74,6 +83,42 @@ class SFLgthisdataspiderSpider(object):
         if resp.status_code == 200:
             return resp.text
 
+    def _create_table(self):
+        sql_s = '''
+        CREATE TABLE `lgt_south_money_data_10jqka` (
+          `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+          `Date` datetime NOT NULL COMMENT '日期',
+          `Flow` decimal(19,4) DEFAULT NULL COMMENT '当日资金流入(亿元）',
+          `Balance` decimal(19,4) DEFAULT NULL COMMENT '当日资金余额（亿元）',
+          `Category` varchar(20) COLLATE utf8_bin DEFAULT NULL COMMENT '类别(港股通（沪/深））',
+          `CategoryCode` varchar(20) COLLATE utf8_bin DEFAULT NULL COMMENT '类别id',
+          `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
+          `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          PRIMARY KEY (`id`),
+          UNIQUE KEY `unique_key` (`Date`,`CategoryCode`) USING BTREE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='陆股通-南向资金-同花顺';
+        '''
+
+        sql_n = '''
+        CREATE TABLE `lgt_north_money_data_10jqka` (
+          `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+          `Date` datetime NOT NULL COMMENT '日期',
+          `Flow` decimal(19,4) DEFAULT NULL COMMENT '当日资金流入(亿元）',
+          `Balance` decimal(19,4) DEFAULT NULL COMMENT '当日资金余额（亿元）',
+          `Category` varchar(20) COLLATE utf8_bin DEFAULT NULL COMMENT '类别(沪股通+深股通）',
+          `CategoryCode` varchar(20) COLLATE utf8_bin DEFAULT NULL COMMENT '类别id',
+          `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
+          `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          PRIMARY KEY (`id`),
+          UNIQUE KEY `unique_key` (`Date`,`CategoryCode`) USING BTREE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='陆股通-北向资金-同花顺'; 
+        '''
+
+        spider = self._init_pool(self.spider_cfg)
+        spider.insert(sql_s)
+        spider.insert(sql_n)
+        spider.dispose()
+
     def _check_if_trading_today(self, category):
         """检查下当前方向是否交易"""
         dc = self._init_pool(self.dc_cfg)
@@ -84,6 +129,7 @@ class SFLgthisdataspiderSpider(object):
         return ret
 
     def _start(self):
+        self._create_table()
         for category in self.category_map:
             is_trading = self._check_if_trading_today(category)
             if not is_trading:
@@ -109,6 +155,3 @@ if __name__ == "__main__":
     sf = SFLgthisdataspiderSpider()
     # print(sf.cookies)
     sf._start()
-
-
-    pass
