@@ -254,6 +254,32 @@ class SHMergeTools(MergeTools):
         target.insert(sql)
         target.dispose()
 
+    def contract_sql(self, to_insert: dict, table: str, update_fields: list):
+        """
+        拼接主键冲突更新 sql 语句
+        :param to_insert: 即将插入的数据字典
+        :param table: 即将插入的数据表
+        :param update_fields: 冲突更新字段
+        :return:
+        """
+        ks = []
+        vs = []
+        for k in to_insert:
+            ks.append(k)
+            vs.append(to_insert.get(k))
+        fields_str = "(" + ",".join(ks) + ")"
+        values_str = "(" + "%s," * (len(vs) - 1) + "%s" + ")"
+        base_sql = '''INSERT INTO `{}` '''.format(table) + fields_str + ''' values ''' + values_str
+        on_update_sql = ''' ON DUPLICATE KEY UPDATE '''
+        update_vs = []
+        for update_field in update_fields:
+            on_update_sql += '{}=%s,'.format(update_field)
+            update_vs.append(to_insert.get(update_field))
+        on_update_sql = on_update_sql.rstrip(",")
+        sql = base_sql + on_update_sql + """;"""
+        vs.extend(update_vs)
+        return sql, tuple(vs)
+
     def sync_juyuan_table(self, table, target_cli, target_table_name, fields=None):
         """
         将聚源数据库中的有效字段导出
@@ -346,13 +372,15 @@ class SHMergeTools(MergeTools):
             if change not in last_hu_changes:
                 new_hu_changes.append(change)
 
+        # 将数据中的情况在本地保存一个快照
         self.save_hu_changes(hu_changes)
 
-        logger.info("len(new_hu_changes): {}".format(len(new_hu_changes)))
+        logger.info("沪股通的成分变更中需要新插入的数据量(len(new_hu_changes)) 是: {}".format(len(new_hu_changes)))
         self.process_hu_changes(new_hu_changes)
-        self.check_hu_list()
+        self.check_hu_list()   # 注意 如果是在本地测试一直性的话，需要先执行爬虫库数据迁移到测试库的脚本
 
-        # 处理沪港通 港变更
+        # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>南北分割线>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
         hk_changes = self.get_hk_changes()
         last_hk_changes = self.loads_hk_changes()
 
@@ -361,13 +389,14 @@ class SHMergeTools(MergeTools):
             if not change in last_hk_changes:
                 new_hk_changes.append(change)
 
+        # 同理 将数据库中的情况在本地保存快照
         self.save_hk_changes(hk_changes)
 
-        logger.info("len(new_hk_changes): {}".format(len(new_hk_changes)))
+        logger.info("港股通(沪)的成分变更中需要新插入的数据量(len(new_hk_changes))是: {}".format(len(new_hk_changes)))
         self.process_hk_changes(new_hk_changes)
         self.check_hk_list()
 
 
 if __name__ == "__main__":
     tool = SHMergeTools()
-    tool.start()
+    tool._start()
