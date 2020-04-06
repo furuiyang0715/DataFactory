@@ -79,6 +79,13 @@ class CommonHumamTools(object):
         css_code_map = self.get_css_code_map(secu_codes)
         return css_code_map
 
+    def get_distinct_spider_udpate_time(self):
+        spider = self.init_sql_pool(self.spider_cfg)
+        sql = '''select distinct(Time) from {};'''.format(self.change_table_name)
+        ret = spider.select_all(sql)
+        spider.dispose()
+        return ret
+
     def get_distinct_spider_secucode(self):
         spider = self.init_sql_pool(self.spider_cfg)
         sql = 'select distinct(SSESCode) from {}; '.format(self.change_table_name)
@@ -172,10 +179,17 @@ class CommonHumamTools(object):
     def show_code_spider_records(self, code):
         sql = 'select SSESCode, EffectiveDate, Ch_ange, Remarks from {} where Time = (select max(Time) from {}) and SSESCode = "{}" order by EffectiveDate;'.format(
             self.change_table_name, self.change_table_name, code)
-        print(sql)
+        # print(sql)
         spider = self.init_sql_pool(self.spider_cfg)
         ret = spider.select_all(sql)
         spider.dispose()
+        return ret
+
+    def show_code_target_records(self, code):
+        sql = '''select * from {} where SecuCode = {}; '''.format(self.table_name, code)
+        target = self.init_sql_pool(self.target_cfg)
+        ret = target.select_all(sql)
+        target.dispose()
         return ret
 
     def select_spider_records_with_a_num(self, num):
@@ -193,6 +207,19 @@ class CommonHumamTools(object):
         ret = spider.select_all(sql)
         spider.dispose()
         return ret
+
+    def select_onetime_records(self, onetime: datetime.datetime):
+        """
+        获取某一个时间点的记录
+        :param onetime:
+        :return:
+        """
+        sql = '''select * from {} where Time = '{}'; '''.format(self.change_table_name, onetime)
+        spider = self.init_sql_pool(self.spider_cfg)
+        ret = spider.select_all(sql)
+        spider.dispose()
+        return ret
+
 
     def insert(self, data):
         in_date = data.get("InDate")

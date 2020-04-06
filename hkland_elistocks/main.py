@@ -2,6 +2,7 @@ import datetime
 import functools
 import os
 import pickle
+import pprint
 import sys
 import time
 import traceback
@@ -121,15 +122,75 @@ def task():
             logger.info("开始增量处理")
 
 
-def main():
-    logger.info("当前时间是{} ".format(datetime.datetime.now()))
-    task()
-    schedule.every().day.at("17:00").do(task)
+def task_2():
+    """直接检查两个数据点之间的差异"""
+    sh = SHHumanTools()
+    ret = sh.get_distinct_spider_udpate_time()
+    dt_list = sorted([r.get("Time") for r in ret])
+    latest_records = sh.select_latest_records()
+    last_but_one_records = sh.select_onetime_records(dt_list[-2])
 
-    while True:
-        logger.info("当前调度系统中的任务列表是{}".format(schedule.jobs))
-        schedule.run_pending()
-        time.sleep(1800)
+    # 去掉一些无关字段
+    for r in latest_records:
+        r.pop("id")
+        r.pop("Time")
+        r.pop("CREATETIMEJZ")
+        r.pop("ItemID")
+        r.pop("UPDATETIMEJZ")
+
+    for r in last_but_one_records:
+        r.pop("id")
+        r.pop("Time")
+        r.pop("CREATETIMEJZ")
+        r.pop("ItemID")
+        r.pop("UPDATETIMEJZ")
+
+    to_insert = []
+    to_delete = []
+    for one in latest_records:
+        if not one in last_but_one_records:
+            to_insert.append(one)
+
+    for one in last_but_one_records:
+        if not one in latest_records:
+            to_delete.append(one)
+
+    # print(pprint.pformat(to_delete))
+    # print(pprint.pformat(to_insert))
+
+    # 开始处理增量
+    # 获取这个 code 的最近一次的记录
+    for one in to_insert:
+        secu_code = one.get("SSESCode")
+        change = one.get("Ch_ange")
+        remarks = one.get("Remarks")
+        effective_date = one.get("EffectiveDate")
+        if change == sh.stats_transfer:
+            if sh.sentense3 in remarks:
+                logger.info("结束 1 3 4 ")
+            else:
+                logger.info("结束 1")
+                records = sh.show_code_target_records(secu_code)
+                for r in records:
+                    if r.get("Flag") == 1 and r.get('TargetCategory') == 1:
+                        in_record = r
+                        in_record.update({'OutDate': effective_date, 'Flag': 2})
+                        logger.info(in_record)
+                        sh.update(in_record)
 
 
-main()
+task_2()
+
+
+# def main():
+#     logger.info("当前时间是{} ".format(datetime.datetime.now()))
+#     task()
+#     schedule.every().day.at("17:00").do(task)
+#
+#     while True:
+#         logger.info("当前调度系统中的任务列表是{}".format(schedule.jobs))
+#         schedule.run_pending()
+#         time.sleep(1800)
+#
+#
+# main()
