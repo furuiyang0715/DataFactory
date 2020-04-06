@@ -8,6 +8,7 @@ import json
 import pprint
 import re
 import sys
+import traceback
 
 import requests
 
@@ -36,34 +37,57 @@ class HkexlugutongshishispiderSpider(object):
             data = data.replace(',', '')
         return data
 
-    def start_requests(self):
-        now = lambda: datetime.datetime.now()
-        now_date = now().strftime('%Y%m%d')
-        # print(now_date)   # 20200404
+    def start(self):
+        try:
+            self._start()
+        except:
+            traceback.print_exc()
+
+    '''
+    if category == '沪股通每日额度余额':
+    # print(new_json)
+    # 沪股通每日额度
+    # print(new_json)
+    SHSCDQ = new_json[0]['section'][0]['item'][0][1]
+    SHSCDQ = self.re_data(SHSCDQ)
+    item['SHSCDQ'] = SHSCDQ
+    # 沪股通每日额度余额
+    T1 = new_json[0]['section'][0]['subtitle'][1]
+    T2 = new_json[0]['section'][0]['item'][1][0].split(' ')[2][:-1]
+    Time = T1.split('/')[-1] + '-' + T1.split('/')[1] + '-' + T1.split('/')[0] + ' ' + T2
+    # print(Time)
+    item['SHSCDQ_T'] = Time
+    SHSCDB = new_json[0]['section'][0]['item'][1][1]
+    SHSCDB = self.re_data(SHSCDB)
+    item['SHSCDB'] = SHSCDB
+    # 沪股通每日余额占额度百分比
+    SHSCD_BPQ = new_json[0]['section'][0]['item'][2][1]
+    SHSCD_BPQ = self.re_data(SHSCD_BPQ)
+    item['SHSCD_BPQ'] = SHSCD_BPQ
+    '''
+
+    def _start(self):
         url_dic = {
             '沪股通成交额': 'http://sc.hkex.com.hk/TuniS/www.hkex.com.hk/chi/csm/script/data_NBSH_Turnover_chi.js',
-            '港股通（沪）成交额': 'http://sc.hkex.com.hk/TuniS/www.hkex.com.hk/chi/csm/script/data_SBSH_Turnover_chi.js',
-            '沪股通每日额度余额': 'http://sc.hkex.com.hk/TuniS/www.hkex.com.hk/chi/csm/script/data_NBSH_QuotaUsage_chi.js',
-            '深股通成交额': 'http://sc.hkex.com.hk/TuniS/www.hkex.com.hk/chi/csm/script/data_NBSZ_Turnover_chi.js',
-            '港股通（深）成交额': 'http://sc.hkex.com.hk/TuniS/www.hkex.com.hk/chi/csm/script/data_SBSZ_Turnover_chi.js',
-            '深股通每日额度余额': 'http://sc.hkex.com.hk/TuniS/www.hkex.com.hk/chi/csm/script/data_NBSZ_QuotaUsage_chi.js',
+            # '港股通（沪）成交额': 'http://sc.hkex.com.hk/TuniS/www.hkex.com.hk/chi/csm/script/data_SBSH_Turnover_chi.js',
+            # '沪股通每日额度余额': 'http://sc.hkex.com.hk/TuniS/www.hkex.com.hk/chi/csm/script/data_NBSH_QuotaUsage_chi.js',
+            # '深股通成交额': 'http://sc.hkex.com.hk/TuniS/www.hkex.com.hk/chi/csm/script/data_NBSZ_Turnover_chi.js',
+            # '港股通（深）成交额': 'http://sc.hkex.com.hk/TuniS/www.hkex.com.hk/chi/csm/script/data_SBSZ_Turnover_chi.js',
+            # '深股通每日额度余额': 'http://sc.hkex.com.hk/TuniS/www.hkex.com.hk/chi/csm/script/data_NBSZ_QuotaUsage_chi.js',
         }
-        # 每天大于下午17：30不再更新实时数据
-        now_time = now().strftime('%H:%M')
-        # print(now_time)   # 22:32
         for category in url_dic:
             url = url_dic[category]
             body = requests.get(url, headers=self.headers).text
-            print(body)
-            # print(type(body))
-            # print(json.loads(body.rstrip(";")))
-            # ret = eval(body.rstrip(";").lstrip("northbound12 =").lstrip("northbound22 ="))
-            # ret = json.loads(body.rstrip(";").lstrip("northbound12 =").lstrip("northbound22 ="))
-            # print(type(ret))
-            # print(pprint.pformat(ret))
-            # datas = re.findall("northbound12 = (.*);", body)
-            # print(datas)
-            # sys.exit(0)
+            # print(body)
+            datas = json.loads(body.rstrip(";").lstrip("northbound12 =").lstrip("northbound22 =").lstrip("southbound11 =").lstrip("southbound21 ="))
+            print(pprint.pformat(datas))
+            # print(type(datas))
+            flow_info = datas[0].get("section")[0].get("subtitle")
+            print(flow_info)  # ['成交额', '06/04/2020 (06:00)', {}]
+            show_dt = flow_info[1]
+            print(show_dt)   # 06/04/2020 (06:00)
+
+
 
 
     @staticmethod
@@ -241,4 +265,4 @@ class HkexlugutongshishispiderSpider(object):
 
 if __name__ == "__main__":
     h = HkexlugutongshishispiderSpider()
-    h.start_requests()
+    h.start()
