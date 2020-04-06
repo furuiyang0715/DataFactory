@@ -12,6 +12,7 @@ class ZHMergeTools(MergeTools):
         super(ZHMergeTools, self).__init__()
         self.juyuan_table_name = 'lc_zhsccomponent'    # 深港通成分股
         self.target_table_name = 'hkland_sgcomponent'
+        self.tool_table_name = 'base_table_updatetime'
 
         # 深港通中的深股通成分和更改
         self.zh_list_table_name = 'hkex_lgt_szse_securities'
@@ -327,6 +328,20 @@ class ZHMergeTools(MergeTools):
         with open("HK_CHANGES_Z.pickle", "wb") as f:
             f.write(pickle.dumps(zh_changes))
 
+    def refresh_update_time(self):
+        target = self.init_sql_pool(self.target_cfg)
+        sql = '''select max(UPDATETIMEJZ) as max_dt from {}; '''.format(self.target_table_name)
+        max_dt = target.select_one(sql).get("max_dt")
+        logger.info("最新的更新时间是{}".format(max_dt))
+        refresh_sql = '''replace into {} (id,TableName, LastUpdateTime,IsValid) values (7, 'hkland_sgcomponent', '{}', 1); 
+        '''.format(self.tool_table_name,
+                   # self.target_table_name,
+                   max_dt)
+        logger.info(refresh_sql)
+        count = target.update(refresh_sql)
+        logger.info(count)  # 1 首次插入 2 替换插入
+        target.dispose()
+
     def _start(self):
         # 建表
         if LOCAL:
@@ -362,6 +377,9 @@ class ZHMergeTools(MergeTools):
         self.dumps_hk_changes(hk_changes)
         self.process_hk_changes(new_hk_changes)
         self.check_hk_list()
+
+        # 刷新表的最后更新时间
+        self.refresh_update_time()
 
 
 if __name__ == "__main__":
