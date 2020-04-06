@@ -298,7 +298,7 @@ class ZHMergeTools(MergeTools):
             logger.warning("导入聚源历史数据失败 ")
             traceback.print_exc()
         else:
-            logger.info("深港通成分股历史数据插入数量: {}".format(count))
+            logger.info("聚源replace更新数量: {}".format(count))
         target_cli.dispose()
 
     def read_last_zh_changes(self):
@@ -345,9 +345,11 @@ class ZHMergeTools(MergeTools):
             if not change in last_zh_changes:
                 new_zh_changes.append(change)
         self.dumps_zh_changes(zh_changes)
-        logger.info("len(new_zh_changes): {} ".format(len(new_zh_changes)))
+        logger.info("需要新插入的深股通成分股变更的数量(len(new_zh_changes)) 是: {} ".format(len(new_zh_changes)))
         self.process_zh_changes(new_zh_changes)
         self.check_zh_list()
+
+        # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>南北向数据分割线>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
         # 处理深港通 港的更改
         last_hk_changes = self.read_last_hk_changes()
@@ -356,7 +358,7 @@ class ZHMergeTools(MergeTools):
         for change in hk_changes:
             if not change in last_hk_changes:
                 new_hk_changes.append(change)
-        logger.info("len(new_hk_changes): {}".format(len(new_hk_changes)))
+        logger.info("需要新插入的港股通(深)成分股变更的数量(len(new_hk_changes)) 是: {}".format(len(new_hk_changes)))
         self.dumps_hk_changes(hk_changes)
         self.process_hk_changes(new_hk_changes)
         self.check_hk_list()
@@ -364,4 +366,4 @@ class ZHMergeTools(MergeTools):
 
 if __name__ == "__main__":
     tool = ZHMergeTools()
-    tool.start()
+    tool._start()

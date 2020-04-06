@@ -324,7 +324,7 @@ class SHMergeTools(MergeTools):
             logger.warning("导入聚源历史数据失败 ")
             traceback.print_exc()
         else:
-            logger.info("沪港通成分股历史数据插入数量: {}".format(count))
+            logger.info("聚源 replace 更新数量: {}".format(count))
         target_cli.dispose()
 
     def save_hu_changes(self, hu_changes):
