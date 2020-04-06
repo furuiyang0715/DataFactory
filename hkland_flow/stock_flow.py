@@ -1,16 +1,14 @@
 # -*- coding: utf-8 -*-
-import datetime
 import json
-# from .langconv import *
-# import redis
-# import scrapy
-# from ..settings import REDIS_HOST, REDIS_PORT, REDIS_PASSWORD
-import pprint
-import re
-import sys
+import logging
 import traceback
-
 import requests
+
+from hkland_flow.stock_hu_ontime import SSEStatsOnTime
+from hkland_flow.stock_shen_ontime import SZSEStatsOnTime
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 
 class HkexlugutongshishispiderSpider(object):
@@ -67,26 +65,56 @@ class HkexlugutongshishispiderSpider(object):
     '''
 
     def _start(self):
-        url_dic = {
-            '沪股通成交额': 'http://sc.hkex.com.hk/TuniS/www.hkex.com.hk/chi/csm/script/data_NBSH_Turnover_chi.js',
-            # '港股通（沪）成交额': 'http://sc.hkex.com.hk/TuniS/www.hkex.com.hk/chi/csm/script/data_SBSH_Turnover_chi.js',
-            # '沪股通每日额度余额': 'http://sc.hkex.com.hk/TuniS/www.hkex.com.hk/chi/csm/script/data_NBSH_QuotaUsage_chi.js',
-            # '深股通成交额': 'http://sc.hkex.com.hk/TuniS/www.hkex.com.hk/chi/csm/script/data_NBSZ_Turnover_chi.js',
-            # '港股通（深）成交额': 'http://sc.hkex.com.hk/TuniS/www.hkex.com.hk/chi/csm/script/data_SBSZ_Turnover_chi.js',
-            # '深股通每日额度余额': 'http://sc.hkex.com.hk/TuniS/www.hkex.com.hk/chi/csm/script/data_NBSZ_QuotaUsage_chi.js',
+        # 北向资金
+        # north_url_dict = {
+        #     '沪股通成交额': 'http://sc.hkex.com.hk/TuniS/www.hkex.com.hk/chi/csm/script/data_NBSH_Turnover_chi.js',
+        #     '沪股通每日额度余额': 'http://sc.hkex.com.hk/TuniS/www.hkex.com.hk/chi/csm/script/data_NBSH_QuotaUsage_chi.js',
+        #     '深股通成交额': 'http://sc.hkex.com.hk/TuniS/www.hkex.com.hk/chi/csm/script/data_NBSZ_Turnover_chi.js',
+        #     '深股通每日额度余额': 'http://sc.hkex.com.hk/TuniS/www.hkex.com.hk/chi/csm/script/data_NBSZ_QuotaUsage_chi.js',
+        # }
+        north_urls = [
+            'http://sc.hkex.com.hk/TuniS/www.hkex.com.hk/chi/csm/script/data_NBSH_Turnover_chi.js',  # 沪股通成交额
+            'http://sc.hkex.com.hk/TuniS/www.hkex.com.hk/chi/csm/script/data_NBSH_QuotaUsage_chi.js',  # 沪股通每日资金余额
+            'http://sc.hkex.com.hk/TuniS/www.hkex.com.hk/chi/csm/script/data_NBSZ_Turnover_chi.js',  # 深股通成交额
+            'http://sc.hkex.com.hk/TuniS/www.hkex.com.hk/chi/csm/script/data_NBSZ_QuotaUsage_chi.js',  # 深股通每日资金余额
+        ]
+        # 南向资金
+        south_url_dict = {
+            '港股通（沪）成交额': 'http://sc.hkex.com.hk/TuniS/www.hkex.com.hk/chi/csm/script/data_SBSH_Turnover_chi.js',
+            '港股通（深）成交额': 'http://sc.hkex.com.hk/TuniS/www.hkex.com.hk/chi/csm/script/data_SBSZ_Turnover_chi.js',
         }
-        for category in url_dic:
-            url = url_dic[category]
-            body = requests.get(url, headers=self.headers).text
-            # print(body)
-            datas = json.loads(body.rstrip(";").lstrip("northbound12 =").lstrip("northbound22 =").lstrip("southbound11 =").lstrip("southbound21 ="))
-            print(pprint.pformat(datas))
-            # print(type(datas))
-            flow_info = datas[0].get("section")[0].get("subtitle")
-            print(flow_info)  # ['成交额', '06/04/2020 (06:00)', {}]
-            show_dt = flow_info[1]
-            print(show_dt)   # 06/04/2020 (06:00)
 
+        logger.info("开始处理北向资金")
+        # logger.info("开始获取沪股通成交额信息 ")
+        # body = requests.get(north_urls[0], headers=self.headers).text
+
+        logger.info("开始处理沪股通每日额度信息")
+        body = requests.get(north_urls[1], headers=self.headers).text
+        datas = json.loads(
+            body.rstrip(";").lstrip("northbound11 =").lstrip("northbound12 =").lstrip("northbound21 =").lstrip(
+                "northbound22 ="))
+        flow_info = datas[0].get("section")[0].get("subtitle")
+        show_dt = flow_info[1]
+        print(show_dt)
+        print(flow_info)
+
+        logger.info("开始处理深股通每日额度信息")
+        body = requests.get(north_urls[3], headers=self.headers).text
+        datas = json.loads(
+            body.rstrip(";").lstrip("northbound11 =").lstrip("northbound12 =").lstrip("northbound21 =").lstrip(
+                "northbound22 ="))
+        flow_info = datas[0].get("section")[0].get("subtitle")
+        show_dt = flow_info[1]
+        print(show_dt)
+        print(flow_info)
+
+        logger.info("开始处理港股通(沪)每日额度信息")
+        sse = SSEStatsOnTime()
+        print(sse.get_balance_info())
+
+        logger.info("开始处理港股通(深)每日额度信息")
+        sz = SZSEStatsOnTime()
+        print(sz.get_balance_info())
 
 
 
