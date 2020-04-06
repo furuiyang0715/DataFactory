@@ -1,3 +1,5 @@
+import datetime
+
 from hkland_flow.configs import TEST_MYSQL_HOST, TEST_MYSQL_PORT, TEST_MYSQL_USER, TEST_MYSQL_PASSWORD, TEST_MYSQL_DB
 from hkland_flow.sql_pool import PyMysqlPoolBase
 
@@ -25,12 +27,14 @@ def contract_sql(to_insert: dict, table: str, update_fields: list):
 def run():
     dd = {"id": 1,
           "name": "ruiyang",
-          "age": '26',
+          "age": None,
           "mshu": "A Develop 2333",
           "hobby": "sleep",
+          "dt": datetime.datetime(2020, 1, 1)
+          # "dt": None,
           }
     table = 'ruiyang_test'
-    sql, vs = contract_sql(dd, table, ['mshu', 'age'])
+    sql, vs = contract_sql(dd, table, ['mshu', 'age', 'dt'])
     '''
     REPLACE INTO `lgt_south_money_data` (Date,HKHFlow,HKHBalance,HKZFlow,HKZBalance,SouthMoney,Category) values (%s,%s,%s,%s,%s,%s,%s);
     (datetime.datetime(2020, 4, 1, 15, 22), Decimal('239313.53'), Decimal('3960686.47'), Decimal('102840.54'), Decimal('4097159.46'), Decimal('342154.07'), '南向资金')
@@ -45,6 +49,7 @@ def run():
         "db": TEST_MYSQL_DB,
     }
     pool = PyMysqlPoolBase(**cfg)
+
     # pool.delete('drop table ruiyang_test; ')
     # create_sql = '''
     # CREATE TABLE IF NOT EXISTS `{}` (
@@ -53,6 +58,7 @@ def run():
     #       `age` int COMMENT '年龄',
     #       `hobby` varchar(40) COMMENT '爱好',
     #       `mshu` varchar(40)  COMMENT '描述',
+    #       `dt` datetime COMMENT '时间',
     #       `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
     #       `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     #       PRIMARY KEY (`id`),

@@ -220,7 +220,6 @@ class CommonHumamTools(object):
         spider.dispose()
         return ret
 
-
     def insert(self, data):
         in_date = data.get("InDate")
         if isinstance(in_date, datetime.date):
@@ -249,6 +248,60 @@ class CommonHumamTools(object):
             pass
         finally:
             target.dispose()
+
+    def contract_sql(self, to_insert: dict, table: str, update_fields: list):
+        """
+        拼接主键冲突更新 sql 语句
+        :param to_insert: 即将插入的数据字典
+        :param table: 即将插入的数据表
+        :param update_fields: 冲突更新字段
+        :return:
+        """
+        ks = []
+        vs = []
+        for k in to_insert:
+            ks.append(k)
+            vs.append(to_insert.get(k))
+        fields_str = "(" + ",".join(ks) + ")"
+        values_str = "(" + "%s," * (len(vs) - 1) + "%s" + ")"
+        base_sql = '''INSERT INTO `{}` '''.format(table) + fields_str + ''' values ''' + values_str
+        on_update_sql = ''' ON DUPLICATE KEY UPDATE '''
+        update_vs = []
+        for update_field in update_fields:
+            on_update_sql += '{}=%s,'.format(update_field)
+            update_vs.append(to_insert.get(update_field))
+        on_update_sql = on_update_sql.rstrip(",")
+        sql = base_sql + on_update_sql + """;"""
+        vs.extend(update_vs)
+        return sql, tuple(vs)
+
+    def update(self, data):
+        # 将时间统一转换为 datetime.datetime 的格式
+        in_date = data.get("InDate")
+        if isinstance(in_date, datetime.date):
+            in_date = datetime.datetime(in_date.year, in_date.month, in_date.day)
+            data.update({"InDate": in_date})
+
+        out_date = data.get("OutDate")
+        if isinstance(out_date, datetime.date):
+            out_date = datetime.datetime(out_date.year, out_date.month, out_date.day)
+            data.update({"OutDate": out_date})
+
+        fields = sorted(data.keys())
+        sql, value = self.contract_sql(data, self.table_name, fields)
+        target = self.init_sql_pool(self.target_cfg)
+        try:
+            count = target.insert(sql, value)
+            logger.info("update count:  {}".format(count))
+        except pymysql.err.IntegrityError as e:
+            traceback.print_exc()
+        except Exception as e:
+            traceback.print_exc()
+        else:
+            pass
+        finally:
+            target.dispose()
+        pass
 
     def get_history_records(self, code):
         sql = 'select ID, TradingType,TargetCategory,InnerCode,SecuCode,SecuAbbr,InDate,OutDate,Flag,CCASSCode, ParValue from {} where SecuCode = {} ;'.format(self.table_name, code)
