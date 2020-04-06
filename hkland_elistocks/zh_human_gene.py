@@ -8,6 +8,7 @@ class ZHHumanTools(CommonHumamTools):
     def __init__(self):
         super(ZHHumanTools, self).__init__()
         self.table_name = 'hkland_sgelistocks'  # 深港通合资格股
+        self.tool_table_name = 'base_table_updatetime'
         self.change_table_name = 'hkex_lgt_change_of_szse_securities_lists'
         self.market = 90
         self.trade_type = 3
@@ -1199,6 +1200,20 @@ class ZHHumanTools(CommonHumamTools):
                     self.update_code_info(secu_code, [r1])
             else:
                 raise
+
+    def refresh_update_time(self):
+        target = self.init_sql_pool(self.target_cfg)
+        sql = '''select max(UPDATETIMEJZ) as max_dt from {}; '''.format(self.table_name)
+        max_dt = target.select_one(sql).get("max_dt")
+        logger.info("最新的更新时间是{}".format(max_dt))
+        refresh_sql = '''replace into {} (id,TableName, LastUpdateTime,IsValid) values (8, 'hkland_sgelistocks', '{}', 1); 
+        '''.format(self.tool_table_name,
+                   # self.target_table_name,
+                   max_dt)
+        logger.info(refresh_sql)
+        count = target.update(refresh_sql)
+        logger.info(count)  # 1 首次插入 2 替换插入
+        target.dispose()
 
     def _process(self):
 

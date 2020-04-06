@@ -29,6 +29,7 @@ class SHHumanTools(CommonHumamTools):
         self.change_table_name = 'hkex_lgt_change_of_sse_securities_lists'
         self.market = 83
         self.trade_type = 1
+        self.tool_table_name = 'base_table_updatetime'
 
         self.stats_todonothing = [
             'SSE Stock Code and Stock Name are changed to 601360 and 360 SECURITY TECHNOLOGY respectively',
@@ -1035,6 +1036,20 @@ class SHHumanTools(CommonHumamTools):
                                 for record in [record1, record2, record3, record4, record5, record6]:
                                     logger.info(record)
                                 self.update_code_info(secu_code, [record1, record2, record3, record4, record5, record6])
+
+    def refresh_update_time(self):
+        target = self.init_sql_pool(self.target_cfg)
+        sql = '''select max(UPDATETIMEJZ) as max_dt from {}; '''.format(self.table_name)
+        max_dt = target.select_one(sql).get("max_dt")
+        logger.info("最新的更新时间是{}".format(max_dt))
+        refresh_sql = '''replace into {} (id,TableName, LastUpdateTime,IsValid) values (3, 'hkland_hgelistocks', '{}', 1); 
+        '''.format(self.tool_table_name,
+                   # self.target_table_name,
+                   max_dt)
+        logger.info(refresh_sql)
+        count = target.update(refresh_sql)
+        logger.info(count)  # 1 首次插入 2 替换插入
+        target.dispose()
 
     def _process(self):
         self.first_process()

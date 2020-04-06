@@ -128,7 +128,7 @@ def task_2():
     sh = SHHumanTools()
     zh = ZHHumanTools()
     for ins in (sh, zh):
-        print(">>>"*100)
+        print(">>>"*50)
         ret = ins.get_distinct_spider_udpate_time()
         dt_list = sorted([r.get("Time") for r in ret])
         latest_records = ins.select_latest_records()
@@ -210,7 +210,10 @@ def task_2():
                 # print(ins.table_name)
                 ins.update(record_new)
 
-    print(">>>" * 100)
+        # 更新最新插入时间
+        ins.refresh_update_time()
+
+    print(">>>" * 50)
     list_check()
 
 
