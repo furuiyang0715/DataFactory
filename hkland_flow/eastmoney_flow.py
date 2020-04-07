@@ -9,6 +9,7 @@ import traceback
 
 from decimal import Decimal
 import requests as req
+sys.path.append("./../")
 
 from hkland_flow.configs import (SPIDER_MYSQL_HOST, SPIDER_MYSQL_PORT, SPIDER_MYSQL_USER, SPIDER_MYSQL_PASSWORD,
                                  SPIDER_MYSQL_DB, PRODUCT_MYSQL_HOST, PRODUCT_MYSQL_PORT, PRODUCT_MYSQL_USER,
@@ -73,7 +74,7 @@ class EMLGTNanBeiXiangZiJin(object):
         spider = self._init_pool(self.spider_cfg)
         start_dt = datetime.datetime.combine(datetime.datetime.now(), datetime.time.min)
         end_dt = datetime.datetime.combine(datetime.datetime.now(), datetime.time.max)
-        sql = '''select * from {} where Category = 2 and DateTime >= '{}' and DateTime <= '{}';'''.format(
+        sql = '''select * from {} where Category = 1 and DateTime >= '{}' and DateTime <= '{}';'''.format(
             self.table_name, start_dt, end_dt)
         south_datas = spider.select_all(sql)
         spider.dispose()
@@ -135,6 +136,8 @@ class EMLGTNanBeiXiangZiJin(object):
                 to_insert.append(r)
 
         update_fields = ['DateTime', 'ShHkFlow', 'ShHkBalance', 'SzHkFlow', 'SzHkBalance', 'Netinflow', 'Category']
+        # print(items)
+        # print(already_sourth_datas)
         print(len(to_insert))
 
         for item in to_insert:
@@ -267,7 +270,16 @@ class EMLGTNanBeiXiangZiJin(object):
 
 if __name__ == "__main__":
     now = lambda: time.time()
-    t1 = now()
-    eml = EMLGTNanBeiXiangZiJin()
-    eml._start()
-    print("Time-spider: {}".format(now() - t1))
+
+    # t1 = now()
+    # eml = EMLGTNanBeiXiangZiJin()
+    # eml._start()
+    # print("Time-spider: {}".format(now() - t1))
+
+    while True:
+        t1 = now()
+        eml = EMLGTNanBeiXiangZiJin()
+        eml.start()
+        print("Time-spider: {}".format(now() - t1))
+
+        time.sleep(3)
