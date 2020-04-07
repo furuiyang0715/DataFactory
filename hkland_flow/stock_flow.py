@@ -7,6 +7,9 @@ import sys
 import traceback
 import requests
 
+from hkland_flow.configs import (SPIDER_MYSQL_HOST, SPIDER_MYSQL_PORT, SPIDER_MYSQL_USER,
+                                 SPIDER_MYSQL_PASSWORD, SPIDER_MYSQL_DB)
+from hkland_flow.sql_pool import PyMysqlPoolBase
 from hkland_flow.stock_hu_ontime import SSEStatsOnTime
 from hkland_flow.stock_shen_ontime import SZSEStatsOnTime
 
@@ -15,10 +18,35 @@ logger = logging.getLogger(__name__)
 
 
 class HkexlugutongshishispiderSpider(object):
+    spider_cfg = {
+        "host": SPIDER_MYSQL_HOST,
+        "port": SPIDER_MYSQL_PORT,
+        "user": SPIDER_MYSQL_USER,
+        "password": SPIDER_MYSQL_PASSWORD,
+        "db": SPIDER_MYSQL_DB,
+    }
+
     def __init__(self):
         self.headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.80 Safari/537.36',
         }
+        self.table_name = 'hkland_flow_exchange'
+
+    def _init_pool(self, cfg: dict):
+        """
+        eg.
+        conf = {
+                "host": LOCAL_MYSQL_HOST,
+                "port": LOCAL_MYSQL_PORT,
+                "user": LOCAL_MYSQL_USER,
+                "password": LOCAL_MYSQL_PASSWORD,
+                "db": LOCAL_MYSQL_DB,
+        }
+        :param cfg:
+        :return:
+        """
+        pool = PyMysqlPoolBase(**cfg)
+        return pool
 
     @staticmethod
     def re_data(data):
@@ -33,6 +61,63 @@ class HkexlugutongshishispiderSpider(object):
             self._start()
         except:
             traceback.print_exc()
+
+    def contract_sql(self, to_insert: dict, table: str, update_fields: list):
+        ks = []
+        vs = []
+        for k in to_insert:
+            ks.append(k)
+            vs.append(to_insert.get(k))
+        fields_str = "(" + ",".join(ks) + ")"
+        values_str = "(" + "%s," * (len(vs) - 1) + "%s" + ")"
+        base_sql = '''INSERT INTO `{}` '''.format(table) + fields_str + ''' values ''' + values_str
+        on_update_sql = ''' ON DUPLICATE KEY UPDATE '''
+        update_vs = []
+        for update_field in update_fields:
+            on_update_sql += '{}=%s,'.format(update_field)
+            update_vs.append(to_insert.get(update_field))
+        on_update_sql = on_update_sql.rstrip(",")
+        sql = base_sql + on_update_sql + """;"""
+        vs.extend(update_vs)
+        return sql, tuple(vs)
+
+    def _save(self, to_insert, table, update_fields: list):
+        spider = self._init_pool(self.spider_cfg)
+        try:
+            insert_sql, values = self.contract_sql(to_insert, table, update_fields)
+            count = spider.insert(insert_sql, values)
+        except:
+            traceback.print_exc()
+            logger.warning("失败")
+            count = None
+        else:
+            if count:
+                logger.info("更入新数据 {}".format(to_insert))
+        finally:
+            spider.dispose()
+        return count
+
+    def _create_table(self):
+        sql = """
+        CREATE TABLE IF NOT EXISTS `{}` (
+          `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+          `DateTime` datetime NOT NULL COMMENT '交易时间',
+          `ShHkFlow` decimal(19,4) NOT NULL COMMENT '沪股通/港股通(沪)当日资金流向(万）',
+          `ShHkBalance` decimal(19,4) NOT NULL COMMENT '沪股通/港股通(沪)当日资金余额（万）',
+          `SzHkFlow` decimal(19,4) NOT NULL COMMENT '深股通/港股通(深)当日资金流向(万）',
+          `SzHkBalance` decimal(19,4) NOT NULL COMMENT '深股通/港股通(深)当日资金余额（万）',
+          `Netinflow` decimal(19,4) NOT NULL COMMENT '南北向资金,当日净流入',
+          `Category` tinyint(4) NOT NULL COMMENT '类别:1 南向, 2 北向',
+          `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
+          `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          PRIMARY KEY (`id`),
+          UNIQUE KEY `unique_key2` (`DateTime`,`Category`),
+          KEY `DateTime` (`DateTime`) USING BTREE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='陆港通-实时资金流向-交易所源';
+        """.format(self.table_name)
+        spider = self._init_pool(self.spider_cfg)
+        spider.insert(sql)
+        spider.dispose()
 
     def _start(self):
         # 北向资金
@@ -169,9 +254,9 @@ class HkexlugutongshishispiderSpider(object):
             sh_item.update(sz_item)
             # 南北向资金,当日净流入
             sh_item['Netinflow'] = sh_item['ShHkFlow'] + sh_item['SzHkFlow']
-            print(sh_item)
-            self._save(sh_item)
-
+            # print(sh_item)
+            update_fields = ['Category', 'DateTime', 'ShHkFlow', 'ShHkBalance','SzHkFlow', 'SzHkBalance', 'Netinflow']
+            self._save(sh_item, self.table_name, update_fields)
 
         # logger.info("开始处理港股通(沪)每日额度信息")
         # sse = SSEStatsOnTime()
@@ -184,4 +269,5 @@ class HkexlugutongshishispiderSpider(object):
 
 if __name__ == "__main__":
     h = HkexlugutongshishispiderSpider()
+    h._create_table()
     h._start()
