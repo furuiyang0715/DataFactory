@@ -41,7 +41,7 @@ class HoldShares(object):
         self.headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36',
         }
-        self.today = datetime.date.today().strftime("%Y%m%d")
+        self.today = datetime.date.today()
         # 当前只能查询之前一天的记录
         self.check_day = (datetime.date.today() - datetime.timedelta(days=1)).strftime("%Y/%m/%d")   # 2020/03/29
         self.converter = opencc.OpenCC('t2s')  # 中文繁体转简体
@@ -66,7 +66,7 @@ class HoldShares(object):
             '__VIEWSTATE': '/wEPDwUJNjIxMTYzMDAwZGQ79IjpLOM+JXdffc28A8BMMA9+yg==',
             '__VIEWSTATEGENERATOR': 'EC4ACD6F',
             '__EVENTVALIDATION': '/wEdAAdtFULLXu4cXg1Ju23kPkBZVobCVrNyCM2j+bEk3ygqmn1KZjrCXCJtWs9HrcHg6Q64ro36uTSn/Z2SUlkm9HsG7WOv0RDD9teZWjlyl84iRMtpPncyBi1FXkZsaSW6dwqO1N1XNFmfsMXJasjxX85jz8PxJxwgNJLTNVe2Bh/bcg5jDf8=',
-            'today': '{}'.format(self.today),
+            'today': '{}'.format(self.today.strftime("%Y%m%d")),
             'sortBy': 'stockcode',
             'sortDirection': 'asc',
             'alertMsg': '',
@@ -102,7 +102,18 @@ class HoldShares(object):
         spider.insert(sql)
         spider.dispose()
 
-    def contract_sql(self, to_insert: dict, table: str):
+    # def contract_sql(self, to_insert: dict, table: str):
+    #     ks = []
+    #     vs = []
+    #     for k in to_insert:
+    #         ks.append(k)
+    #         vs.append(to_insert.get(k))
+    #     fields_str = "(" + ",".join(ks) + ")"
+    #     values_str = "(" + "%s," * (len(vs) - 1) + "%s" + ")"
+    #     base_sql = '''REPLACE INTO `{}` '''.format(table) + fields_str + ''' values ''' + values_str + ''';'''
+    #     return base_sql, tuple(vs)
+
+    def contract_sql(self, to_insert: dict, table: str, update_fields: list):
         ks = []
         vs = []
         for k in to_insert:
@@ -110,19 +121,27 @@ class HoldShares(object):
             vs.append(to_insert.get(k))
         fields_str = "(" + ",".join(ks) + ")"
         values_str = "(" + "%s," * (len(vs) - 1) + "%s" + ")"
-        base_sql = '''REPLACE INTO `{}` '''.format(table) + fields_str + ''' values ''' + values_str + ''';'''
-        return base_sql, tuple(vs)
+        base_sql = '''INSERT INTO `{}` '''.format(table) + fields_str + ''' values ''' + values_str
+        on_update_sql = ''' ON DUPLICATE KEY UPDATE '''
+        update_vs = []
+        for update_field in update_fields:
+            on_update_sql += '{}=%s,'.format(update_field)
+            update_vs.append(to_insert.get(update_field))
+        on_update_sql = on_update_sql.rstrip(",")
+        sql = base_sql + on_update_sql + """;"""
+        vs.extend(update_vs)
+        return sql, tuple(vs)
 
-    def _save(self, sql_pool, to_insert, table):
+    def _save(self, sql_pool, to_insert, table, update_fields):
         try:
-            insert_sql, values = self.contract_sql(to_insert, table)
+            insert_sql, values = self.contract_sql(to_insert, table, update_fields)
             count = sql_pool.insert(insert_sql, values)
         except:
-            # traceback.print_exc()
+            traceback.print_exc()
             logger.warning("失败")
-            logger.info(to_insert)
         else:
-            logger.info("更入新数据 {}".format(to_insert))
+            if count == 1:
+                logger.info("更入新数据 {}".format(to_insert))
             sql_pool.end()
             return count
 
@@ -162,17 +181,22 @@ class HoldShares(object):
                 item['Percent'] = POAShares
                 # # 类别
                 # item['category'] = self.type_name
+                # 时间是连续的今天的时间
+                # item['']
+
                 # 时间
-                item['Date'] = date.replace("/", "-")
-                # 类别+代码+时间 存成一个 hashID
-                d = date.replace('/', '')
-                content = self.type_name + item['SecuCode'] + d
-                m2 = hashlib.md5()
-                m2.update(content.encode('utf-8'))
-                item_id = m2.hexdigest()
-                item['ItemID'] = item_id
+                # item['Date'] = date.replace("/", "-")
+                # # 类别+代码+时间 存成一个 hashID
+                # d = date.replace('/', '')
+                # content = self.type_name + item['SecuCode'] + d
+                # m2 = hashlib.md5()
+                # m2.update(content.encode('utf-8'))
+                # item_id = m2.hexdigest()
+                # item['ItemID'] = item_id
                 spider = self._init_pool(self.spider_cfg)
-                self._save(spider, item, self.table)
+                update_fields = ['SecuCode', 'SecuName', 'Holding', 'Percent', 'Date']
+                print(item)
+                # self._save(spider, item, self.table, update_fields)
                 # 将其存入爬虫数据库 hold_shares_sh hold_shares_sz hold_shares_hk
 
     def start(self):
@@ -221,6 +245,9 @@ class HoldShares(object):
           UNIQUE KEY `un` (`Date`,`SecuCode`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='港股通持股记录-港股'; 
         '''
+
+    def sync(self):
+        pass
 
 
 if __name__ == "__main__":
