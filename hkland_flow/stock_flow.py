@@ -320,5 +320,6 @@ if __name__ == "__main__":
 docker build -f Dockerfile_exchange -t registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_flow_exchange:v1 .
 docker push registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_flow_exchange:v1 
 sudo docker pull registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_flow_exchange:v1 
-sudo docker run -itd --name flow_exchange --env LOCAL=0 registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_flow_exchange:v1 
+sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name flow_exchange --env LOCAL=0 registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_flow_exchange:v1 
+
 '''
