@@ -204,7 +204,7 @@ class HkexlugutongshishispiderSpider(object):
         sh_item['ShHkFlow'] = self.re_data(flow_info[0][1]) - self.re_data(flow_info[1][1])
         # 沪股通/港股通(沪)当日资金余额（万） 此处北向资金表示沪股通
         sh_item['ShHkBalance'] = self.re_data(flow_info[1][1])
-        # print(sh_item)
+        print(sh_item)
 
         # logger.info("开始处理深股通每日额度信息")
         body = requests.get(north_urls[3], headers=self.headers).text
@@ -250,13 +250,13 @@ class HkexlugutongshishispiderSpider(object):
         sz_item['SzHkFlow'] = self.re_data(flow_info[0][1]) - self.re_data(flow_info[1][1])
         # 深股通/港股通(深)当日资金余额（万）北向时为深股通
         sz_item['SzHkBalance'] = self.re_data(flow_info[1][1])
-        # print(sz_item)
+        print(sz_item)
 
         if sh_item['DateTime'] == sz_item['DateTime']:
             sh_item.update(sz_item)
             # 南北向资金,当日净流入
             sh_item['Netinflow'] = sh_item['ShHkFlow'] + sh_item['SzHkFlow']
-            # print(sh_item)
+            print(sh_item)
             update_fields = ['Category', 'DateTime', 'ShHkFlow', 'ShHkBalance', 'SzHkFlow', 'SzHkBalance', 'Netinflow']
             self._save(sh_item, self.table_name, update_fields)
 
@@ -306,7 +306,7 @@ if __name__ == "__main__":
     # h._north()
     # h._south()
     while True:
-        h._start()
+        h.start()
         time.sleep(3)
         print()
         print()
