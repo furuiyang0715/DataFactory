@@ -63,6 +63,7 @@ class HkexlugutongshishispiderSpider(object):
 
     def start(self):
         try:
+            self._create_table()
             self._start()
         except:
             traceback.print_exc()
