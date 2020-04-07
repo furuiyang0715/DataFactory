@@ -2,9 +2,12 @@ import datetime
 import logging
 import re
 import traceback
+from decimal import Decimal
 
 import execjs
 import requests
+import sys
+sys.path.append("./../")
 
 from hkland_flow.configs import DC_HOST, DC_PORT, DC_USER, DC_DB, DC_PASSWD, SPIDER_MYSQL_HOST, SPIDER_MYSQL_PORT, \
     SPIDER_MYSQL_USER, SPIDER_MYSQL_PASSWORD, SPIDER_MYSQL_DB
@@ -159,8 +162,44 @@ class SFLgthisdataspiderSpider(object):
             spider.dispose()
         return count
 
+    def select_south_datas(self):
+        """获取已有的南向数据"""
+        spider = self._init_pool(self.spider_cfg)
+        start_dt = datetime.datetime.combine(datetime.datetime.now(), datetime.time.min)
+        end_dt = datetime.datetime.combine(datetime.datetime.now(), datetime.time.max)
+        sql = '''select * from {} where Category = 1 and DateTime >= '{}' and DateTime <= '{}';'''.format(
+            self.table_name, start_dt, end_dt)
+        south_datas = spider.select_all(sql)
+        spider.dispose()
+        for data in south_datas:
+            data.pop("CREATETIMEJZ")
+            data.pop("UPDATETIMEJZ")
+        return south_datas
+
+    def select_north_datas(self):
+        """获取已有的北向数据"""
+        spider = self._init_pool(self.spider_cfg)
+        start_dt = datetime.datetime.combine(datetime.datetime.now(), datetime.time.min)
+        end_dt = datetime.datetime.combine(datetime.datetime.now(), datetime.time.max)
+        sql = '''select * from {} where Category = 2 and DateTime >= '{}' and DateTime <= '{}';'''.format(
+            self.table_name, start_dt, end_dt)
+        north_datas = spider.select_all(sql)
+        spider.dispose()
+        for data in north_datas:
+            data.pop("CREATETIMEJZ")
+            data.pop("UPDATETIMEJZ")
+        return north_datas
+
     def _start(self):
         self._create_table()
+        self._north()
+        self._south()
+
+    def re_data(self, d):
+        ret = float(d) * 10000
+        ret = int(ret * 10000) // 10000
+        ret = Decimal(ret)
+        return ret
 
     def _south(self):
         '''
@@ -180,14 +219,13 @@ class SFLgthisdataspiderSpider(object):
             url = self.base_url.format(category)
             page = self.get(url)
             ret = re.findall(r"var dataDay = (.*);", page)
-            # sh_items = []
             if ret:
                 datas = eval(ret[0])[0]
                 for data in datas:
                     item = dict()
                     item['DateTime'] = datetime.datetime.strptime(self.today + " " + data[0] + ":00", "%Y-%m-%d %H:%M:%S")
-                    item['ShHkFlow'] = float(data[1]) * 10000
-                    item['ShHkBalance'] = float(data[2]) * 10000
+                    item['ShHkFlow'] = self.re_data(data[1])
+                    item['ShHkBalance'] = self.re_data(data[2])
                     item['Category'] = 1
                     # print(item)
                     sh_items.append(item)
@@ -201,14 +239,13 @@ class SFLgthisdataspiderSpider(object):
             url = self.base_url.format(category)
             page = self.get(url)
             ret = re.findall(r"var dataDay = (.*);", page)
-            # sz_items = []
             if ret:
                 datas = eval(ret[0])[0]
                 for data in datas:
                     item = dict()
                     item['DateTime'] = datetime.datetime.strptime(self.today + " " + data[0] + ":00", "%Y-%m-%d %H:%M:%S")
-                    item['SzHkFlow'] = float(data[1]) * 10000
-                    item['SzHkBalance'] = float(data[2]) * 10000
+                    item['SzHkFlow'] = self.re_data(data[1])
+                    item['SzHkBalance'] = self.re_data(data[2])
                     item['Category'] = 1
                     # print(item)
                     sz_items.append(item)
@@ -220,8 +257,6 @@ class SFLgthisdataspiderSpider(object):
                 sh_map[str(item["DateTime"])] = item
             for item in sz_items:
                 sz_map[str(item["DateTime"])] = item
-            # print(sh_map)
-            # print(sz_map)
 
             _map = {}
             for k in sh_map:
@@ -231,8 +266,26 @@ class SFLgthisdataspiderSpider(object):
                     new['Netinflow'] = new['ShHkFlow'] + new['SzHkFlow']
                     _map[k] = new
 
-            print(_map)
-            # 查询出已经在数据库中的数据
+            items = list(_map.values())
+            to_delete = []
+            to_insert = []
+
+            already_sourth_datas = self.select_south_datas()
+            for r in already_sourth_datas:
+                d_id = r.pop("id")
+                if not r in items:
+                    to_delete.append(d_id)
+
+            for r in items:
+                if not r in already_sourth_datas:
+                    to_insert.append(r)
+
+            update_fields = ['DateTime', 'ShHkFlow', 'ShHkBalance', 'SzHkFlow', 'SzHkBalance', 'Netinflow', 'Category']
+            # print(items[-1])
+            # print(already_sourth_datas[-1])
+            print(len(to_insert))
+            for item in to_insert:
+                self._save(item, self.table_name, update_fields)
 
     def _north(self):
         '''
@@ -252,14 +305,13 @@ class SFLgthisdataspiderSpider(object):
             url = self.base_url.format(category)
             page = self.get(url)
             ret = re.findall(r"var dataDay = (.*);", page)
-            # sh_items = []
             if ret:
                 datas = eval(ret[0])[0]
                 for data in datas:
                     item = dict()
                     item['DateTime'] = datetime.datetime.strptime(self.today + " " + data[0] + ":00", "%Y-%m-%d %H:%M:%S")
-                    item['ShHkFlow'] = float(data[1]) * 10000
-                    item['ShHkBalance'] = float(data[2]) * 10000
+                    item['ShHkFlow'] = self.re_data(data[1])
+                    item['ShHkBalance'] = self.re_data(data[2])
                     item['Category'] = 2
                     # print(item)
                     sh_items.append(item)
@@ -279,8 +331,8 @@ class SFLgthisdataspiderSpider(object):
                 for data in datas:
                     item = dict()
                     item['DateTime'] = datetime.datetime.strptime(self.today + " " + data[0] + ":00", "%Y-%m-%d %H:%M:%S")
-                    item['SzHkFlow'] = float(data[1]) * 10000
-                    item['SzHkBalance'] = float(data[2]) * 10000
+                    item['SzHkFlow'] = self.re_data(data[1])
+                    item['SzHkBalance'] = self.re_data(data[2])
                     item['Category'] = 2
                     # print(item)
                     sz_items.append(item)
@@ -302,16 +354,31 @@ class SFLgthisdataspiderSpider(object):
                     new = sh_map[k]
                     new['Netinflow'] = new['ShHkFlow'] + new['SzHkFlow']
                     _map[k] = new
+            items = list(_map.values())
+            to_delete = []
+            to_insert = []
 
-            print(_map)
-            # 查询出已经在数据库中的数据
+            already_north_datas = self.select_north_datas()
+            for r in already_north_datas:
+                d_id = r.pop("id")
+                if not r in items:
+                    to_delete.append(d_id)
+
+            for r in items:
+                if not r in already_north_datas:
+                    to_insert.append(r)
+
+            update_fields = ['DateTime', 'ShHkFlow', 'ShHkBalance', 'SzHkFlow', 'SzHkBalance', 'Netinflow', 'Category']
+            print(len(to_insert))
+            for item in to_insert:
+                self._save(item, self.table_name, update_fields)
 
 
 if __name__ == "__main__":
     sf = SFLgthisdataspiderSpider()
     # print(sf.cookies)
 
-    sf._north()
-    sf._south()
+    # sf._north()
+    # sf._south()
 
-    # sf._start()
+    sf._start()
