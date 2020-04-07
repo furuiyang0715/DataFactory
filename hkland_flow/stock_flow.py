@@ -8,6 +8,9 @@ import threading
 import time
 import traceback
 import requests
+import sys
+
+sys.path.append("./../")
 
 from hkland_flow.configs import (SPIDER_MYSQL_HOST, SPIDER_MYSQL_PORT, SPIDER_MYSQL_USER,
                                  SPIDER_MYSQL_PASSWORD, SPIDER_MYSQL_DB)
@@ -311,3 +314,10 @@ if __name__ == "__main__":
         print()
         print()
 
+
+'''deploy step 
+docker build -f Dockerfile_exchange -t registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_flow_exchange:v1 .
+docker push registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_flow_exchange:v1 
+sudo docker pull registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_flow_exchange:v1 
+sudo docker run -itd --name flow_exchange --env LOCAL=0 registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_flow_exchange:v1 
+'''
