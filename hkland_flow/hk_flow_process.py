@@ -457,5 +457,5 @@ if __name__ == "__main__":
     eml.start()
     print("Time-spider: {}".format(now() - t1))
 
-    eml.sync()
-    print("Time-process: {}".format(now() - t1))
+    # eml.sync()
+    # print("Time-process: {}".format(now() - t1))

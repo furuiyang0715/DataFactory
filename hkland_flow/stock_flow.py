@@ -3,6 +3,7 @@ import datetime
 import json
 import logging
 import re
+import sys
 import traceback
 import requests
 
@@ -14,57 +15,24 @@ logger = logging.getLogger(__name__)
 
 
 class HkexlugutongshishispiderSpider(object):
-    # name = 'HKEXLuGuTongShiShiSpider'
-    # allowed_domains = ['hkex.com']
-
     def __init__(self):
-        # super().__init__(**kwargs)
-        # self.rel = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, password=REDIS_PASSWORD, db=1)
         self.headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.80 Safari/537.36',
         }
-        # self.item = {}
 
     @staticmethod
     def re_data(data):
-        if data and 'Mil' in data:
-            data = data.split(' ')[0]
-        if 'RMB' in data:
-            data = data.replace('RMB', '')
-        if 'HK$' in data:
-            data = data.replace('HK$', '')
-        if ',' in data:
-            data = data.replace(',', '')
-        return data
+        ret = re.findall("RMB(.*) Mil", data)   # RMB52,000 Mil
+        if ret:
+            data = ret[0]
+            data = data.replace(",", '')
+            return int(data) * 100
 
     def start(self):
         try:
             self._start()
         except:
             traceback.print_exc()
-
-    '''
-    if category == '沪股通每日额度余额':
-    # print(new_json)
-    # 沪股通每日额度
-    # print(new_json)
-    SHSCDQ = new_json[0]['section'][0]['item'][0][1]
-    SHSCDQ = self.re_data(SHSCDQ)
-    item['SHSCDQ'] = SHSCDQ
-    # 沪股通每日额度余额
-    T1 = new_json[0]['section'][0]['subtitle'][1]
-    T2 = new_json[0]['section'][0]['item'][1][0].split(' ')[2][:-1]
-    Time = T1.split('/')[-1] + '-' + T1.split('/')[1] + '-' + T1.split('/')[0] + ' ' + T2
-    # print(Time)
-    item['SHSCDQ_T'] = Time
-    SHSCDB = new_json[0]['section'][0]['item'][1][1]
-    SHSCDB = self.re_data(SHSCDB)
-    item['SHSCDB'] = SHSCDB
-    # 沪股通每日余额占额度百分比
-    SHSCD_BPQ = new_json[0]['section'][0]['item'][2][1]
-    SHSCD_BPQ = self.re_data(SHSCD_BPQ)
-    item['SHSCD_BPQ'] = SHSCD_BPQ
-    '''
 
     def _start(self):
         # 北向资金
@@ -82,9 +50,6 @@ class HkexlugutongshishispiderSpider(object):
         ]
 
         logger.info("开始处理北向资金")
-        # logger.info("开始获取沪股通成交额信息 ")
-        # body = requests.get(north_urls[0], headers=self.headers).text
-        # print(body)
         '''
         northbound11 =
             [
@@ -137,28 +102,25 @@ class HkexlugutongshishispiderSpider(object):
                 "northbound22 ="))
         show_dt = datas[0].get("section")[0].get("subtitle")[1]
         show_dt = datetime.datetime.strptime(show_dt, "%d/%m/%Y").strftime("%Y-%m-%d")
-        # print(show_dt)   # 2020-04-07
         flow_info = datas[0].get("section")[0].get("item")
-        # print(flow_info)
-        # [['额度', 'RMB52,000 Mil', {}], ['余额 (于 09:31)', 'RMB51,505 Mil', {}], ['余额占额度百分比', '99%', {}]]
-        item = dict()
+        sh_item = dict()
+        # 类别:1 南向, 2 北向
+        sh_item['Category'] = 2
         # 分钟时间
         m_dt = flow_info[1][0]
         m_dt = re.findall("余额 \(于 (.*)\)", m_dt)[0]
         complete_dt = " ".join([show_dt, m_dt])
         complete_dt = str(datetime.datetime.strptime(complete_dt, "%Y-%m-%d %H:%M"))
-        item['SHSCDQ_T'] = complete_dt
-        # 每日额度
-        item['SHSCDQ'] = flow_info[0][1]
-        # 每日额度余额
-        item['SHSCDB'] = flow_info[1][1]
-        # 每日余额占额度百分比
-        item['SHSCD_BPQ'] = flow_info[2][1]
-        print(item)
+        # 分钟交易时间
+        sh_item['DateTime'] = complete_dt
+        # 沪股通/港股通(沪)当日资金流向(万）此处北向资金表示沪股通
+        sh_item['ShHkFlow'] = self.re_data(flow_info[0][1]) - self.re_data(flow_info[1][1])
+        # 沪股通/港股通(沪)当日资金余额（万） 此处北向资金表示沪股通
+        sh_item['ShHkBalance'] = self.re_data(flow_info[1][1])
+        # print(sh_item)
 
         logger.info("开始处理深股通每日额度信息")
         body = requests.get(north_urls[3], headers=self.headers).text
-        # print(body)
         '''
         northbound22 =
             [
@@ -187,23 +149,29 @@ class HkexlugutongshishispiderSpider(object):
                 "northbound22 ="))
         show_dt = datas[0].get("section")[0].get("subtitle")[1]
         show_dt = datetime.datetime.strptime(show_dt, "%d/%m/%Y").strftime("%Y-%m-%d")
-        # print(show_dt)
         flow_info = datas[0].get("section")[0].get("item")
-        # print(flow_info)
-        item = dict()
-        # 分钟时间
         m_dt = flow_info[1][0]
         m_dt = re.findall("余额 \(于 (.*)\)", m_dt)[0]
         complete_dt = " ".join([show_dt, m_dt])
         complete_dt = str(datetime.datetime.strptime(complete_dt, "%Y-%m-%d %H:%M"))
-        item['SZSCDQ_T'] = complete_dt
-        # 每日额度
-        item['SZSCDQ'] = flow_info[0][1]
-        # 每日额度余额
-        item['SZSCDB'] = flow_info[1][1]
-        # 每日余额占额度百分比
-        item['SZSCD_BPQ'] = flow_info[2][1]
-        print(item)
+        sz_item = dict()
+        # 类别:1 南向, 2 北向
+        sz_item['Category'] = 2
+        # 分钟交易时间
+        sz_item['DateTime'] = complete_dt
+        # 深股通/港股通(深)当日资金流向(万） 北向时为深股通
+        sz_item['SzHkFlow'] = self.re_data(flow_info[0][1]) - self.re_data(flow_info[1][1])
+        # 深股通/港股通(深)当日资金余额（万）北向时为深股通
+        sz_item['SzHkBalance'] = self.re_data(flow_info[1][1])
+        # print(sz_item)
+
+        if sh_item['DateTime'] == sz_item['DateTime']:
+            sh_item.update(sz_item)
+            # 南北向资金,当日净流入
+            sh_item['Netinflow'] = sh_item['ShHkFlow'] + sh_item['SzHkFlow']
+            print(sh_item)
+            self._save(sh_item)
+
 
         # logger.info("开始处理港股通(沪)每日额度信息")
         # sse = SSEStatsOnTime()
@@ -216,4 +184,4 @@ class HkexlugutongshishispiderSpider(object):
 
 if __name__ == "__main__":
     h = HkexlugutongshishispiderSpider()
-    h.start()
+    h._start()
