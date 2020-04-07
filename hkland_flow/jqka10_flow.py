@@ -227,7 +227,9 @@ class SFLgthisdataspiderSpider(object):
             for k in sh_map:
                 if k in sz_map:
                     sh_map[k].update(sz_map[k])
-                    _map[k] = sh_map[k]
+                    new = sh_map[k]
+                    new['Netinflow'] = new['ShHkFlow'] + new['SzHkFlow']
+                    _map[k] = new
 
             print(_map)
             # 查询出已经在数据库中的数据
@@ -297,7 +299,9 @@ class SFLgthisdataspiderSpider(object):
             for k in sh_map:
                 if k in sz_map:
                     sh_map[k].update(sz_map[k])
-                    _map[k] = sh_map[k]
+                    new = sh_map[k]
+                    new['Netinflow'] = new['ShHkFlow'] + new['SzHkFlow']
+                    _map[k] = new
 
             print(_map)
             # 查询出已经在数据库中的数据
