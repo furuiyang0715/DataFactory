@@ -4,6 +4,8 @@ import json
 import logging
 import re
 import sys
+import threading
+import time
 import traceback
 import requests
 
@@ -281,19 +283,31 @@ class HkexlugutongshishispiderSpider(object):
         sh_item['DateTime'] = sh_dt
         sh_item['ShHkFlow'] = (info.get("DailyLimit") - info.get("Balance")) / 10000
         sh_item['ShHkBalance'] = info.get("Balance") / 10000
-        # print(sh_item)
+        print(sh_item)
 
         if sz_item.get("DateTime") == sh_item.get("DateTime"):
             sh_item.update(sz_item)
-            # print(sh_item)
+            print(sh_item)
             sh_item['Netinflow'] = sh_item['ShHkFlow'] + sh_item['SzHkFlow']
-            # print(sh_item)
+            print(sh_item)
             update_fields = ['Category', 'DateTime', 'ShHkFlow', 'ShHkBalance', 'SzHkFlow', 'SzHkBalance', 'Netinflow']
             self._save(sh_item, self.table_name, update_fields)
+
+    def _start(self):
+        t1 = threading.Thread(target=self._south,)
+        t2 = threading.Thread(target=self._north,)
+        t1.start()
+        t2.start()
 
 
 if __name__ == "__main__":
     h = HkexlugutongshishispiderSpider()
     # h._create_table()
     # h._north()
-    h._south()
+    # h._south()
+    while True:
+        h._start()
+        time.sleep(3)
+        print()
+        print()
+
