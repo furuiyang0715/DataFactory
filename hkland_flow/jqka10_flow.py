@@ -1,6 +1,7 @@
 import datetime
 import logging
 import re
+import time
 import traceback
 from decimal import Decimal
 
@@ -192,8 +193,16 @@ class SFLgthisdataspiderSpider(object):
 
     def _start(self):
         self._create_table()
+        logger.info("开始更新北向数据")
         self._north()
+        logger.info("开始更新南向数据")
         self._south()
+
+    def start(self):
+        try:
+            self._start()
+        except:
+            traceback.print_exc()
 
     def re_data(self, d):
         ret = float(d) * 10000
@@ -375,10 +384,22 @@ class SFLgthisdataspiderSpider(object):
 
 
 if __name__ == "__main__":
-    sf = SFLgthisdataspiderSpider()
-    # print(sf.cookies)
+    # sf = SFLgthisdataspiderSpider()
+    # sf._start()
 
-    # sf._north()
-    # sf._south()
+    while True:
+        sf = SFLgthisdataspiderSpider()
+        sf.start()
+        print()
+        print()
+        time.sleep(3)
 
-    sf._start()
+
+'''
+docker build -f Dockerfile_jqka10 -t registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_flow_jqka10:v1 .
+docker push registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_flow_jqka10:v1 
+sudo docker pull registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_flow_jqka10:v1 
+sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name flow_jqka10 --env LOCAL=0 registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_flow_jqka10:v1 
+
+
+'''
