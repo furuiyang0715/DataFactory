@@ -51,6 +51,7 @@ class SFLgthisdataspiderSpider(object):
             'ggtbs': ('港股通(深)', 4),
         }
         self.today = datetime.datetime.today().strftime("%Y-%m-%d")
+        self.table_name = 'hkland_flow_jqka10'
 
     def _init_pool(self, cfg: dict):
         """
@@ -85,39 +86,25 @@ class SFLgthisdataspiderSpider(object):
             return resp.text
 
     def _create_table(self):
-        sql_s = '''
-        CREATE TABLE IF NOT EXISTS `lgt_south_money_data_10jqka` (
-          `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-          `Date` datetime NOT NULL COMMENT '日期',
-          `Flow` decimal(19,4) DEFAULT NULL COMMENT '当日资金流入(亿元）',
-          `Balance` decimal(19,4) DEFAULT NULL COMMENT '当日资金余额（亿元）',
-          `Category` varchar(20) COLLATE utf8_bin DEFAULT NULL COMMENT '类别(港股通（沪/深））',
-          `CategoryCode` varchar(20) COLLATE utf8_bin DEFAULT NULL COMMENT '类别id',
-          `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
-          `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-          PRIMARY KEY (`id`),
-          UNIQUE KEY `unique_key` (`Date`,`CategoryCode`) USING BTREE
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='陆股通-南向资金-同花顺';
-        '''
-
-        sql_n = '''
-        CREATE TABLE IF NOT EXISTS `lgt_north_money_data_10jqka` (
-          `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-          `Date` datetime NOT NULL COMMENT '日期',
-          `Flow` decimal(19,4) DEFAULT NULL COMMENT '当日资金流入(亿元）',
-          `Balance` decimal(19,4) DEFAULT NULL COMMENT '当日资金余额（亿元）',
-          `Category` varchar(20) COLLATE utf8_bin DEFAULT NULL COMMENT '类别(沪股通+深股通）',
-          `CategoryCode` varchar(20) COLLATE utf8_bin DEFAULT NULL COMMENT '类别id',
-          `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
-          `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-          PRIMARY KEY (`id`),
-          UNIQUE KEY `unique_key` (`Date`,`CategoryCode`) USING BTREE
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='陆股通-北向资金-同花顺'; 
-        '''
-
         spider = self._init_pool(self.spider_cfg)
-        spider.insert(sql_s)
-        spider.insert(sql_n)
+        sql = '''
+        CREATE TABLE IF NOT EXISTS `{}` (
+          `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+          `DateTime` datetime NOT NULL COMMENT '交易时间',
+          `ShHkFlow` decimal(19,4) NOT NULL COMMENT '沪股通/港股通(沪)当日资金流向(万）',
+          `ShHkBalance` decimal(19,4) NOT NULL COMMENT '沪股通/港股通(沪)当日资金余额（万）',
+          `SzHkFlow` decimal(19,4) NOT NULL COMMENT '深股通/港股通(深)当日资金流向(万）',
+          `SzHkBalance` decimal(19,4) NOT NULL COMMENT '深股通/港股通(深)当日资金余额（万）',
+          `Netinflow` decimal(19,4) NOT NULL COMMENT '南北向资金,当日净流入',
+          `Category` tinyint(4) NOT NULL COMMENT '类别:1 南向, 2 北向',
+          `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
+          `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          PRIMARY KEY (`id`),
+          UNIQUE KEY `unique_key2` (`DateTime`,`Category`),
+          KEY `DateTime` (`DateTime`) USING BTREE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='陆港通-实时资金流向-同花顺数据源';
+        '''.format(self.table_name)
+        spider.insert(sql)
         spider.dispose()
 
     def _check_if_trading_today(self, category):
@@ -184,9 +171,9 @@ class SFLgthisdataspiderSpider(object):
                         item['Balance'] = float(data[2])
                         item['Category'] = self.category_map.get(category)[0]
                         item['CategoryCode'] = category
-                        # print(item)
-                        table = "lgt_north_money_data_10jqka" if self.category_map.get(category)[1] in (1, 3) else "lgt_south_money_data_10jqka"
-                        self._save(item, table, update_fields=['Date', 'Flow', 'Balance', 'Category', 'CategoryCode'])
+                        print(item)   # {'Date': '2020-04-07 09:44', 'Flow': -0.86, 'Balance': 420.86, 'Category': '港股通(沪)', 'CategoryCode': 'ggtb'}
+                        # table = "lgt_north_money_data_10jqka" if self.category_map.get(category)[1] in (1, 3) else "lgt_south_money_data_10jqka"
+                        # self._save(item, table, update_fields=['Date', 'Flow', 'Balance', 'Category', 'CategoryCode'])
 
 
 if __name__ == "__main__":
