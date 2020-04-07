@@ -119,7 +119,7 @@ class HkexlugutongshishispiderSpider(object):
         spider.insert(sql)
         spider.dispose()
 
-    def _start(self):
+    def _north(self):
         # 北向资金
         north_urls = [
             'http://sc.hkex.com.hk/TuniS/www.hkex.com.hk/chi/csm/script/data_NBSH_Turnover_chi.js',  # 沪股通成交额
@@ -127,12 +127,12 @@ class HkexlugutongshishispiderSpider(object):
             'http://sc.hkex.com.hk/TuniS/www.hkex.com.hk/chi/csm/script/data_NBSZ_Turnover_chi.js',  # 深股通成交额
             'http://sc.hkex.com.hk/TuniS/www.hkex.com.hk/chi/csm/script/data_NBSZ_QuotaUsage_chi.js',  # 深股通每日资金余额
         ]
-        # 南向资金
-        south_urls = [
-            'http://sc.hkex.com.hk/TuniS/www.hkex.com.hk/chi/csm/script/data_SBSH_Turnover_chi.js',  # '港股通（沪）成交额'
-            'http://sc.hkex.com.hk/TuniS/www.hkex.com.hk/chi/csm/script/data_SBSZ_Turnover_chi.js',  # '港股通（深）成交额'
-
-        ]
+        # # 南向资金
+        # south_urls = [
+        #     'http://sc.hkex.com.hk/TuniS/www.hkex.com.hk/chi/csm/script/data_SBSH_Turnover_chi.js',  # '港股通（沪）成交额'
+        #     'http://sc.hkex.com.hk/TuniS/www.hkex.com.hk/chi/csm/script/data_SBSZ_Turnover_chi.js',  # '港股通（深）成交额'
+        #
+        # ]
 
         logger.info("开始处理北向资金")
         '''
@@ -157,7 +157,7 @@ class HkexlugutongshishispiderSpider(object):
             ];
         '''
 
-        logger.info("开始处理沪股通每日额度信息")
+        # logger.info("开始处理沪股通每日额度信息")
         '''
         northbound12 =
             [
@@ -204,7 +204,7 @@ class HkexlugutongshishispiderSpider(object):
         sh_item['ShHkBalance'] = self.re_data(flow_info[1][1])
         # print(sh_item)
 
-        logger.info("开始处理深股通每日额度信息")
+        # logger.info("开始处理深股通每日额度信息")
         body = requests.get(north_urls[3], headers=self.headers).text
         '''
         northbound22 =
@@ -255,19 +255,45 @@ class HkexlugutongshishispiderSpider(object):
             # 南北向资金,当日净流入
             sh_item['Netinflow'] = sh_item['ShHkFlow'] + sh_item['SzHkFlow']
             # print(sh_item)
-            update_fields = ['Category', 'DateTime', 'ShHkFlow', 'ShHkBalance','SzHkFlow', 'SzHkBalance', 'Netinflow']
+            update_fields = ['Category', 'DateTime', 'ShHkFlow', 'ShHkBalance', 'SzHkFlow', 'SzHkBalance', 'Netinflow']
             self._save(sh_item, self.table_name, update_fields)
 
-        # logger.info("开始处理港股通(沪)每日额度信息")
-        # sse = SSEStatsOnTime()
-        # print(sse.get_balance_info())
-        #
+    def _south(self):
+        logger.info("开始处理南向数据")
         # logger.info("开始处理港股通(深)每日额度信息")
-        # sz = SZSEStatsOnTime()
-        # print(sz.get_balance_info())
+        sz = SZSEStatsOnTime()
+        info = sz.get_balance_info()
+        sz_item = dict()
+        sz_item['Category'] = 1
+        sz_item['DateTime'] = info.get("Time") + ":00"
+        sz_item['SzHkFlow'] = (info.get("DailyLimit") - info.get("Balance")) / 10000
+        sz_item['SzHkBalance'] = info.get("Balance") / 10000
+        # print(sz_item)
+
+        # logger.info("开始处理港股通(沪)每日额度信息")
+        sse = SSEStatsOnTime()
+        info = sse.get_balance_info()
+        sh_item = dict()
+        sh_item['Category'] = 1    # 南向数据
+        sh_dt = info.get("Time")
+        sh_dt = datetime.datetime.strptime(sh_dt, "%Y-%m-%d %H:%M:%S")
+        sh_dt = str(datetime.datetime(sh_dt.year, sh_dt.month, sh_dt.day, sh_dt.hour, sh_dt.minute - 1, 0))
+        sh_item['DateTime'] = sh_dt
+        sh_item['ShHkFlow'] = (info.get("DailyLimit") - info.get("Balance")) / 10000
+        sh_item['ShHkBalance'] = info.get("Balance") / 10000
+        # print(sh_item)
+
+        if sz_item.get("DateTime") == sh_item.get("DateTime"):
+            sh_item.update(sz_item)
+            # print(sh_item)
+            sh_item['Netinflow'] = sh_item['ShHkFlow'] + sh_item['SzHkFlow']
+            # print(sh_item)
+            update_fields = ['Category', 'DateTime', 'ShHkFlow', 'ShHkBalance', 'SzHkFlow', 'SzHkBalance', 'Netinflow']
+            self._save(sh_item, self.table_name, update_fields)
 
 
 if __name__ == "__main__":
     h = HkexlugutongshishispiderSpider()
-    h._create_table()
-    h._start()
+    # h._create_table()
+    # h._north()
+    h._south()
