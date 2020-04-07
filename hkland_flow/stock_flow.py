@@ -274,7 +274,7 @@ class HkexlugutongshishispiderSpider(object):
         sz_item['DateTime'] = info.get("Time") + ":00"
         sz_item['SzHkFlow'] = (info.get("DailyLimit") - info.get("Balance")) / 10000
         sz_item['SzHkBalance'] = info.get("Balance") / 10000
-        # print(sz_item)
+        print(sz_item)
 
         # logger.info("开始处理港股通(沪)每日额度信息")
         sse = SSEStatsOnTime()
@@ -291,7 +291,6 @@ class HkexlugutongshishispiderSpider(object):
 
         if sz_item.get("DateTime") == sh_item.get("DateTime"):
             sh_item.update(sz_item)
-            print(sh_item)
             sh_item['Netinflow'] = sh_item['ShHkFlow'] + sh_item['SzHkFlow']
             print(sh_item)
             update_fields = ['Category', 'DateTime', 'ShHkFlow', 'ShHkBalance', 'SzHkFlow', 'SzHkBalance', 'Netinflow']
