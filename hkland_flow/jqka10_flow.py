@@ -50,6 +50,14 @@ class SFLgthisdataspiderSpider(object):
             'sgtb': ('深股通', 3),
             'ggtbs': ('港股通(深)', 4),
         }
+        self.north_map = {
+            'hgtb': ('沪股通', 1),
+            'sgtb': ('深股通', 3),
+        }
+        self.south_map = {
+            'ggtb': ('港股通(沪)', 2),
+            'ggtbs': ('港股通(深)', 4),
+        }
         self.today = datetime.datetime.today().strftime("%Y-%m-%d")
         self.table_name = 'hkland_flow_jqka10'
 
@@ -153,30 +161,83 @@ class SFLgthisdataspiderSpider(object):
 
     def _start(self):
         self._create_table()
-        for category in self.category_map:
-            is_trading = self._check_if_trading_today(category)
-            if not is_trading:
-                logger.info("{} 该方向数据今日关闭".format(self.category_map.get(category)[0]))
-                continue
-            else:
-                url = self.base_url.format(category)
-                page = self.get(url)
-                ret = re.findall(r"var dataDay = (.*);", page)
-                if ret:
-                    datas = eval(ret[0])[0]
-                    for data in datas:
-                        item = dict()
-                        item['Date'] = self.today + " " + data[0]
-                        item['Flow'] = float(data[1])
-                        item['Balance'] = float(data[2])
-                        item['Category'] = self.category_map.get(category)[0]
-                        item['CategoryCode'] = category
-                        print(item)   # {'Date': '2020-04-07 09:44', 'Flow': -0.86, 'Balance': 420.86, 'Category': '港股通(沪)', 'CategoryCode': 'ggtb'}
-                        # table = "lgt_north_money_data_10jqka" if self.category_map.get(category)[1] in (1, 3) else "lgt_south_money_data_10jqka"
-                        # self._save(item, table, update_fields=['Date', 'Flow', 'Balance', 'Category', 'CategoryCode'])
+
+    def _north(self):
+        '''
+        self.north_map = {
+            'hgtb': ('沪股通', 1),
+            'sgtb': ('深股通', 3),
+        }
+        '''
+        sh_items = []
+        sz_items = []
+        # 北向 沪
+        category = 'hgtb'
+        is_trading = self._check_if_trading_today(category)
+        if not is_trading:
+            logger.info("{} 该方向数据今日关闭".format(self.north_map.get(category)[0]))
+        else:
+            url = self.base_url.format(category)
+            page = self.get(url)
+            ret = re.findall(r"var dataDay = (.*);", page)
+            # sh_items = []
+            if ret:
+                datas = eval(ret[0])[0]
+                for data in datas:
+                    item = dict()
+                    item['DateTime'] = datetime.datetime.strptime(self.today + " " + data[0] + ":00", "%Y-%m-%d %H:%M:%S")
+                    item['ShHkFlow'] = float(data[1]) * 10000
+                    item['ShHkBalance'] = float(data[2]) * 10000
+                    item['Category'] = 2
+                    # print(item)
+                    sh_items.append(item)
+
+        # 北向 深
+        category = 'sgtb'
+        is_trading = self._check_if_trading_today(category)
+        if not is_trading:
+            logger.info("{} 该方向数据今日关闭".format(self.north_map.get(category)[0]))
+        else:
+            url = self.base_url.format(category)
+            page = self.get(url)
+            ret = re.findall(r"var dataDay = (.*);", page)
+            # sz_items = []
+            if ret:
+                datas = eval(ret[0])[0]
+                for data in datas:
+                    item = dict()
+                    item['DateTime'] = datetime.datetime.strptime(self.today + " " + data[0] + ":00", "%Y-%m-%d %H:%M:%S")
+                    item['SzHkFlow'] = float(data[1]) * 10000
+                    item['SzHkBalance'] = float(data[2]) * 10000
+                    item['Category'] = 2
+                    # print(item)
+                    sz_items.append(item)
+
+        if sh_items and sz_items:
+            sh_map = {}
+            sz_map = {}
+            for item in sh_items:
+                sh_map[str(item["DateTime"])] = item
+            for item in sz_items:
+                sz_map[str(item["DateTime"])] = item
+            # print(sh_map)
+            # print(sz_map)
+
+            _map = {}
+            for k in sh_map:
+                if k in sz_map:
+                    sh_map[k].update(sz_map[k])
+                    _map[k] = sh_map[k]
+
+            # print(_map)
+            # 查询出已经在数据库中的数据
+
 
 
 if __name__ == "__main__":
     sf = SFLgthisdataspiderSpider()
     # print(sf.cookies)
-    sf._start()
+
+    sf._north()
+
+    # sf._start()
