@@ -1,6 +1,7 @@
 import copy
 import datetime
 import logging
+import sys
 import traceback
 
 import pandas as pd
@@ -129,6 +130,8 @@ class FlowMerge(object):
         """
         生成 start 和 end 之间全部分钟时间点列表 包含前后时间点
         """
+        # print(start)
+        # print(end)
         idx = pd.date_range(start=start, end=end, freq="min")
         # res = [dt.strftime("%Y-%m-%d %H:%M:%S") for dt in idx]
         dt_list = [dt.to_pydatetime() for dt in idx]
@@ -186,12 +189,13 @@ class FlowMerge(object):
         elif this_moment_min < afternoon_start:
             dt_list = self.gen_all_minutes(morning_start, morning_end)
         elif this_moment_min <= afternoon_end:
-            dt_list = self.gen_all_minutes(morning_start, morning_end).extend(self.gen_all_minutes(afternoon_start, this_moment_min))
+            dt_list = self.gen_all_minutes(morning_start, morning_end)
+            dt_list.extend(self.gen_all_minutes(afternoon_start, this_moment_min))
         elif this_moment_min > afternoon_end:
-            dt_list = self.gen_all_minutes(morning_start, morning_end).extend(self.gen_all_minutes(afternoon_start, afternoon_end))
+            dt_list = self.gen_all_minutes(morning_start, morning_end)
+            dt_list.extend(self.gen_all_minutes(afternoon_start, afternoon_end))
         else:
             raise
-        # print(dt_list)
         # complete_win = {str(dt): dict for dt in dt_list}
         # print(complete_win)
 
@@ -242,7 +246,6 @@ class FlowMerge(object):
         update_fields = ['DateTime', 'ShHkFlow', 'ShHkBalance', 'SzHkFlow', 'SzHkBalance', 'Netinflow', 'Category']
         for data in to_insert:
             self.save(data, self.product_table_name, update_fields)
-
 
 
 if __name__ == "__main__":
