@@ -5,7 +5,8 @@ import logging
 import pandas as pd
 
 from hkland_flow.configs import (SPIDER_MYSQL_HOST, SPIDER_MYSQL_PORT, SPIDER_MYSQL_USER,
-                                 SPIDER_MYSQL_PASSWORD, SPIDER_MYSQL_DB)
+                                 SPIDER_MYSQL_PASSWORD, SPIDER_MYSQL_DB, PRODUCT_MYSQL_HOST, PRODUCT_MYSQL_PORT,
+                                 PRODUCT_MYSQL_USER, PRODUCT_MYSQL_PASSWORD, PRODUCT_MYSQL_DB)
 from hkland_flow.sql_pool import PyMysqlPoolBase
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -21,6 +22,14 @@ class FlowMerge(object):
         "db": SPIDER_MYSQL_DB,
     }
 
+    product_cfg = {
+        "host": PRODUCT_MYSQL_HOST,
+        "port": PRODUCT_MYSQL_PORT,
+        "user": PRODUCT_MYSQL_USER,
+        "password": PRODUCT_MYSQL_PASSWORD,
+        "db": PRODUCT_MYSQL_DB,
+    }
+
     def __init__(self):
         self.today = datetime.datetime.today()
         self.year = self.today.year
@@ -31,6 +40,9 @@ class FlowMerge(object):
         self.exchange_table_name = 'hkland_flow_exchange'
         self.eastmoney_table_name = 'hkland_flow_eastmoney'
         self.jqka_table_name = 'hkland_flow_jqka10'
+
+        self.product_table_name = 'hkland_flow'
+        self.tool_table_name = 'base_table_updatetime'
 
     def _init_pool(self, cfg: dict):
         pool = PyMysqlPoolBase(**cfg)
@@ -54,6 +66,47 @@ class FlowMerge(object):
             _map[str(dt)] = data
 
         return _map
+
+    def _create_table(self):
+        """创建正式库的表"""
+        sql = '''
+        CREATE TABLE IF NOT EXISTS `{}` (
+          `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+          `DateTime` datetime NOT NULL COMMENT '交易时间',
+          `ShHkFlow` decimal(19,4) NOT NULL COMMENT '沪股通/港股通(沪)当日资金流向(万）',
+          `ShHkBalance` decimal(19,4) NOT NULL COMMENT '沪股通/港股通(沪)当日资金余额（万）',
+          `SzHkFlow` decimal(19,4) NOT NULL COMMENT '深股通/港股通(深)当日资金流向(万）',
+          `SzHkBalance` decimal(19,4) NOT NULL COMMENT '深股通/港股通(深)当日资金余额（万）',
+          `Netinflow` decimal(19,4) NOT NULL COMMENT '南北向资金,当日净流入',
+          `Category` tinyint(4) NOT NULL COMMENT '类别:1 南向, 2 北向',
+          `HashID` varchar(50) COLLATE utf8_bin DEFAULT NULL COMMENT '哈希ID',
+          `CMFID` bigint(20) unsigned DEFAULT NULL COMMENT '源表来源ID',
+          `CMFTime` datetime DEFAULT NULL COMMENT 'Come From Time',
+          `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
+          `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          PRIMARY KEY (`id`),
+          UNIQUE KEY `unique_key2` (`DateTime`,`Category`),
+          UNIQUE KEY `unique_key` (`CMFID`, `Category`),
+          KEY `DateTime` (`DateTime`) USING BTREE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='陆港通-实时资金流向';
+        '''.format(self.product_table_name)
+
+        # 创建工具表
+        tool_sql = '''
+        CREATE TABLE IF NOT EXISTS `{}` (
+          `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+          `TableName` varchar(100) NOT NULL COMMENT '表名',
+          `LastUpdateTime` datetime NOT NULL COMMENT '最后更新时间',
+          `IsValid` tinyint(4) DEFAULT '1' COMMENT '是否有效',
+          PRIMARY KEY (`id`),
+          UNIQUE KEY `u1` (`TableName`) USING BTREE
+        ) ENGINE=InnoDB AUTO_INCREMENT=18063 DEFAULT CHARSET=utf8 COMMENT='每个表的最后更新时间';
+        '''.format(self.tool_table_name)
+
+        product = self._init_pool(self.product_cfg)
+        product.insert(sql)
+        product.insert(tool_sql)  # 一般只执行一次
+        product.dispose()
 
     def gen_all_minutes(self, start: datetime.datetime, end: datetime.datetime):
         """
@@ -108,14 +161,21 @@ class FlowMerge(object):
         south_df = south_df.set_index("DateTime",
                                       # drop=False
                                       )
-        south_df.sort_values(by="DateTime", ascending=True, inplace=True)
+        # south_df.sort_values(by="DateTime", ascending=True, inplace=True)
         need_south_df = south_df.reindex(index=dt_list)
         need_south_df.replace({0: None}, inplace=True)
         need_south_df.fillna(method="ffill", inplace=True)
+        need_south_df.reset_index("DateTime", inplace=True)
+        need_south_df.sort_values(by="DateTime", ascending=True, inplace=True)
+        datas = need_south_df.to_dict(orient='records')
 
-        # 将索引列恢复到某一列中
+        for data in datas:
+            print(data)
+
+
 
 
 if __name__ == "__main__":
     flow = FlowMerge()
+    flow._create_table()
     flow.south()
