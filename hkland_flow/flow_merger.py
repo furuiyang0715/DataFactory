@@ -380,6 +380,21 @@ class FlowMerge(object):
         else:
             self.north()
 
+        # 刷新更新时间戳
+        self.refresh_update_time()
+
+    def refresh_update_time(self):
+        product = self._init_pool(self.product_cfg)
+        sql = '''select max(UPDATETIMEJZ) as max_dt from {}; '''.format(self.product_table_name)
+        max_dt = product.select_one(sql).get("max_dt")
+        logger.info("最新的更新时间是{}".format(max_dt))
+
+        refresh_sql = '''replace into {} (id,TableName, LastUpdateTime,IsValid) values (1, "hkland_flow", '{}', 1); 
+        '''.format(self.tool_table_name, max_dt)
+        count = product.update(refresh_sql)
+        logger.info(count)   # 1 首次插入 2 替换插入
+        product.dispose()
+
     def start(self):
         try:
             self._start()
