@@ -172,8 +172,89 @@ class FlowMerge(object):
             product.dispose()
         return count
 
+    def north(self):
+        """9:30-11:30; 13:00-15:00  (11:30-9:30)*60+1 + (15-13)*60+1 = 242"""
+        morning_start = datetime.datetime(self.year, self.month, self.day, 9, 30, 0)
+        morning_end = datetime.datetime(self.year, self.month, self.day, 11, 30, 0)
+        afternoon_start = datetime.datetime(self.year, self.month, self.day, 13, 0, 0)
+        afternoon_end = datetime.datetime(self.year, self.month, self.day, 15, 0, 0)
+        this_moment = datetime.datetime.now()
+        this_moment_min = datetime.datetime(this_moment.year, this_moment.month, this_moment.day,
+                                            this_moment.hour, this_moment.minute, 0) + datetime.timedelta(minutes=self.offset)
+
+        if this_moment_min < morning_start:
+            logger.info("北向未开盘")
+            return
+        elif this_moment_min <= morning_end:
+            dt_list = self.gen_all_minutes(morning_start, this_moment_min)
+        elif this_moment_min < afternoon_start:
+            dt_list = self.gen_all_minutes(morning_start, morning_end)
+        elif this_moment_min <= afternoon_end:
+            dt_list = self.gen_all_minutes(morning_start, morning_end)
+            dt_list.extend(self.gen_all_minutes(afternoon_start, this_moment_min))
+        elif this_moment_min > afternoon_end:
+            dt_list = self.gen_all_minutes(morning_start, morning_end)
+            dt_list.extend(self.gen_all_minutes(afternoon_start, afternoon_end))
+        else:
+            raise
+        # for i in dt_list:
+        #     print(i)
+
+        exchange_north = self.fetch(self.exchange_table_name, morning_start, this_moment_min, 2)
+        exchange_north_win = self.process_sql_datas(exchange_north)
+        # for k in exchange_north_win:
+        #     print(k, ">>> ", exchange_north_win[k])
+
+        jqka_north = self.fetch(self.jqka_table_name, morning_start, this_moment_min, 2)
+        jqka_north_win = self.process_sql_datas(jqka_north)
+        # for k in jqka_north_win:
+        #     print(k, ">>> ", jqka_north_win[k])
+
+        eastmoney_north = self.fetch(self.eastmoney_table_name, morning_start, this_moment_min, 2)
+        eastmoney_north_win = self.process_sql_datas(eastmoney_north)
+        # for k in eastmoney_north_win:
+        #     print(k, ">>> ", eastmoney_north_win[k])
+
+        # 按照优先级别进行更新
+        north_win = copy.deepcopy(exchange_north_win)
+        north_win.update(jqka_north_win)
+        north_win.update(eastmoney_north_win)
+
+        north_df = pd.DataFrame(list(north_win.values()))
+        north_df = north_df.set_index("DateTime",
+                                      # drop=False
+                                      )
+        need_north_df = north_df.reindex(index=dt_list)
+        need_north_df.replace({0: None}, inplace=True)
+        need_north_df.fillna(method="ffill", inplace=True)
+        need_north_df.reset_index("DateTime", inplace=True)
+        need_north_df.sort_values(by="DateTime", ascending=True, inplace=True)
+        datas = need_north_df.to_dict(orient='records')
+
+        # # 首次
+        # for data in datas:
+        #     data.update({"DateTime": data.get("DateTime").to_pydatetime()})
+        #     update_fields = ['DateTime', 'ShHkFlow', 'ShHkBalance', 'SzHkFlow', 'SzHkBalance', 'Netinflow', 'Category']
+        #     self.save(data, self.product_table_name, update_fields)
+
+        # 增量
+        for data in datas:
+            data.update({"DateTime": data.get("DateTime").to_pydatetime()})
+
+        already_datas = self.select_already_datas(2, morning_start, this_moment_min)
+        to_insert = []
+        for data in datas:
+            if not data in already_datas:
+                to_insert.append(data)
+
+        print(to_insert)
+        print(len(to_insert))
+        update_fields = ['DateTime', 'ShHkFlow', 'ShHkBalance', 'SzHkFlow', 'SzHkBalance', 'Netinflow', 'Category']
+        for data in to_insert:
+            self.save(data, self.product_table_name, update_fields)
+
     def south(self):
-        """9-12; 13-16:10     (12-9)*60 + (16-13) *60 + 10 + 2 = 372"""
+        """9:00-12:00; 13:00-16:10     (12-9)*60 + (16-13) *60 + 10 + 2 = 372"""
         morning_start = datetime.datetime(self.year, self.month, self.day, 9, 0, 0)
         morning_end = datetime.datetime(self.year, self.month, self.day, 12, 0, 0)
         afternoon_start = datetime.datetime(self.year, self.month, self.day, 13, 0, 0)
@@ -251,4 +332,5 @@ class FlowMerge(object):
 if __name__ == "__main__":
     flow = FlowMerge()
     flow._create_table()
-    flow.south()
+    # flow.south()
+    flow.north()
