@@ -1,6 +1,7 @@
 import copy
 import datetime
 import logging
+import traceback
 
 import pandas as pd
 
@@ -55,6 +56,22 @@ class FlowMerge(object):
         ret = spider.select_all(sql)
         spider.dispose()
         return ret
+
+    def select_already_datas(self, category, start_dt, end_dt):
+        """获取已有的南北向数据"""
+        product = self._init_pool(self.product_cfg)
+        sql = '''select * from {} where Category = {} and DateTime >= '{}' and DateTime <= '{}';'''.format(
+            self.product_table_name, category, start_dt, end_dt)
+        _datas = product.select_all(sql)
+        product.dispose()
+        for data in _datas:
+            data.pop("CREATETIMEJZ")
+            data.pop("UPDATETIMEJZ")
+            data.pop("id")
+            data.pop("HashID")
+            data.pop("CMFID")
+            data.pop("CMFTime")
+        return _datas
 
     def process_sql_datas(self, datas):
         _map = {}
@@ -117,6 +134,41 @@ class FlowMerge(object):
         dt_list = [dt.to_pydatetime() for dt in idx]
         return dt_list
 
+    def contract_sql(self, to_insert: dict, table: str, update_fields: list):
+        ks = []
+        vs = []
+        for k in to_insert:
+            ks.append(k)
+            vs.append(to_insert.get(k))
+        fields_str = "(" + ",".join(ks) + ")"
+        values_str = "(" + "%s," * (len(vs) - 1) + "%s" + ")"
+        base_sql = '''INSERT INTO `{}` '''.format(table) + fields_str + ''' values ''' + values_str
+        on_update_sql = ''' ON DUPLICATE KEY UPDATE '''
+        update_vs = []
+        for update_field in update_fields:
+            on_update_sql += '{}=%s,'.format(update_field)
+            update_vs.append(to_insert.get(update_field))
+        on_update_sql = on_update_sql.rstrip(",")
+        sql = base_sql + on_update_sql + """;"""
+        vs.extend(update_vs)
+        return sql, tuple(vs)
+
+    def save(self, to_insert, table, update_fields: list):
+        product = self._init_pool(self.product_cfg)
+        try:
+            insert_sql, values = self.contract_sql(to_insert, table, update_fields)
+            count = product.insert(insert_sql, values)
+        except:
+            traceback.print_exc()
+            logger.warning("失败")
+            count = None
+        else:
+            if count:
+                logger.info("更入新数据 {}".format(to_insert))
+        finally:
+            product.dispose()
+        return count
+
     def south(self):
         """9-12; 13-16:10     (12-9)*60 + (16-13) *60 + 10 + 2 = 372"""
         morning_start = datetime.datetime(self.year, self.month, self.day, 9, 0, 0)
@@ -169,9 +221,27 @@ class FlowMerge(object):
         need_south_df.sort_values(by="DateTime", ascending=True, inplace=True)
         datas = need_south_df.to_dict(orient='records')
 
-        for data in datas:
-            print(data)
+        # # 首次
+        # for data in datas:
+        #     data.update({"DateTime": data.get("DateTime").to_pydatetime()})
+        #     update_fields = ['DateTime', 'ShHkFlow', 'ShHkBalance', 'SzHkFlow', 'SzHkBalance', 'Netinflow', 'Category']
+        #     self.save(data, self.product_table_name, update_fields)
 
+        # 增量
+        for data in datas:
+            data.update({"DateTime": data.get("DateTime").to_pydatetime()})
+
+        already_datas = self.select_already_datas(1, morning_start, this_moment_min)
+        to_insert = []
+        for data in datas:
+            if not data in already_datas:
+                to_insert.append(data)
+
+        print(to_insert)
+        print(len(to_insert))
+        update_fields = ['DateTime', 'ShHkFlow', 'ShHkBalance', 'SzHkFlow', 'SzHkBalance', 'Netinflow', 'Category']
+        for data in to_insert:
+            self.save(data, self.product_table_name, update_fields)
 
 
 
