@@ -304,11 +304,12 @@ class HkexlugutongshishispiderSpider(object):
 
 
 if __name__ == "__main__":
-    h = HkexlugutongshishispiderSpider()
+    # h = HkexlugutongshishispiderSpider()
     # h._create_table()
     # h._north()
     # h._south()
     while True:
+        h = HkexlugutongshishispiderSpider()
         h.start()
         time.sleep(3)
         print()

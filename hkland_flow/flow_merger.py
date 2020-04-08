@@ -2,13 +2,15 @@ import copy
 import datetime
 import logging
 import sys
+import time
 import traceback
 
 import pandas as pd
 
 from hkland_flow.configs import (SPIDER_MYSQL_HOST, SPIDER_MYSQL_PORT, SPIDER_MYSQL_USER,
                                  SPIDER_MYSQL_PASSWORD, SPIDER_MYSQL_DB, PRODUCT_MYSQL_HOST, PRODUCT_MYSQL_PORT,
-                                 PRODUCT_MYSQL_USER, PRODUCT_MYSQL_PASSWORD, PRODUCT_MYSQL_DB)
+                                 PRODUCT_MYSQL_USER, PRODUCT_MYSQL_PASSWORD, PRODUCT_MYSQL_DB, DC_HOST, DC_PORT,
+                                 DC_USER, DC_PASSWD, DC_DB)
 from hkland_flow.sql_pool import PyMysqlPoolBase
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -16,6 +18,14 @@ logger = logging.getLogger(__name__)
 
 
 class FlowMerge(object):
+    dc_cfg = {
+        "host": DC_HOST,
+        "port": DC_PORT,
+        "user": DC_USER,
+        "password": DC_PASSWD,
+        "db": DC_DB,
+    }
+
     spider_cfg = {
         "host": SPIDER_MYSQL_HOST,
         "port": SPIDER_MYSQL_PORT,
@@ -328,9 +338,64 @@ class FlowMerge(object):
         for data in to_insert:
             self.save(data, self.product_table_name, update_fields)
 
+    def _check_if_trading_today(self, category):
+        '''
+        self.category_map = {
+            'hgtb': ('沪股通', 1),
+            'ggtb': ('港股通(沪)', 2),
+            'sgtb': ('深股通', 3),
+            'ggtbs': ('港股通(深)', 4),
+        }
+        一般来说 1 3 与 2 4 是一致的
+        '''
+        dc = self._init_pool(self.dc_cfg)
+        _map = {
+            1: (2, 4),
+            2: (1, 3),
+        }
+
+        sql = 'select IfTradingDay from hkland_shszhktradingday where TradingType in {} and EndDate = "{}";'.format(
+        _map.get(category), self.today.strftime("%Y-%m-%d"))
+        ret = dc.select_all(sql)
+        ret = [r.get("IfTradingDay") for r in ret]
+        if ret == [2, 2]:
+            return False
+        else:
+            return True
+
+    def _start(self):
+        # 尝试建表
+        self._create_table()
+        # 首先判断今天南北向是否交易
+        south_trade_bool = self._check_if_trading_today(1)
+        if not south_trade_bool:
+            logger.warning("今天{}南向无交易".format(self.today))
+        else:
+            self.south()
+
+        north_trade_bool = self._check_if_trading_today(2)
+        if not north_trade_bool:
+            logger.warning("今天{}南向无交易".format(self.today))
+        else:
+            self.north()
+
+    def start(self):
+        try:
+            self._start()
+        except:
+            traceback.print_exc()
+
 
 if __name__ == "__main__":
-    flow = FlowMerge()
-    flow._create_table()
-    # flow.south()
-    flow.north()
+    # flow = FlowMerge()
+    # flow._start()
+
+    now = lambda: time.time()
+    while True:
+        t1 = now()
+        flow = FlowMerge()
+        flow.start()
+        logger.info("Time:{}s".format(now() - t1))
+        time.sleep(5)
+        print()
+        print()
