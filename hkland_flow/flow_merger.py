@@ -6,6 +6,7 @@ import time
 import traceback
 
 import pandas as pd
+sys.path.append("./../")
 
 from hkland_flow.configs import (SPIDER_MYSQL_HOST, SPIDER_MYSQL_PORT, SPIDER_MYSQL_USER,
                                  SPIDER_MYSQL_PASSWORD, SPIDER_MYSQL_DB, PRODUCT_MYSQL_HOST, PRODUCT_MYSQL_PORT,
@@ -399,3 +400,12 @@ if __name__ == "__main__":
         time.sleep(5)
         print()
         print()
+
+
+'''
+docker build -f Dockerfile_merge -t registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_flow_merge:v1 .
+docker push registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_flow_merge:v1 
+sudo docker pull registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_flow_merge:v1 
+sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name flow_merge --env LOCAL=0 registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_flow_merge:v1 
+
+'''

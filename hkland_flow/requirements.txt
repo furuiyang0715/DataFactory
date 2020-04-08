@@ -1,5 +1,6 @@
 PyMySQL==0.9.3
-PyExecJS==1.5.1
 schedule==0.6.0
 requests==2.21.0
+pandas==0.23.4
+PyExecJS==1.5.1
 DBUtils==1.3
