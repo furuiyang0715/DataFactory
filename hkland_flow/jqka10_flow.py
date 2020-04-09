@@ -119,6 +119,15 @@ class SFLgthisdataspiderSpider(object):
         spider.insert(sql)
         spider.dispose()
 
+    def _check_if_trading_period(self):
+        """判断是否是该天的交易时段"""
+        _now = datetime.datetime.now()
+        if (_now <= datetime.datetime(_now.year, _now.month, _now.day, 8, 0, 0) or
+                _now >= datetime.datetime(_now.year, _now.month, _now.day, 16, 30, 0)):
+            logger.warning("非当天交易时段")
+            return False
+        return True
+
     def _check_if_trading_today(self, category):
         """检查下当前方向是否交易"""
         dc = self._init_pool(self.dc_cfg)
@@ -192,6 +201,10 @@ class SFLgthisdataspiderSpider(object):
         return north_datas
 
     def _start(self):
+        is_trading = self._check_if_trading_period()
+        if not is_trading:
+            return
+
         self._create_table()
         logger.info("开始更新北向数据")
         self._north()

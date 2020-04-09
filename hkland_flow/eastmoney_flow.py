@@ -69,6 +69,15 @@ class EMLGTNanBeiXiangZiJin(object):
         py_data = json.loads(data).get('data')
         return py_data
 
+    def _check_if_trading_period(self):
+        """判断是否是该天的交易时段"""
+        _now = datetime.datetime.now()
+        if (_now <= datetime.datetime(_now.year, _now.month, _now.day, 8, 0, 0) or
+                _now >= datetime.datetime(_now.year, _now.month, _now.day, 16, 30, 0)):
+            logger.warning("非当天交易时段")
+            return False
+        return True
+
     def select_n2s_datas(self):
         """获取已有的南向数据"""
         spider = self._init_pool(self.spider_cfg)
@@ -252,6 +261,10 @@ class EMLGTNanBeiXiangZiJin(object):
         spider.end()
 
     def _start(self):
+        is_trading = self._check_if_trading_period()
+        if not is_trading:
+            return
+
         self._create_table()
 
         py_data = self.get_response_data()

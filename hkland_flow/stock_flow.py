@@ -71,6 +71,15 @@ class HkexlugutongshishispiderSpider(object):
             data = data.replace(",", '')
             return int(data) * 100
 
+    def _check_if_trading_period(self):
+        """判断是否是该天的交易时段"""
+        _now = datetime.datetime.now()
+        if (_now <= datetime.datetime(_now.year, _now.month, _now.day, 8, 0, 0) or
+                _now >= datetime.datetime(_now.year, _now.month, _now.day, 16, 30, 0)):
+            logger.warning("非当天交易时段")
+            return False
+        return True
+
     def start(self):
         try:
             self._create_table()
@@ -332,6 +341,10 @@ class HkexlugutongshishispiderSpider(object):
             return True
 
     def _start(self):
+        is_trading = self._check_if_trading_period()
+        if not is_trading:
+            return
+
         south_bool = self._check_if_trading_today(1)
         if south_bool:
             t1 = threading.Thread(target=self._south,)
