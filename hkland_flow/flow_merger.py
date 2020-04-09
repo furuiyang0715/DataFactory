@@ -365,6 +365,10 @@ class FlowMerge(object):
             return True
 
     def _start(self):
+        is_trading = self._check_if_trading_period()
+        if not is_trading:
+            return
+
         # 尝试建表
         self._create_table()
         # 首先判断今天南北向是否交易
@@ -394,6 +398,15 @@ class FlowMerge(object):
         count = product.update(refresh_sql)
         logger.info(count)   # 1 首次插入 2 替换插入
         product.dispose()
+
+    def _check_if_trading_period(self):
+        """判断是否是该天的交易时段"""
+        _now = datetime.datetime.now()
+        if (_now <= datetime.datetime(_now.year, _now.month, _now.day, 8, 0, 0) or
+                _now >= datetime.datetime(_now.year, _now.month, _now.day, 17, 00, 0)):
+            logger.warning("非当天交易时段")
+            return False
+        return True
 
     def start(self):
         try:
