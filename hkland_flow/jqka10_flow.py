@@ -413,6 +413,8 @@ docker build -f Dockerfile_jqka10 -t registry.cn-shenzhen.aliyuncs.com/jzdev/jzd
 docker push registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_flow_jqka10:v1 
 sudo docker pull registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_flow_jqka10:v1 
 sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name flow_jqka10 --env LOCAL=0 registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_flow_jqka10:v1 
+docker logs -ft --tail 1000 flow_jqka10
 
-
+# local 
+sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name flow_jqka10 registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_flow_jqka10:v1 
 '''

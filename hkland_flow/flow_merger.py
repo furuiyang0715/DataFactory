@@ -435,5 +435,18 @@ docker build -f Dockerfile_merge -t registry.cn-shenzhen.aliyuncs.com/jzdev/jzda
 docker push registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_flow_merge:v1 
 sudo docker pull registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_flow_merge:v1 
 sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name flow_merge --env LOCAL=0 registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_flow_merge:v1 
+docker logs -ft --tail 1000 flow_merge 
+
+# local 
+sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name flow_merge registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_flow_merge:v1 
+'''
+
+
+''' 372 & 242 
+select * from hkland_flow where DateTime >= '2020-04-09 09:00:00' and DateTime <= '2020-04-09 16:10:00' and  Category = '1';
+select * from hkland_flow where DateTime >= '2020-04-09 09:00:00' and DateTime <= '2020-04-09 16:10:00' and  Category = '2';
+
+select * from  hkland_shszhktradingday where EndDate = '2020-04-09 00:00:00'; 
+
 
 '''
