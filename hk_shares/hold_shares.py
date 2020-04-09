@@ -77,9 +77,12 @@ class HoldShares(object):
         }
         self.percent_comment = _percent_comment_map.get(self.type)
 
-        self.table = 'hold_shares_{}'.format(self.type)
+        # 敏仪的爬虫表名是 hold_shares_sh hold_shares_sz hold_shares_hk
+        # 我这边更新后的表名是 hoding_ .. 区别是跟正式表的字段保持一致
+        self.spider_table = 'holding_shares_{}'.format(self.type)
         #  FIXME 运行内存
         self.inner_code_map = self.get_inner_code_map()
+
 
     @property
     def post_params(self):
@@ -101,24 +104,22 @@ class HoldShares(object):
         return pool
 
     def _create_table(self):
-        # SHOUGANG CONCORD INTERNATIONAL ENTERPRISES CO LTD-TEMPORARY COUNTER    # length = 67 50-->100
+        # ['SecuCode', 'InnerCode', 'SecuAbbr', 'Date', 'Percent', 'ShareNum']
         sql = '''
-        CREATE TABLE IF NOT EXISTS `hold_shares_{}` (
+         CREATE TABLE IF NOT EXISTS `{}` (
           `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-          `SecuCode` varchar(10) COLLATE utf8_bin NOT NULL COMMENT '股票交易代码',
-          `SecuName` varchar(100) COLLATE utf8_bin DEFAULT NULL COMMENT '股票名称',
-          `Holding` decimal(19,2) DEFAULT NULL COMMENT '于中央结算系统的持股量',
-          `Percent` decimal(9,4) DEFAULT NULL COMMENT '{}',
-          `Date` date DEFAULT NULL COMMENT '日期',
-          `ItemID` varchar(50) COLLATE utf8_bin DEFAULT NULL COMMENT 'itemid',
+          `SecuCode` varchar(16) COLLATE utf8_bin NOT NULL COMMENT '股票交易代码',
+          `InnerCode` int(11) NOT NULL COMMENT '内部编码',
+          `SecuAbbr` varchar(50) COLLATE utf8_bin DEFAULT NULL COMMENT '股票简称',
+          `Date` datetime NOT NULL COMMENT '自然日',
+          `Percent` decimal(20,4) DEFAULT NULL COMMENT '占A股总股本的比例（%）',
+          `ShareNum` decimal(20,0) DEFAULT NULL COMMENT '股票数量(股)',
           `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
           `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
           PRIMARY KEY (`id`),
-          UNIQUE KEY `unique_key` (`SecuCode`,`Date`,`ItemID`),
-          KEY `SecuCode` (`SecuCode`),
-          KEY `update_time` (`UPDATETIMEJZ`)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='{}持股记录（HKEX）'; 
-        '''.format(self.type, self.percent_comment, self.type_name)
+          UNIQUE KEY `un2` (`InnerCode`,`Date`) USING BTREE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='沪/深股通持股记录'; 
+        '''.format(self.spider_table)
         spider = self._init_pool(self.spider_cfg)
         spider.insert(sql)
         spider.dispose()
@@ -234,6 +235,8 @@ class HoldShares(object):
                 item['InnerCode'] = self.get_inner_code(land_secu_code)
                 # 时间 在数据处理的时候进行控制 这里统一用网页上的时间
                 item['Date'] = date.replace("/", "-")
+                # 判断是否是港交所交易日 在数据处理的时间进行判断
+                # item['HKTradeDay'] =
                 # 於中央結算系統的持股量
                 holding = tr.xpath('./td[3]/div[2]/text()')[0]
                 if holding:
@@ -248,12 +251,10 @@ class HoldShares(object):
                 else:
                     POAShares = float(0)
                 item['Percent'] = POAShares
-                print(item)
-
-                # spider = self._init_pool(self.spider_cfg)
-                # update_fields = ['SecuCode', 'SecuName', 'Holding', 'Percent', 'Date']
-                # self._save(spider, item, self.table, update_fields)
-                # 将其存入爬虫数据库 hold_shares_sh hold_shares_sz hold_shares_hk
+                # print(item)
+                spider = self._init_pool(self.spider_cfg)
+                update_fields = ['SecuCode', 'InnerCode', 'SecuAbbr', 'Date', 'Percent', 'ShareNum']
+                self._save(spider, item, self.spider_table, update_fields)
 
     def start(self):
         try:
