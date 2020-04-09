@@ -161,8 +161,10 @@ class HoldShares(object):
            https://dd.gildata.com/#/tableShow/718/column///
         """
         juyuan = self._init_pool(self.juyuan_cfg)
-        # sql = '''SELECT SecuCode,InnerCode from hk_secumain WHERE SecuCategory in (51, 3, 53) and SecuMarket in (72) and ListedSector in (1, 2, 6, 7);'''
-        sql = 'SELECT SecuCode,InnerCode from SecuMain WHERE SecuCategory in (1, 2) and SecuMarket in (83, 90) and ListedSector in (1, 2, 6, 7);'
+        if self.type in ("sh", "sz"):
+            sql = 'SELECT SecuCode,InnerCode from SecuMain WHERE SecuCategory in (1, 2) and SecuMarket in (83, 90) and ListedSector in (1, 2, 6, 7);'
+        else:
+            sql = '''SELECT SecuCode,InnerCode from hk_secumain WHERE SecuCategory in (51, 3, 53, 78) and SecuMarket in (72) and ListedSector in (1, 2, 6, 7);'''
         ret = juyuan.select_all(sql)
         juyuan.dispose()
         info = {}
@@ -200,7 +202,9 @@ class HoldShares(object):
                 logger.warning("{} 无对应的大陆编码".format(secu_code))
                 raise
         elif self.type == 'hk':
-            pass
+            # 补上 0
+            if len(secu_code) != 5:
+                secu_code = "0"*(5-len(secu_code)) + secu_code
         else:
             raise
 
@@ -210,6 +214,18 @@ class HoldShares(object):
         ret = self.inner_code_map.get(secu_code)
         if not ret:
             logger.warning("{} 不存在内部编码".format(secu_code))
+            raise
+        return ret
+
+    def get_secu_name(self, secu_code):
+        """网站显示的名称过长 就使用数据库中查询出来的名称 """
+        juyuan = self._init_pool(self.juyuan_cfg)
+        if self.type in ("sh", "sz"):
+            sql = 'SELECT ChiNameAbbr from SecuMain WHERE SecuCode ="{}" and SecuCategory in (1, 2) and SecuMarket in (83, 90) and ListedSector in (1, 2, 6, 7);'.format(secu_code)
+        else:
+            sql = '''SELECT ChiNameAbbr from hk_secumain WHERE SecuCode ="{}" and  SecuCategory in (51, 3, 53, 78) and SecuMarket in (72) and ListedSector in (1, 2, 6, 7);'''.format(secu_code)
+        ret = juyuan.select_one(sql).get("ChiNameAbbr")
+        juyuan.dispose()
         return ret
 
     def _start(self):
@@ -226,17 +242,21 @@ class HoldShares(object):
                 # 股份代码
                 secu_code = tr.xpath('./td[1]/div[2]/text()')[0].strip()
                 item['SecuCode'] = secu_code
+                # 聚源内部编码
+                _secu_code = self._trans_secucode(secu_code)
+                item['InnerCode'] = self.get_inner_code(_secu_code)
                 # 股票简称
                 secu_name = tr.xpath('./td[2]/div[2]/text()')[0].strip()
                 simple_secu_name = self.converter.convert(secu_name)
+                if len(simple_secu_name) > 50:
+                    simple_secu_name = self.get_secu_name(_secu_code)
                 item['SecuAbbr'] = simple_secu_name
-                # 聚源内部编码
-                land_secu_code = self._trans_secucode(secu_code)
-                item['InnerCode'] = self.get_inner_code(land_secu_code)
+
                 # 时间 在数据处理的时候进行控制 这里统一用网页上的时间
                 item['Date'] = date.replace("/", "-")
                 # 判断是否是港交所交易日 在数据处理的时间进行判断
                 # item['HKTradeDay'] =
+
                 # 於中央結算系統的持股量
                 holding = tr.xpath('./td[3]/div[2]/text()')[0]
                 if holding:
@@ -244,6 +264,7 @@ class HoldShares(object):
                 else:
                     holding = 0
                 item['ShareNum'] = holding
+
                 # 占股的百分比
                 POAShares = tr.xpath('./td[4]/div[2]/text()')
                 if POAShares:
@@ -251,7 +272,8 @@ class HoldShares(object):
                 else:
                     POAShares = float(0)
                 item['Percent'] = POAShares
-                # print(item)
+
+                print(item)
                 spider = self._init_pool(self.spider_cfg)
                 update_fields = ['SecuCode', 'InnerCode', 'SecuAbbr', 'Date', 'Percent', 'ShareNum']
                 self._save(spider, item, self.spider_table, update_fields)
@@ -313,7 +335,7 @@ if __name__ == "__main__":
     #     h = HoldShares(type)
     #     h.start()
 
-    h = HoldShares("sz")
+    h = HoldShares("hk")
     ret = h.inner_code_map
     # for k in ret:
     #     print(k, ret[k])
