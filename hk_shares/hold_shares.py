@@ -2,6 +2,7 @@ import datetime
 import hashlib
 import json
 import logging
+import pprint
 import re
 import sys
 import traceback
@@ -49,7 +50,7 @@ class HoldShares(object):
 
     def __init__(self, type, offset=1):
         self.type = type
-        self.url = 'http://www.hkexnews.hk/sdw/search/mutualmarket_c.aspx?t={}'.format(type)
+        self.url = 'https://www.hkexnews.hk/sdw/search/mutualmarket_c.aspx?t={}'.format(type)
         self.headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36',
         }
@@ -86,7 +87,7 @@ class HoldShares(object):
         # 生成正式库中的两个 hkland_shares hkland_hkshares
         if self.type in ("sh", "sz"):
             self.table_name = 'hkland_shares'
-        elif self.type == "sz":
+        elif self.type == "hk":
             self.table_name = 'hkland_hkshares'
         else:
             raise
@@ -107,6 +108,17 @@ class HoldShares(object):
             'txtShareholdingDate': '{}'.format(self.check_day),
             'btnSearch': '搜尋',
         }
+        # data = {
+        #     "__VIEWSTATE": "/wEPDwUJNjIxMTYzMDAwZGQ79IjpLOM+JXdffc28A8BMMA9+yg==",
+        #     "__VIEWSTATEGENERATOR": "EC4ACD6F",
+        #     "__EVENTVALIDATION": "/wEdAAdtFULLXu4cXg1Ju23kPkBZVobCVrNyCM2j+bEk3ygqmn1KZjrCXCJtWs9HrcHg6Q64ro36uTSn/Z2SUlkm9HsG7WOv0RDD9teZWjlyl84iRMtpPncyBi1FXkZsaSW6dwqO1N1XNFmfsMXJasjxX85jz8PxJxwgNJLTNVe2Bh/bcg5jDf8=",
+        #     "today": "20200409",
+        #     "sortBy": "stockcode",
+        #     "sortDirection": "asc",
+        #     "alertMsg": '',
+        #     "txtShareholdingDate": "2020/01/08",
+        #     "btnSearch": "搜尋",
+        # }
         return data
 
     def _init_pool(self, cfg):
@@ -240,13 +252,19 @@ class HoldShares(object):
 
     def _start(self):
         self._create_table()
+        # print(self.url)
+        # print(self.check_day)
+        # print(pprint.pformat(self.post_params))
         resp = requests.post(self.url, data=self.post_params)
         if resp.status_code == 200:
             body = resp.text
+            # print("持股日期" in body)
+            # print(body)
             doc = html.fromstring(body)
             # 查询较早数据可能长时间加载不出来
             date = doc.xpath('//*[@id="pnlResult"]/h2/span/text()')[0]
             date = re.findall(r"持股日期: (\d{4}/\d{2}/\d{2})", date)[0]
+            print(date)
             trs = doc.xpath('//*[@id="mutualmarket-result"]/tbody/tr')
             item = {}
             for tr in trs:
@@ -284,6 +302,7 @@ class HoldShares(object):
                 else:
                     POAShares = float(0)
                 item['Percent'] = POAShares
+                # print(item)
 
                 spider = self._init_pool(self.spider_cfg)
                 update_fields = ['SecuCode', 'InnerCode', 'SecuAbbr', 'Date', 'Percent', 'ShareNum']
@@ -357,8 +376,12 @@ class HoldShares(object):
 if __name__ == "__main__":
     # 可开多线程 不要求太实时 就顺序执行
     for _type in ("sh", "sz", "hk"):
-        h = HoldShares(_type)
-        h.start()
+        for _offset in range(1, 8):
+            h = HoldShares(_type, _offset)
+            h._start()
+            print()
+            print()
+            print()
 
     # h = HoldShares("hk")
     # ret = h.inner_code_map
@@ -366,5 +389,3 @@ if __name__ == "__main__":
 
     # h = HoldShares("sh")
     # h._sync()
-
-
