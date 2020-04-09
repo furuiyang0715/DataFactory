@@ -14,6 +14,13 @@ DC_USER = env.get("DC_USER", cf.get('dc', 'DC_USER'))
 DC_PASSWD = env.get("DC_PASSWD", cf.get('dc', 'DC_PASSWD'))
 DC_DB = env.get("DC_DB", cf.get('dc', 'DC_DB'))
 
+# 聚源
+JUY_HOST = env.get("JUY_HOST", cf.get('juyuan', 'JUY_HOST'))
+JUY_PORT = int(env.get("JUY_PORT", cf.get('juyuan', 'JUY_PORT')))
+JUY_USER = env.get("JUY_USER", cf.get('juyuan', 'JUY_USER'))
+JUY_PASSWD = env.get("JUY_PASSWD", cf.get('juyuan', 'JUY_PASSWD'))
+JUY_DB = env.get("JUY_DB", cf.get('juyuan', 'JUY_DB'))
+
 # deploy
 LOCAL = bool(int(env.get("LOCAL", cf.get('deploy', 'LOCAL'))))
 FIRST = bool(int(env.get("FIRST", cf.get('deploy', 'FIRST'))))

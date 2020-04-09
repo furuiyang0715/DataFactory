@@ -1,5 +1,6 @@
 import datetime
 import hashlib
+import json
 import logging
 import re
 import sys
@@ -10,7 +11,8 @@ from lxml import html
 
 from hk_shares.configs import (SPIDER_MYSQL_HOST, SPIDER_MYSQL_PORT, SPIDER_MYSQL_USER, SPIDER_MYSQL_PASSWORD,
                                SPIDER_MYSQL_DB, PRODUCT_MYSQL_HOST, PRODUCT_MYSQL_PORT, PRODUCT_MYSQL_USER,
-                               PRODUCT_MYSQL_PASSWORD, PRODUCT_MYSQL_DB)
+                               PRODUCT_MYSQL_PASSWORD, PRODUCT_MYSQL_DB, JUY_HOST, JUY_PORT, JUY_USER, JUY_PASSWD,
+                               JUY_DB)
 from hk_shares.sql_pool import PyMysqlPoolBase
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -35,6 +37,14 @@ class HoldShares(object):
         "db": PRODUCT_MYSQL_DB,
     }
 
+    juyuan_cfg = {
+        "host": JUY_HOST,
+        "port": JUY_PORT,
+        "user": JUY_USER,
+        "password": JUY_PASSWD,
+        "db": JUY_DB,
+    }
+
     def __init__(self, type):
         self.type = type
         self.url = 'http://www.hkexnews.hk/sdw/search/mutualmarket_c.aspx?t={}'.format(type)
@@ -50,6 +60,15 @@ class HoldShares(object):
             'sz': '深股通',
             'hk': '港股通',
         }
+
+        _market_map = {
+            "sh": 83,
+            "sz": 90,
+            'hk': 72,
+
+        }
+        self.market = _market_map.get(self.type)
+
         self.type_name = _type_map.get(self.type)
         _percent_comment_map = {
             'sh': '占于上交所上市及交易的A股总数的百分比(%)',
@@ -59,6 +78,8 @@ class HoldShares(object):
         self.percent_comment = _percent_comment_map.get(self.type)
 
         self.table = 'hold_shares_{}'.format(self.type)
+        #  FIXME 运行内存
+        self.inner_code_map = self.get_inner_code_map()
 
     @property
     def post_params(self):
@@ -102,17 +123,6 @@ class HoldShares(object):
         spider.insert(sql)
         spider.dispose()
 
-    # def contract_sql(self, to_insert: dict, table: str):
-    #     ks = []
-    #     vs = []
-    #     for k in to_insert:
-    #         ks.append(k)
-    #         vs.append(to_insert.get(k))
-    #     fields_str = "(" + ",".join(ks) + ")"
-    #     values_str = "(" + "%s," * (len(vs) - 1) + "%s" + ")"
-    #     base_sql = '''REPLACE INTO `{}` '''.format(table) + fields_str + ''' values ''' + values_str + ''';'''
-    #     return base_sql, tuple(vs)
-
     def contract_sql(self, to_insert: dict, table: str, update_fields: list):
         ks = []
         vs = []
@@ -145,6 +155,27 @@ class HoldShares(object):
             sql_pool.end()
             return count
 
+    def get_inner_code_map(self):
+        """https://dd.gildata.com/#/tableShow/27/column///
+           https://dd.gildata.com/#/tableShow/718/column///
+        """
+        juyuan = self._init_pool(self.juyuan_cfg)
+        sql = 'SELECT SecuCode,InnerCode from SecuMain WHERE SecuCategory in (1, 2) and SecuMarket in (83, 90) and ListedSector in (1, 2, 6, 7);'
+        ret = juyuan.select_all(sql)
+        juyuan.dispose()
+        info = {}
+        for r in ret:
+            key = r.get("SecuCode")
+            value = r.get('InnerCode')
+            info[key] = value
+        return info
+
+    def get_inner_code(self, secu_code):
+        ret = self.inner_code_map.get(secu_code)
+        if not ret:
+            logger.warning("{} 不存在内部编码".format(secu_code))
+        return ret
+
     def _start(self):
         self._create_table()
         resp = requests.post(self.url, data=self.post_params)
@@ -152,26 +183,29 @@ class HoldShares(object):
             body = resp.text
             doc = html.fromstring(body)
             date = doc.xpath('//*[@id="pnlResult"]/h2/span/text()')[0]
-            # print(date)    # 持股日期: 2020/03/28
             date = re.findall(r"持股日期: (\d{4}/\d{2}/\d{2})", date)[0]
-            # print(date)    # 2020/03/28
             trs = doc.xpath('//*[@id="mutualmarket-result"]/tbody/tr')
             item = {}
             for tr in trs:
                 # 股份代码
                 secu_code = tr.xpath('./td[1]/div[2]/text()')[0].strip()
                 item['SecuCode'] = secu_code
-                # 股票名称
+                # 股票简称
                 secu_name = tr.xpath('./td[2]/div[2]/text()')[0].strip()
                 simple_secu_name = self.converter.convert(secu_name)
-                item['SecuName'] = simple_secu_name
+                # item['SecuName'] = simple_secu_name
+                item['SecuAbbr'] = simple_secu_name
+                # 聚源内部编码
+                # item['InnerCode'] = self.get_inner_code(secu_code)
+                # 时间 在数据处理的时候进行控制 这里统一用网页上的时间
+                item['Date'] = date.replace("/", "-")
                 # 於中央結算系統的持股量
                 holding = tr.xpath('./td[3]/div[2]/text()')[0]
                 if holding:
                     holding = int(holding.replace(',', ''))
                 else:
                     holding = 0
-                item['Holding'] = holding
+                item['ShareNum'] = holding
                 # 占股的百分比
                 POAShares = tr.xpath('./td[4]/div[2]/text()')
                 if POAShares:
@@ -179,23 +213,10 @@ class HoldShares(object):
                 else:
                     POAShares = float(0)
                 item['Percent'] = POAShares
-                # # 类别
-                # item['category'] = self.type_name
-                # 时间是连续的今天的时间
-                # item['']
-
-                # 时间
-                # item['Date'] = date.replace("/", "-")
-                # # 类别+代码+时间 存成一个 hashID
-                # d = date.replace('/', '')
-                # content = self.type_name + item['SecuCode'] + d
-                # m2 = hashlib.md5()
-                # m2.update(content.encode('utf-8'))
-                # item_id = m2.hexdigest()
-                # item['ItemID'] = item_id
-                spider = self._init_pool(self.spider_cfg)
-                update_fields = ['SecuCode', 'SecuName', 'Holding', 'Percent', 'Date']
                 print(item)
+
+                # spider = self._init_pool(self.spider_cfg)
+                # update_fields = ['SecuCode', 'SecuName', 'Holding', 'Percent', 'Date']
                 # self._save(spider, item, self.table, update_fields)
                 # 将其存入爬虫数据库 hold_shares_sh hold_shares_sz hold_shares_hk
 
@@ -252,6 +273,14 @@ class HoldShares(object):
 
 if __name__ == "__main__":
     # 可开多线程 不要求太实时 就顺序执行
-    for type in ("sh", "sz", "hk"):
-        h = HoldShares(type)
-        h.start()
+    # for type in ("sh", "sz", "hk"):
+    #     h = HoldShares(type)
+    #     h.start()
+
+    h = HoldShares("sz")
+    ret = h.inner_code_map
+    # for k in ret:
+    #     print(k, ret[k])
+    h._start()
+
+
