@@ -359,33 +359,52 @@ class HoldShares(object):
         product.dispose()
 
     def _sync(self):
-        # 首先创建正式表
         self._create_product_table()
-        # 获取爬虫数据库中最近 7 天的数据
-        start_dt = self.today - datetime.timedelta(days=8)
-        end_dt = self.today - datetime.timedelta(days=1)
-        sql = '''select * from {} where Date >=  '{}'  and Date <= '{}'; '''.format(self.spider_table, start_dt, end_dt)
         spider = self._init_pool(self.spider_cfg)
-        datas = spider.select_all(sql)
-        print(datas)
 
+        start_dt = self.today - datetime.timedelta(days=7)
+        end_dt = self.today
+        dt = start_dt
+        _map = {}
+        while dt <= end_dt:
+            sql = '''select max(Date) as before_max_dt from {} where Date <= '{}'; '''.format(self.spider_table, dt)
+            _dt = spider.select_one(sql).get("before_max_dt")
+            _map[str(dt)] = _dt
+            dt += datetime.timedelta(days=1)
 
-        pass
+        # print(pprint.pformat(_map))
+
+        product = self._init_pool(self.product_cfg)
+
+        select_fields = ['SecuCode', 'InnerCode', 'SecuAbbr', 'Percent', 'ShareNum']
+        update_fields = ['Date', 'SecuCode', 'InnerCode', 'SecuAbbr', 'Percent', 'ShareNum']
+
+        select_str = ",".join(select_fields).rstrip(",")
+        for dt in _map:
+            sql = '''select {} from {} where Date = '{}'; '''.format(select_str, self.spider_table, _map.get(dt))
+            datas = spider.select_all(sql)
+            for data in datas:
+                data.update({"Date": dt})
+                self._save(product, data, self.table_name, update_fields)
+
+        product.dispose()
+        spider.dispose()
 
 
 if __name__ == "__main__":
     # 可开多线程 不要求太实时 就顺序执行
-    for _type in ("sh", "sz", "hk"):
-        for _offset in range(1, 8):
-            h = HoldShares(_type, _offset)
-            h._start()
-            print()
-            print()
-            print()
+    # for _type in ("sh", "sz", "hk"):
+    #     for _offset in range(1, 8):
+    #         print(_offset)
+    #         h = HoldShares(_type, _offset)
+    #         h._start()
+    #         print()
+    #         print()
+    #         print()
 
     # h = HoldShares("hk")
     # ret = h.inner_code_map
     # h._start()
 
-    # h = HoldShares("sh")
-    # h._sync()
+    h = HoldShares("sh")
+    h._sync()
