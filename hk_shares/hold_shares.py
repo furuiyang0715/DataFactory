@@ -5,6 +5,8 @@ import logging
 import re
 import sys
 import traceback
+
+import pandas as pd
 import requests
 import opencc
 from lxml import html
@@ -45,15 +47,16 @@ class HoldShares(object):
         "db": JUY_DB,
     }
 
-    def __init__(self, type):
+    def __init__(self, type, offset=1):
         self.type = type
         self.url = 'http://www.hkexnews.hk/sdw/search/mutualmarket_c.aspx?t={}'.format(type)
         self.headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36',
         }
-        self.today = datetime.date.today()
+        self.today = datetime.datetime.combine(datetime.date.today(), datetime.time.min)
+        self.offset = offset
         # 当前只能查询之前一天的记录
-        self.check_day = (datetime.date.today() - datetime.timedelta(days=1)).strftime("%Y/%m/%d")   # 2020/03/29
+        self.check_day = (datetime.date.today() - datetime.timedelta(days=self.offset)).strftime("%Y/%m/%d")
         self.converter = opencc.OpenCC('t2s')  # 中文繁体转简体
         _type_map = {
             'sh': '沪股通',
@@ -80,9 +83,16 @@ class HoldShares(object):
         # 敏仪的爬虫表名是 hold_shares_sh hold_shares_sz hold_shares_hk
         # 我这边更新后的表名是 hoding_ .. 区别是跟正式表的字段保持一致
         self.spider_table = 'holding_shares_{}'.format(self.type)
+        # 生成正式库中的两个 hkland_shares hkland_hkshares
+        if self.type in ("sh", "sz"):
+            self.table_name = 'hkland_shares'
+        elif self.type == "sz":
+            self.table_name = 'hkland_hkshares'
+        else:
+            raise
+
         #  FIXME 运行内存
         self.inner_code_map = self.get_inner_code_map()
-
 
     @property
     def post_params(self):
@@ -177,7 +187,7 @@ class HoldShares(object):
     def _trans_secucode(self, secu_code: str):
         """香港 大陆证券代码转换
         规则: 沪: 60-> 9
-             深: 000-> 70, 001-> 71, 002-> 72, 003-> 73, 300-> 77
+            深: 000-> 70, 001-> 71, 002-> 72, 003-> 73, 300-> 77
 
         FIXME: 科创板  688 在港股无对应的代码
         """
@@ -234,6 +244,7 @@ class HoldShares(object):
         if resp.status_code == 200:
             body = resp.text
             doc = html.fromstring(body)
+            # 查询较早数据可能长时间加载不出来
             date = doc.xpath('//*[@id="pnlResult"]/h2/span/text()')[0]
             date = re.findall(r"持股日期: (\d{4}/\d{2}/\d{2})", date)[0]
             trs = doc.xpath('//*[@id="mutualmarket-result"]/tbody/tr')
@@ -254,6 +265,7 @@ class HoldShares(object):
 
                 # 时间 在数据处理的时候进行控制 这里统一用网页上的时间
                 item['Date'] = date.replace("/", "-")
+                # item['Date'] = self.check_day
                 # 判断是否是港交所交易日 在数据处理的时间进行判断
                 # item['HKTradeDay'] =
 
@@ -273,7 +285,6 @@ class HoldShares(object):
                     POAShares = float(0)
                 item['Percent'] = POAShares
 
-                print(item)
                 spider = self._init_pool(self.spider_cfg)
                 update_fields = ['SecuCode', 'InnerCode', 'SecuAbbr', 'Date', 'Percent', 'ShareNum']
                 self._save(spider, item, self.spider_table, update_fields)
@@ -285,9 +296,8 @@ class HoldShares(object):
             traceback.print_exc()
 
     # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>> 数据加工处理分界线 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-    # 生成正式库中的两个 hkland_shares hkland_hkshares
     def _create_product_table(self):
-        sql = '''
+        sql1 = '''
         CREATE TABLE IF NOT EXISTS `hkland_shares` (
           `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
           `SecuCode` varchar(16) COLLATE utf8_bin NOT NULL COMMENT '股票交易代码',
@@ -324,21 +334,37 @@ class HoldShares(object):
           UNIQUE KEY `un` (`Date`,`SecuCode`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='港股通持股记录-港股'; 
         '''
+        product = self._init_pool(self.product_cfg)
+        product.insert(sql1)
+        product.insert(sql2)
+        product.dispose()
 
-    def sync(self):
+    def _sync(self):
+        # 首先创建正式表
+        self._create_product_table()
+        # 获取爬虫数据库中最近 7 天的数据
+        start_dt = self.today - datetime.timedelta(days=8)
+        end_dt = self.today - datetime.timedelta(days=1)
+        sql = '''select * from {} where Date >=  '{}'  and Date <= '{}'; '''.format(self.spider_table, start_dt, end_dt)
+        spider = self._init_pool(self.spider_cfg)
+        datas = spider.select_all(sql)
+        print(datas)
+
+
         pass
 
 
 if __name__ == "__main__":
     # 可开多线程 不要求太实时 就顺序执行
-    # for type in ("sh", "sz", "hk"):
-    #     h = HoldShares(type)
-    #     h.start()
+    for _type in ("sh", "sz", "hk"):
+        h = HoldShares(_type)
+        h.start()
 
-    h = HoldShares("hk")
-    ret = h.inner_code_map
-    # for k in ret:
-    #     print(k, ret[k])
-    h._start()
+    # h = HoldShares("hk")
+    # ret = h.inner_code_map
+    # h._start()
+
+    # h = HoldShares("sh")
+    # h._sync()
 
 
