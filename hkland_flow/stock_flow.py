@@ -13,7 +13,8 @@ import sys
 sys.path.append("./../")
 
 from hkland_flow.configs import (SPIDER_MYSQL_HOST, SPIDER_MYSQL_PORT, SPIDER_MYSQL_USER,
-                                 SPIDER_MYSQL_PASSWORD, SPIDER_MYSQL_DB)
+                                 SPIDER_MYSQL_PASSWORD, SPIDER_MYSQL_DB, DC_HOST, DC_PORT, DC_USER,
+                                 DC_PASSWD, DC_DB)
 from hkland_flow.sql_pool import PyMysqlPoolBase
 from hkland_flow.stock_hu_ontime import SSEStatsOnTime
 from hkland_flow.stock_shen_ontime import SZSEStatsOnTime
@@ -23,6 +24,14 @@ logger = logging.getLogger(__name__)
 
 
 class HkexlugutongshishispiderSpider(object):
+    dc_cfg = {
+        "host": DC_HOST,
+        "port": DC_PORT,
+        "user": DC_USER,
+        "password": DC_PASSWD,
+        "db": DC_DB,
+    }
+
     spider_cfg = {
         "host": SPIDER_MYSQL_HOST,
         "port": SPIDER_MYSQL_PORT,
@@ -36,6 +45,7 @@ class HkexlugutongshishispiderSpider(object):
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.80 Safari/537.36',
         }
         self.table_name = 'hkland_flow_exchange'
+        self.today = datetime.datetime.today()
 
     def _init_pool(self, cfg: dict):
         """
@@ -296,11 +306,45 @@ class HkexlugutongshishispiderSpider(object):
             update_fields = ['Category', 'DateTime', 'ShHkFlow', 'ShHkBalance', 'SzHkFlow', 'SzHkBalance', 'Netinflow']
             self._save(sh_item, self.table_name, update_fields)
 
+    def _check_if_trading_today(self, category):
+        '''
+        self.category_map = {
+            'hgtb': ('沪股通', 1),
+            'ggtb': ('港股通(沪)', 2),
+            'sgtb': ('深股通', 3),
+            'ggtbs': ('港股通(深)', 4),
+        }
+        一般来说 1 3 与 2 4 是一致的
+        '''
+        dc = self._init_pool(self.dc_cfg)
+        _map = {
+            1: (2, 4),
+            2: (1, 3),
+        }
+
+        sql = 'select IfTradingDay from hkland_shszhktradingday where TradingType in {} and EndDate = "{}";'.format(
+        _map.get(category), self.today.strftime("%Y-%m-%d"))
+        ret = dc.select_all(sql)
+        ret = [r.get("IfTradingDay") for r in ret]
+        if ret == [2, 2]:
+            return False
+        else:
+            return True
+
     def _start(self):
-        t1 = threading.Thread(target=self._south,)
-        t2 = threading.Thread(target=self._north,)
-        t1.start()
-        t2.start()
+        south_bool = self._check_if_trading_today(1)
+        if south_bool:
+            t1 = threading.Thread(target=self._south,)
+            t1.start()
+        else:
+            logger.warning("今日无南向交易 ")
+
+        north_bool = self._check_if_trading_today(2)
+        if north_bool:
+            t2 = threading.Thread(target=self._north,)
+            t2.start()
+        else:
+            logger.warning("今日无北向交易 ")
 
 
 if __name__ == "__main__":
@@ -308,6 +352,7 @@ if __name__ == "__main__":
     # h._create_table()
     # h._north()
     # h._south()
+
     while True:
         h = HkexlugutongshishispiderSpider()
         h.start()
