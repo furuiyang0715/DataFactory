@@ -160,6 +160,7 @@ class HoldShares(object):
            https://dd.gildata.com/#/tableShow/718/column///
         """
         juyuan = self._init_pool(self.juyuan_cfg)
+        # sql = '''SELECT SecuCode,InnerCode from hk_secumain WHERE SecuCategory in (51, 3, 53) and SecuMarket in (72) and ListedSector in (1, 2, 6, 7);'''
         sql = 'SELECT SecuCode,InnerCode from SecuMain WHERE SecuCategory in (1, 2) and SecuMarket in (83, 90) and ListedSector in (1, 2, 6, 7);'
         ret = juyuan.select_all(sql)
         juyuan.dispose()
@@ -169,6 +170,40 @@ class HoldShares(object):
             value = r.get('InnerCode')
             info[key] = value
         return info
+
+    def _trans_secucode(self, secu_code: str):
+        """香港 大陆证券代码转换
+        规则: 沪: 60-> 9
+             深: 000-> 70, 001-> 71, 002-> 72, 003-> 73, 300-> 77
+
+        FIXME: 科创板  688 在港股无对应的代码
+        """
+        if self.type == "sh":
+            if secu_code.startswith("9"):
+                secu_code = "60" + secu_code[1:]
+            else:
+                logger.warning("{}无对应的大陆编码".format(secu_code))
+                raise
+        elif self.type == 'sz':
+            if secu_code.startswith("70"):
+                secu_code = "000" + secu_code[2:]
+            elif secu_code.startswith("71"):
+                secu_code = "001" + secu_code[2:]
+            elif secu_code.startswith("72"):
+                secu_code = "002" + secu_code[2:]
+            elif secu_code.startswith("73"):
+                secu_code = "003" + secu_code[2:]
+            elif secu_code.startswith("77"):
+                secu_code = "300" + secu_code[2:]
+            else:
+                logger.warning("{} 无对应的大陆编码".format(secu_code))
+                raise
+        elif self.type == 'hk':
+            pass
+        else:
+            raise
+
+        return secu_code
 
     def get_inner_code(self, secu_code):
         ret = self.inner_code_map.get(secu_code)
@@ -193,10 +228,10 @@ class HoldShares(object):
                 # 股票简称
                 secu_name = tr.xpath('./td[2]/div[2]/text()')[0].strip()
                 simple_secu_name = self.converter.convert(secu_name)
-                # item['SecuName'] = simple_secu_name
                 item['SecuAbbr'] = simple_secu_name
                 # 聚源内部编码
-                # item['InnerCode'] = self.get_inner_code(secu_code)
+                land_secu_code = self._trans_secucode(secu_code)
+                item['InnerCode'] = self.get_inner_code(land_secu_code)
                 # 时间 在数据处理的时候进行控制 这里统一用网页上的时间
                 item['Date'] = date.replace("/", "-")
                 # 於中央結算系統的持股量
