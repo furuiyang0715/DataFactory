@@ -434,7 +434,11 @@ if __name__ == "__main__":
 docker build -f Dockerfile_merge -t registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_flow_merge:v1 .
 docker push registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_flow_merge:v1 
 sudo docker pull registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_flow_merge:v1 
-sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name flow_merge --env LOCAL=0 registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_flow_merge:v1 
+
+sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name flow_merge \
+--env LOCAL=0 \
+registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_flow_merge:v1 
+
 docker logs -ft --tail 1000 flow_merge 
 
 # local 
