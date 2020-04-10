@@ -15,7 +15,7 @@ from lxml import html
 from hk_shares.configs import (SPIDER_MYSQL_HOST, SPIDER_MYSQL_PORT, SPIDER_MYSQL_USER, SPIDER_MYSQL_PASSWORD,
                                SPIDER_MYSQL_DB, PRODUCT_MYSQL_HOST, PRODUCT_MYSQL_PORT, PRODUCT_MYSQL_USER,
                                PRODUCT_MYSQL_PASSWORD, PRODUCT_MYSQL_DB, JUY_HOST, JUY_PORT, JUY_USER, JUY_PASSWD,
-                               JUY_DB)
+                               JUY_DB, DC_HOST, DC_PORT, DC_USER, DC_PASSWD, DC_DB)
 from hk_shares.sql_pool import PyMysqlPoolBase
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -46,6 +46,15 @@ class HoldShares(object):
         "user": JUY_USER,
         "password": JUY_PASSWD,
         "db": JUY_DB,
+    }
+
+    # 数据中心库
+    dc_cfg = {
+        "host": DC_HOST,
+        "port": DC_PORT,
+        "user": DC_USER,
+        "password": DC_PASSWD,
+        "db": DC_DB,
     }
 
     def __init__(self, type, offset=1):
@@ -326,8 +335,6 @@ class HoldShares(object):
           `HKTradeDay` datetime NOT NULL COMMENT '港交所交易日',
           `Percent` decimal(20,4) DEFAULT NULL COMMENT '占A股总股本的比例（%）',
           `ShareNum` decimal(20,0) DEFAULT NULL COMMENT '股票数量(股)',
-          `HashID` varchar(50) COLLATE utf8_bin DEFAULT NULL COMMENT 'HashID',
-          `CMFTime` datetime NOT NULL COMMENT '日期',
           `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
           `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
           PRIMARY KEY (`id`),
@@ -345,8 +352,6 @@ class HoldShares(object):
           `Date` datetime NOT NULL COMMENT '日期',
           `Percent` decimal(20,4) DEFAULT NULL COMMENT '占已发行港股的比例（%）',
           `ShareNum` decimal(20,0) DEFAULT NULL COMMENT '股票数量（股）',
-          `HashID` varchar(50) COLLATE utf8_bin DEFAULT NULL COMMENT 'HashID',
-          `CMFTime` datetime NOT NULL COMMENT '日期',
           `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
           `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
           PRIMARY KEY (`id`),
@@ -364,6 +369,7 @@ class HoldShares(object):
 
         start_dt = self.today - datetime.timedelta(days=7)
         end_dt = self.today
+
         dt = start_dt
         _map = {}
         while dt <= end_dt:
@@ -372,19 +378,38 @@ class HoldShares(object):
             _map[str(dt)] = _dt
             dt += datetime.timedelta(days=1)
 
+        if self.type == "sh":
+            trading_type = 1
+        elif self.type == "sz":
+            trading_type = 3
+        else:
+            trading_type = None
+        if trading_type:
+            dc = self._init_pool(self.dc_cfg)
+            shhk_calendar_map = {}
+            dt = start_dt
+            while dt <= end_dt:
+                # 沪港通 当前日期之间最邻近的一个交易日
+                sql = '''select max(EndDate) as before_max_dt from  hkland_shszhktradingday where EndDate <= '{}' and TradingType={} and IfTradingDay=1;'''.format(dt, trading_type)
+                _dt = dc.select_one(sql).get("before_max_dt")
+                shhk_calendar_map[str(dt)] = _dt
+                dt += datetime.timedelta(days=1)
+
+            # print(pprint.pformat(shhk_calendar_map))
+
         # print(pprint.pformat(_map))
 
         product = self._init_pool(self.product_cfg)
-
         select_fields = ['SecuCode', 'InnerCode', 'SecuAbbr', 'Percent', 'ShareNum']
         update_fields = ['Date', 'SecuCode', 'InnerCode', 'SecuAbbr', 'Percent', 'ShareNum']
-
         select_str = ",".join(select_fields).rstrip(",")
         for dt in _map:
             sql = '''select {} from {} where Date = '{}'; '''.format(select_str, self.spider_table, _map.get(dt))
             datas = spider.select_all(sql)
             for data in datas:
                 data.update({"Date": dt})
+                if self.type in ("sh", "sz"):
+                    data.update({"HKTradeDay": shhk_calendar_map.get(dt)})
                 self._save(product, data, self.table_name, update_fields)
 
         product.dispose()
