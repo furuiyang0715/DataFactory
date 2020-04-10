@@ -432,11 +432,9 @@ def sync_task():
 
 def main():
     spider_task()
-
     sync_task()
-
-    schedule.every().day.at("3:00").do(spider_task)
-    schedule.every().day.at("4:00").do(sync_task)
+    schedule.every().day.at("03:00").do(spider_task)
+    schedule.every().day.at("04:00").do(sync_task)
 
     while True:
         print("当前调度系统中的任务列表是{}".format(schedule.jobs))
@@ -445,7 +443,6 @@ def main():
 
 
 if __name__ == "__main__":
-
     main()
 
 
