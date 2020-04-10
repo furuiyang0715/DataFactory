@@ -14,11 +14,11 @@ import opencc
 import schedule
 from lxml import html
 
-from hk_shares.configs import (SPIDER_MYSQL_HOST, SPIDER_MYSQL_PORT, SPIDER_MYSQL_USER, SPIDER_MYSQL_PASSWORD,
-                               SPIDER_MYSQL_DB, PRODUCT_MYSQL_HOST, PRODUCT_MYSQL_PORT, PRODUCT_MYSQL_USER,
-                               PRODUCT_MYSQL_PASSWORD, PRODUCT_MYSQL_DB, JUY_HOST, JUY_PORT, JUY_USER, JUY_PASSWD,
-                               JUY_DB, DC_HOST, DC_PORT, DC_USER, DC_PASSWD, DC_DB)
-from hk_shares.sql_pool import PyMysqlPoolBase
+from hkland_shares.configs import (SPIDER_MYSQL_HOST, SPIDER_MYSQL_PORT, SPIDER_MYSQL_USER, SPIDER_MYSQL_PASSWORD,
+                                   SPIDER_MYSQL_DB, PRODUCT_MYSQL_HOST, PRODUCT_MYSQL_PORT, PRODUCT_MYSQL_USER,
+                                   PRODUCT_MYSQL_PASSWORD, PRODUCT_MYSQL_DB, JUY_HOST, JUY_PORT, JUY_USER, JUY_PASSWD,
+                                   JUY_DB, DC_HOST, DC_PORT, DC_USER, DC_PASSWD, DC_DB)
+from hkland_shares.sql_pool import PyMysqlPoolBase
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -455,5 +455,14 @@ if __name__ == "__main__":
 爬虫程序每日凌晨 3 点启动 
 同步程序每日凌晨 4 点启动 
 同步程序拿最近 7 天的数据进行填充
+
+docker build -f Dockerfile_share -t registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_shares:v1 .
+docker push registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_shares:v1 
+sudo docker pull registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/shares:v1 
+sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name flow_shares --env LOCAL=0 registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_shares:v1 
+docker logs -ft --tail 1000 flow_shares
+
+# local 
+sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name flow_shares registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_shares:v1 
 
 '''
