@@ -11,7 +11,7 @@ sys.path.append("./../")
 from hkland_flow.configs import (SPIDER_MYSQL_HOST, SPIDER_MYSQL_PORT, SPIDER_MYSQL_USER,
                                  SPIDER_MYSQL_PASSWORD, SPIDER_MYSQL_DB, PRODUCT_MYSQL_HOST, PRODUCT_MYSQL_PORT,
                                  PRODUCT_MYSQL_USER, PRODUCT_MYSQL_PASSWORD, PRODUCT_MYSQL_DB, DC_HOST, DC_PORT,
-                                 DC_USER, DC_PASSWD, DC_DB)
+                                 DC_USER, DC_PASSWD, DC_DB, LOCAL)
 from hkland_flow.sql_pool import PyMysqlPoolBase
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -369,8 +369,8 @@ class FlowMerge(object):
         if not is_trading:
             return
 
-        # 尝试建表
-        self._create_table()
+        if LOCAL:
+            self._create_table()
         # 首先判断今天南北向是否交易
         south_trade_bool = self._check_if_trading_today(1)
         if not south_trade_bool:
