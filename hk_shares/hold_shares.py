@@ -326,6 +326,8 @@ class HoldShares(object):
           `HKTradeDay` datetime NOT NULL COMMENT '港交所交易日',
           `Percent` decimal(20,4) DEFAULT NULL COMMENT '占A股总股本的比例（%）',
           `ShareNum` decimal(20,0) DEFAULT NULL COMMENT '股票数量(股)',
+          `HashID` varchar(50) COLLATE utf8_bin DEFAULT NULL COMMENT 'HashID',
+          `CMFTime` datetime NOT NULL COMMENT '日期',
           `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
           `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
           PRIMARY KEY (`id`),
@@ -343,6 +345,8 @@ class HoldShares(object):
           `Date` datetime NOT NULL COMMENT '日期',
           `Percent` decimal(20,4) DEFAULT NULL COMMENT '占已发行港股的比例（%）',
           `ShareNum` decimal(20,0) DEFAULT NULL COMMENT '股票数量（股）',
+          `HashID` varchar(50) COLLATE utf8_bin DEFAULT NULL COMMENT 'HashID',
+          `CMFTime` datetime NOT NULL COMMENT '日期',
           `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
           `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
           PRIMARY KEY (`id`),
@@ -391,7 +395,7 @@ class HoldShares(object):
         # print(pprint.pformat(_map))
 
         product = self._init_pool(self.product_cfg)
-        select_fields = ['SecuCode', 'InnerCode', 'SecuAbbr', 'Percent', 'ShareNum']
+        select_fields = ['SecuCode', 'InnerCode', 'SecuAbbr', 'Percent', 'ShareNum', 'UPDATETIMEJZ']
         update_fields = ['Date', 'SecuCode', 'InnerCode', 'SecuAbbr', 'Percent', 'ShareNum']
         select_str = ",".join(select_fields).rstrip(",")
         for dt in _map:
