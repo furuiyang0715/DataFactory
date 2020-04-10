@@ -203,6 +203,16 @@ class HoldShares(object):
             info[key] = value
         return info
 
+    def suffix_process(self, code):
+        """对代码进行加减后缀"""
+        if len(code) == 6:
+            if code[0] == '6':
+                return code+'.XSHG'
+            else:
+                return code+'.XSHE'
+        else:
+            raise
+
     def _trans_secucode(self, secu_code: str):
         """香港 大陆证券代码转换
         规则: 沪: 60-> 9
@@ -277,7 +287,7 @@ class HoldShares(object):
             for tr in trs:
                 # 股份代码
                 secu_code = tr.xpath('./td[1]/div[2]/text()')[0].strip()
-                item['SecuCode'] = secu_code
+                # item['SecuCode'] = secu_code
                 # 聚源内部编码
                 _secu_code = self._trans_secucode(secu_code)
                 item['InnerCode'] = self.get_inner_code(_secu_code)
@@ -309,6 +319,13 @@ class HoldShares(object):
                 else:
                     POAShares = float(0)
                 item['Percent'] = POAShares
+
+                if self.type == "hk":
+                    item['SecuCode'] = _secu_code
+                elif self.type in ("sh", "sz"):
+                    item['SecuCode'] = self.suffix_process(_secu_code)
+                else:
+                    raise
                 # print(item)
 
                 spider = self._init_pool(self.spider_cfg)
@@ -416,6 +433,7 @@ class HoldShares(object):
                 data.pop("UPDATETIMEJZ")
                 if self.type in ("sh", "sz"):
                     data.update({"HKTradeDay": shhk_calendar_map.get(dt)})
+                print(data)
                 self._save(product, data, self.table_name, update_fields)
 
         product.dispose()
