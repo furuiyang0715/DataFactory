@@ -1,0 +1,7 @@
+lxml==4.5.0
+pandas==0.23.4
+PyMySQL==0.9.3
+requests==2.21.0
+opencc-python-reimplemented==0.1.5
+schedule==0.6.0
+DBUtils==1.3

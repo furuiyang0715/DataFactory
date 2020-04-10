@@ -14,6 +14,8 @@ import opencc
 import schedule
 from lxml import html
 
+sys.path.append("./../")
+
 from hkland_shares.configs import (SPIDER_MYSQL_HOST, SPIDER_MYSQL_PORT, SPIDER_MYSQL_USER, SPIDER_MYSQL_PASSWORD,
                                    SPIDER_MYSQL_DB, PRODUCT_MYSQL_HOST, PRODUCT_MYSQL_PORT, PRODUCT_MYSQL_USER,
                                    PRODUCT_MYSQL_PASSWORD, PRODUCT_MYSQL_DB, JUY_HOST, JUY_PORT, JUY_USER, JUY_PASSWD,
@@ -362,7 +364,7 @@ class HoldShares(object):
         self._create_product_table()
         spider = self._init_pool(self.spider_cfg)
 
-        start_dt = self.today - datetime.timedelta(days=7)
+        start_dt = self.today - datetime.timedelta(days=4)
         end_dt = self.today
 
         dt = start_dt
@@ -454,7 +456,7 @@ if __name__ == "__main__":
 爬虫程序和同步程序部署在同一个进程中
 爬虫程序每日凌晨 3 点启动 
 同步程序每日凌晨 4 点启动 
-同步程序拿最近 7 天的数据进行填充
+同步程序拿最近 4 天的数据进行填充
 
 docker build -f Dockerfile_share -t registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_shares:v1 .
 docker push registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_shares:v1 
