@@ -433,6 +433,7 @@ class HoldShares(object):
                 data.pop("UPDATETIMEJZ")
                 if self.type in ("sh", "sz"):
                     data.update({"HKTradeDay": shhk_calendar_map.get(dt)})
+                    update_fields.append("HKTradeDay")
                 print(data)
                 self._save(product, data, self.table_name, update_fields)
 
@@ -479,6 +480,9 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+    # h = HoldShares("hk")
+    # h._sync()
 
 
 '''
