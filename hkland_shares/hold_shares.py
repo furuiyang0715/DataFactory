@@ -2,6 +2,7 @@ import datetime
 import hashlib
 import json
 import logging
+import os
 import pprint
 import re
 import sys
@@ -24,6 +25,10 @@ from hkland_shares.sql_pool import PyMysqlPoolBase
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
+
+
+SPIDER = int(os.environ.get("SPIDER", 1))
+SYNC = int(os.environ.get("SYNC", 1))
 
 
 class HoldShares(object):
@@ -433,7 +438,7 @@ def spider_task():
 def sync_task():
     # 获取最近一周的数据进行天填充以及同步
     t1 = now()
-    for _type in ("sh", "sz", "hk"):
+    for _type in ("hk", "sh", "sz"):
         print("{} SYNC START.".format(_type))
         h = HoldShares(_type)
         h._sync()
@@ -441,10 +446,12 @@ def sync_task():
 
 
 def main():
-    spider_task()
-    sync_task()
-    schedule.every().day.at("03:00").do(spider_task)
-    schedule.every().day.at("04:00").do(sync_task)
+    if SPIDER:
+        spider_task()
+        schedule.every().day.at("03:00").do(spider_task)
+    if SYNC:
+        sync_task()
+        schedule.every().day.at("04:00").do(sync_task)
 
     while True:
         print("当前调度系统中的任务列表是{}".format(schedule.jobs))
@@ -465,11 +472,35 @@ if __name__ == "__main__":
 docker build -f Dockerfile_share -t registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_shares:v1 .
 docker push registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_shares:v1 
 sudo docker pull registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_shares:v1 
-sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name flow_shares --env LOCAL=0 registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_shares:v1 
 
-docker logs -ft --tail 1000 flow_shares
+
+# remote 
+## spider 
+sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name flow_shares_spider \
+--env LOCAL=0 \
+--env SYNC=0 \
+--env SPIDER=1 \
+registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_shares:v1 
+## sync 
+sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name flow_shares_sync \
+--env LOCAL=0 \
+--env SYNC=1 \
+--env SPIDER=0 \
+registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_shares:v1 
+
 
 # local 
-sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name flow_shares registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_shares:v1 
+## spider 
+sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name flow_shares_spider \
+--env LOCAL=1 \
+--env SYNC=0 \
+--env SPIDER=1 \
+registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_shares:v1 
+## sync 
+sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name flow_shares_sync \
+--env LOCAL=1 \
+--env SYNC=1 \
+--env SPIDER=0 \
+registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_shares:v1 
 
 '''
