@@ -405,6 +405,8 @@ class HoldShares(object):
             datas = spider.select_all(sql)
             for data in datas:
                 data.update({"Date": dt})
+                data.update({"CMFTime": data.get("UPDATETIMEJZ")})
+                data.pop("UPDATETIMEJZ")
                 if self.type in ("sh", "sz"):
                     data.update({"HKTradeDay": shhk_calendar_map.get(dt)})
                 self._save(product, data, self.table_name, update_fields)
