@@ -119,17 +119,6 @@ class HoldShares(object):
             'txtShareholdingDate': '{}'.format(self.check_day),
             'btnSearch': '搜尋',
         }
-        # data = {
-        #     "__VIEWSTATE": "/wEPDwUJNjIxMTYzMDAwZGQ79IjpLOM+JXdffc28A8BMMA9+yg==",
-        #     "__VIEWSTATEGENERATOR": "EC4ACD6F",
-        #     "__EVENTVALIDATION": "/wEdAAdtFULLXu4cXg1Ju23kPkBZVobCVrNyCM2j+bEk3ygqmn1KZjrCXCJtWs9HrcHg6Q64ro36uTSn/Z2SUlkm9HsG7WOv0RDD9teZWjlyl84iRMtpPncyBi1FXkZsaSW6dwqO1N1XNFmfsMXJasjxX85jz8PxJxwgNJLTNVe2Bh/bcg5jDf8=",
-        #     "today": "20200409",
-        #     "sortBy": "stockcode",
-        #     "sortDirection": "asc",
-        #     "alertMsg": '',
-        #     "txtShareholdingDate": "2020/01/08",
-        #     "btnSearch": "搜尋",
-        # }
         return data
 
     def _init_pool(self, cfg):
@@ -391,7 +380,7 @@ class HoldShares(object):
             shhk_calendar_map = {}
             dt = start_dt
             while dt <= end_dt:
-                # 沪港通 当前日期之间最邻近的一个交易日
+                # 沪港通 或者是 深港通 当前日期之间最邻近的一个交易日
                 sql = '''select max(EndDate) as before_max_dt from  hkland_shszhktradingday where EndDate <= '{}' and TradingType={} and IfTradingDay=1;'''.format(dt, trading_type)
                 _dt = dc.select_one(sql).get("before_max_dt")
                 shhk_calendar_map[str(dt)] = _dt
@@ -459,3 +448,11 @@ if __name__ == "__main__":
 
     main()
 
+
+'''
+爬虫程序和同步程序部署在同一个进程中
+爬虫程序每日凌晨 3 点启动 
+同步程序每日凌晨 4 点启动 
+同步程序拿最近 7 天的数据进行填充
+
+'''
