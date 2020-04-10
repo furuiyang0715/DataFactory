@@ -236,7 +236,7 @@ class SFLgthisdataspiderSpider(object):
         category = 'ggtb'
         is_trading = self._check_if_trading_today(category)
         if not is_trading:
-            logger.info("{} 该方向数据今日关闭".format(self.north_map.get(category)[0]))
+            logger.info("{} 该方向数据今日关闭".format(self.south_map.get(category)[0]))
         else:
             url = self.base_url.format(category)
             page = self.get(url)
@@ -256,7 +256,7 @@ class SFLgthisdataspiderSpider(object):
         category = 'ggtbs'
         is_trading = self._check_if_trading_today(category)
         if not is_trading:
-            logger.info("{} 该方向数据今日关闭".format(self.north_map.get(category)[0]))
+            logger.info("{} 该方向数据今日关闭".format(self.south_map.get(category)[0]))
         else:
             url = self.base_url.format(category)
             page = self.get(url)
@@ -403,9 +403,9 @@ if __name__ == "__main__":
     while True:
         sf = SFLgthisdataspiderSpider()
         sf.start()
-        print()
-        print()
         time.sleep(3)
+        print()
+        print()
 
 
 '''
