@@ -5,11 +5,13 @@ import logging
 import pprint
 import re
 import sys
+import time
 import traceback
 
 import pandas as pd
 import requests
 import opencc
+import schedule
 from lxml import html
 
 from hk_shares.configs import (SPIDER_MYSQL_HOST, SPIDER_MYSQL_PORT, SPIDER_MYSQL_USER, SPIDER_MYSQL_PASSWORD,
@@ -416,20 +418,44 @@ class HoldShares(object):
         spider.dispose()
 
 
+now = lambda: time.time()
+
+
+def spider_task():
+    # 凌晨更新迁前一天的数据
+    t1 = now()
+    for _type in ("sh", "sz", "hk"):
+        print("{} SPIDER START.".format(_type))
+        h = HoldShares(_type)
+        h._start()
+        print("Time: {} s".format(now() - t1))
+
+
+def sync_task():
+    # 获取最近一周的数据进行天填充以及同步
+    t1 = now()
+    for _type in ("sh", "sz", "hk"):
+        print("{} SYNC START.".format(_type))
+        h = HoldShares(_type)
+        h._sync()
+        print("Time: {} s".format(now() - t1))
+
+
+def main():
+    spider_task()
+
+    sync_task()
+
+    schedule.every().day.at("3:00").do(spider_task)
+    schedule.every().day.at("4:00").do(sync_task)
+
+    while True:
+        print("当前调度系统中的任务列表是{}".format(schedule.jobs))
+        schedule.run_pending()
+        time.sleep(180)
+
+
 if __name__ == "__main__":
-    # 可开多线程 不要求太实时 就顺序执行
-    # for _type in ("sh", "sz", "hk"):
-    #     for _offset in range(1, 8):
-    #         print(_offset)
-    #         h = HoldShares(_type, _offset)
-    #         h._start()
-    #         print()
-    #         print()
-    #         print()
 
-    # h = HoldShares("hk")
-    # ret = h.inner_code_map
-    # h._start()
+    main()
 
-    h = HoldShares("sh")
-    h._sync()

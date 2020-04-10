@@ -380,7 +380,7 @@ class FlowMerge(object):
 
         north_trade_bool = self._check_if_trading_today(2)
         if not north_trade_bool:
-            logger.warning("今天{}南向无交易".format(self.today))
+            logger.warning("今天{}北向无交易".format(self.today))
         else:
             self.north()
 
