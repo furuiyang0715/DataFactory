@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+import datetime
 import json
 import logging
 import sys
@@ -21,7 +21,7 @@ class EMLgthisdspiderSpider(BaseSpider):
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.80 Safari/537.36'
         }
         self.page_num = 1000
-        self.table_name = "lgt_historical_data"
+        self.table_name = "hkland_historytradestat"
 
     def _start(self):
         """
@@ -64,44 +64,69 @@ class EMLgthisdspiderSpider(BaseSpider):
             num = body.find("{")
             body = body[num:]
             datas = json.loads(body).get("data")
+            '''
+            fields = {
+                'Date': "Date",    # 日期
+                'TCapitalInflow': "MoneyIn",  # 当日资金流入(百万）
+                'TBalance': "MoneyBalance",   # 当日余额（百万）
+                'AInflowHisFunds': "MoneyInHistoryTotal",   # 历史资金累计流入(百万元）
+                'NetBuyMoney': "NetBuyAmount",   # 当日成交净买额(百万元）
+                'BuyMoney': "BuyAmount",   # 买入成交额（百万元）
+                'SellMoney': "SellAmount",   # 卖出成交额（百万元）
+                # 'LCG': "",   # 领涨股
+                # 'LCGChangeRange': "",   # 领涨股涨跌幅
+                # 'SSEChange': "",   # 上证指数
+                # 'SSEChangePrecent': "",  # 涨跌幅
+                'Category': "MarketType",  # 类别
+                'CategoryCode': "MarketTypeCode",  # 类别编码
+            }
+            '''
             for da in datas:
                 item = dict()
                 # 日期
                 item['Date'] = da['DetailDate']
                 # 当日资金流入(百万）
-                item['TCapitalInflow'] = da['DRZJLR']
+                item['MoneyIn'] = da['DRZJLR']
                 # 当日余额（百万）
-                item['TBalance'] = da['DRYE']
+                item['MoneyBalance'] = da['DRYE']
                 # 历史资金累计流入(百万元）
-                item['AInflowHisFunds'] = da['LSZJLR']
+                item['MoneyInHistoryTotal'] = da['LSZJLR']
                 # 当日成交净买额(百万元）
-                item['NetBuyMoney'] = da['DRCJJME']
+                item['NetBuyAmount'] = da['DRCJJME']
                 # 买入成交额（百万元）
-                item['BuyMoney'] = da['MRCJE']
+                item['BuyAmount'] = da['MRCJE']
                 # 卖出成交额（百万元）
-                item['SellMoney'] = da['MCCJE']
-                # 领涨股
-                item['LCG'] = da['LCG']
-                # 领涨股涨跌幅
-                item['LCGChangeRange'] = da['LCGZDF']
-                # 上证指数
-                item['SSEChange'] = da['SSEChange']
-                # 涨跌幅
-                item['SSEChangePrecent'] = da['SSEChangePrecent']
+                item['SellAmount'] = da['MCCJE']
+                # # 领涨股
+                # item['LCG'] = da['LCG']
+                # # 领涨股涨跌幅
+                # item['LCGChangeRange'] = da['LCGZDF']
+                # # 上证指数
+                # item['SSEChange'] = da['SSEChange']
+                # # 涨跌幅
+                # item['SSEChangePrecent'] = da['SSEChangePrecent']
                 # 类别
                 if da['MarketType'] == 1.0:
-                    item['Category'] = '沪股通'
-                    item['CategoryCode'] = 1
+                    item['MarketType'] = '沪股通'
+                    item['MarketTypeCode'] = 1
                 elif da['MarketType'] == 2.0:
-                    item['Category'] = '港股通(沪市)'
-                    item['CategoryCode'] = 2
+                    item['MarketType'] = '港股通(沪市)'
+                    item['MarketTypeCode'] = 2
                 elif da['MarketType'] == 3.0:
-                    item['Category'] = '深股通'
-                    item['CategoryCode'] = 3
+                    item['MarketType'] = '深股通'
+                    item['MarketTypeCode'] = 3
                 elif da['MarketType'] == 4.0:
-                    item['Category'] = '港股通(深市)'
-                    item['CategoryCode'] = 4
+                    item['MarketType'] = '港股通(深市)'
+                    item['MarketTypeCode'] = 4
+
+                # FIXME 临时兼容之前的程序
+                item["CMFID"] = 1
+                item['CMFTime'] = datetime.datetime.now()
                 items.append(item)
+                # print(item)
+                update_fields = ['Date', "MoneyIn", "MoneyBalance", "MoneyInHistoryTotal", "NetBuyAmount", "BuyAmount",
+                                 "SellAmount", "MarketType", "MarketTypeCode"]
+                self._save(item, self.table_name, update_fields)
         return items
 
     def _create_table(self):
@@ -121,7 +146,7 @@ class EMLgthisdspiderSpider(BaseSpider):
                   }
 
         sql = '''
-        CREATE TABLE `hkland_historytradestat` (
+        CREATE TABLE IF NOT EXISTS `{}` (
           `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
           `Date` datetime NOT NULL COMMENT '日期',
           `MoneyIn` decimal(20,4) NOT NULL COMMENT '当日资金流入(百万）',
@@ -138,29 +163,7 @@ class EMLgthisdspiderSpider(BaseSpider):
           `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
           PRIMARY KEY (`id`),
           UNIQUE KEY `un` (`Date`,`MarketTypeCode`)
-        ) ENGINE=InnoDB AUTO_INCREMENT=14066 DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='陆股通资金流向汇总(港股通币种为港元，陆股通币种为人民币)'; 
-        '''
-
-        sql_spider = '''
-        CREATE TABLE `{}` (
-          `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-          `Date` datetime(6) NOT NULL COMMENT '日期',
-          `TCapitalInflow` decimal(19,4) NOT NULL COMMENT '当日资金流入(百万）',
-          `TBalance` decimal(19,4) NOT NULL COMMENT '当日余额（百万）',
-          `AInflowHisFunds` decimal(19,4) DEFAULT NULL COMMENT '历史资金累计流入(百万元）',
-          `NetBuyMoney` decimal(19,4) DEFAULT NULL COMMENT '当日成交净买额(百万元）',
-          `BuyMoney` decimal(19,4) DEFAULT NULL COMMENT '买入成交额（百万元）',
-          `SellMoney` decimal(19,4) DEFAULT NULL COMMENT '卖出成交额（百万元）',
-          `LCG` varchar(19) COLLATE utf8_bin DEFAULT NULL COMMENT '领涨股',
-          `LCGChangeRange` decimal(19,6) DEFAULT NULL COMMENT '领涨股涨跌幅',
-          `SSEChange` decimal(19,4) DEFAULT NULL COMMENT '上证指数',
-          `SSEChangePrecent` decimal(19,17) DEFAULT NULL COMMENT '涨跌幅',
-          `Category` varchar(10) COLLATE utf8_bin DEFAULT NULL COMMENT '类别',
-          `CategoryCode` decimal(10,0) DEFAULT NULL COMMENT '类别编码',
-          `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
-          `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-          PRIMARY KEY (`id`)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='陆股通历史数据-东财';
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='陆股通资金流向汇总(港股通币种为港元，陆股通币种为人民币)'; 
         '''.format(self.table_name)
         product = self._init_pool(self.product_cfg)
         product.insert(sql)
