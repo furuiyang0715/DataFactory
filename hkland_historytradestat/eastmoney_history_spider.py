@@ -228,3 +228,18 @@ class EMLgthisdspiderSpider(BaseSpider):
 if __name__ == "__main__":
     his = EMLgthisdspiderSpider()
     his.start()
+
+
+'''
+docker build -f Dockerfile_history -t registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_history:v1 .
+docker push registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_history:v1 
+sudo docker pull registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_history:v1 
+
+
+# remote 
+## spider 
+sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name flow_history \
+--env LOCAL=0 \
+--env FIRST=1 \
+registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_history:v1 
+'''
