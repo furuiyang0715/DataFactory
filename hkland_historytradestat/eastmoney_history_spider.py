@@ -4,10 +4,12 @@ import json
 import logging
 import os
 import sys
+import time
 import traceback
 import urllib.parse
 
 import requests
+import schedule
 
 sys.path.append("./../")
 
@@ -97,6 +99,7 @@ class EMLgthisdspiderSpider(BaseSpider):
         return count
 
     def save_many(self, datas):
+        #  Date                | MoneyIn    | MoneyBalance | MoneyInHistoryTotal | NetBuyAmount | BuyAmount  | SellAmount | MarketTypeCode | MarketType
         update_fields = ['Date', "MoneyIn", "MoneyBalance", "MoneyInHistoryTotal", "NetBuyAmount", "BuyAmount",
                          "SellAmount", "MarketType", "MarketTypeCode"]
         product = self._init_pool(self.product_cfg)
@@ -173,9 +176,6 @@ class EMLgthisdspiderSpider(BaseSpider):
                 item['CMFTime'] = datetime.datetime.now()
                 items.append(item)
                 # print(item)
-                # update_fields = ['Date', "MoneyIn", "MoneyBalance", "MoneyInHistoryTotal", "NetBuyAmount", "BuyAmount",
-                #                  "SellAmount", "MarketType", "MarketTypeCode"]
-                # self._save(item, self.table_name, update_fields)
         return items
 
     def _create_table(self):
@@ -225,9 +225,26 @@ class EMLgthisdspiderSpider(BaseSpider):
             traceback.print_exc()
 
 
-if __name__ == "__main__":
+def task():
     his = EMLgthisdspiderSpider()
     his.start()
+
+
+def main():
+    task()
+    schedule.every().day.at("15:03").do(task)
+    schedule.every().day.at("16:13").do(task)
+    schedule.every().day.at("02:00").do(task)
+
+    while True:
+        print("当前调度系统中的任务列表是{}".format(schedule.jobs))
+        schedule.run_pending()
+        time.sleep(180)
+
+
+if __name__ == "__main__":
+
+    main()
 
 
 '''
@@ -236,10 +253,16 @@ docker push registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_history:v1
 sudo docker pull registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_history:v1 
 
 
-# remote 
-## spider 
+# remote  
 sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name flow_history \
 --env LOCAL=0 \
 --env FIRST=1 \
+registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_history:v1 
+
+
+# local 
+sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name flow_history \
+--env LOCAL=1 \
+--env FIRST=0 \
 registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_history:v1 
 '''
