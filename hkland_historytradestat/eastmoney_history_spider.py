@@ -2,6 +2,7 @@
 import datetime
 import json
 import logging
+import os
 import sys
 import traceback
 import urllib.parse
@@ -14,6 +15,9 @@ from hkland_historytradestat.configs import LOCAL
 from hkland_historytradestat.base_spider import BaseSpider
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
+
+
+FIRST = int(os.environ.get("FIRST", 1))
 
 
 class EMLgthisdspiderSpider(BaseSpider):
@@ -48,12 +52,13 @@ class EMLgthisdspiderSpider(BaseSpider):
                   '2': 'ffVlSXoE',
                   '4': 'PLmMnPai'}
         category_lis = [
-            # '1',
+            '1',
             '2',
-            # '3',
-            # '4',
+            '3',
+            '4',
         ]
         for category in category_lis:
+            print(category)
             url1 = """http://dcfm.eastmoney.com/EM_MutiSvcExpandInterface/api/js/get?type=HSGTHIS&token=70f12f2f4f091e459a279469fe49eca5&filter=(MarketType={})"""
             url2 = """&js=var%"""
             url3 ="""{%22data%22:(x),%22pages%22:(tp)}"""
@@ -64,11 +69,16 @@ class EMLgthisdspiderSpider(BaseSpider):
                 url = url1.format(category) + url2 + js_dic[category] + url3 + url4.format(self.page_num, page)
                 datas = self._get_datas(url)
                 if datas:
-                    print(datas[0])
-                    print(datas[-1])
+                    max_dt = datetime.datetime.strptime(datas[0].get("Date"), "%Y-%m-%dT%H:%M:%S")
+                    min_dt = datetime.datetime.strptime(datas[-1].get("Date"), "%Y-%m-%dT%H:%M:%S")
+                    print(min_dt)
+                    print(max_dt)
                     self.save_many(datas)
-                    print("SAVE OVER")
-                if not datas:
+                    if not FIRST:
+                        if max_dt < datetime.datetime.today() - datetime.timedelta(days=20):
+                            print("SAVE OVER")
+                            break
+                else:
                     break
 
     def save(self, client, to_insert, table, update_fields: list):
