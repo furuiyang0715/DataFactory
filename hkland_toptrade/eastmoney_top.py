@@ -34,13 +34,13 @@ class EMLgttop10tradedsharesspiderSpider(BaseSpider):
             for data in [data1, data2, data3, data4]:
                 data = json.loads(data)
                 top_datas = data.get("data")
-                # print(top_datas)
-                # print()
+                # fields = ['Date', 'SecuCode', 'InnerCode', 'SecuAbbr', 'Close', 'ChangePercent', 'TJME', 'TMRJE',
+                #           'TCJJE', 'CategoryCode']
                 for top_data in top_datas:
                     item = dict()
                     item['Date'] = self.day   # 时间
                     item['SecuCode'] = top_data.get("Code")  # 证券代码
-                    item['SecuName'] = top_data.get("Name")   # 证券简称
+                    item['SecuAbbr'] = top_data.get("Name")   # 证券简称
                     item['Close'] = top_data.get('Close')  # 收盘价
                     item['ChangePercent'] = top_data.get('ChangePercent')  # 涨跌幅
                     if top_data['MarketType'] == 1.0:
@@ -50,8 +50,8 @@ class EMLgttop10tradedsharesspiderSpider(BaseSpider):
                         item['TJME'] = top_data['HGTJME']
                         # 买入金额
                         item['TMRJE'] = top_data['HGTMRJE']
-                        # 卖出金额
-                        item['TMCJE'] = top_data['HGTMCJE']
+                        # # 卖出金额
+                        # item['TMCJE'] = top_data['HGTMCJE']
                         # 成交金额
                         item['TCJJE'] = top_data['HGTCJJE']
 
@@ -62,8 +62,8 @@ class EMLgttop10tradedsharesspiderSpider(BaseSpider):
                         item['TJME'] = top_data['GGTHJME']
                         # 港股通(沪)买入金额(港元）
                         item['TMRJE'] = top_data['GGTHMRJE']
-                        # 港股通(沪)卖出金额(港元）
-                        item['TMCJE'] = top_data['GGTHMCJE']
+                        # # 港股通(沪)卖出金额(港元）
+                        # item['TMCJE'] = top_data['GGTHMCJE']
                         # 港股通(沪)成交金额(港元）
                         item['TCJJE'] = top_data['GGTHCJJE']
                     elif top_data['MarketType'] == 3.0:
@@ -73,8 +73,8 @@ class EMLgttop10tradedsharesspiderSpider(BaseSpider):
                         item['TJME'] = top_data['SGTJME']
                         # 买入金额
                         item['TMRJE'] = top_data['SGTMRJE']
-                        # 卖出金额
-                        item['TMCJE'] = top_data['SGTMCJE']
+                        # # 卖出金额
+                        # item['TMCJE'] = top_data['SGTMCJE']
                         # 成交金额
                         item['TCJJE'] = top_data['SGTCJJE']
                     elif top_data['MarketType'] == 4.0:
@@ -84,8 +84,8 @@ class EMLgttop10tradedsharesspiderSpider(BaseSpider):
                         item['TJME'] = top_data['GGTSJME']
                         # 港股通(沪)买入金额(港元）
                         item['TMRJE'] = top_data['GGTSMRJE']
-                        # 港股通(沪)卖出金额(港元）
-                        item['TMCJE'] = top_data['GGTSMCJE']
+                        # # 港股通(沪)卖出金额(港元）
+                        # item['TMCJE'] = top_data['GGTSMCJE']
                         # 港股通(沪)成交金额(港元）
                         item['TCJJE'] = top_data['GGTSCJJE']
                     else:
@@ -93,6 +93,7 @@ class EMLgttop10tradedsharesspiderSpider(BaseSpider):
                     print(item)
 
     def _create_table(self):
+        # fields = ['Date', 'SecuCode', 'InnerCode', 'SecuAbbr', 'Close', 'ChangePercent', 'TJME', 'TMRJE', 'TCJJE', 'CategoryCode',]
         sql = '''
         CREATE TABLE IF NOT EXISTS `hkland_toptrade` (
           `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
@@ -126,4 +127,4 @@ if __name__ == "__main__":
     day_str = day.strftime("%Y-%m-%d")
     top10 = EMLgttop10tradedsharesspiderSpider(day_str)
     top10._create_table()
-    # top10._start()
+    top10._start()
