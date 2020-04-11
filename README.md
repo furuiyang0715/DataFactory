@@ -4,7 +4,7 @@
 ### 陆股通 
 
 #### 陆港通持股记录 
-文件夹同表名: hk_shares 
+文件夹同表名: hkland_shares 
 
 #### 陆股通成分股  
 文件夹同表名: hkland_component
@@ -17,6 +17,24 @@
 
 ### 陆股通实时资金流向 
 文件夹同表名: hkland_flow 
+网站数据源:
+东财数据中心：http://data.eastmoney.com/hsgt/index.html
+港交所官网 https://sc.hkex.com.hk/TuniS/www.hkex.com.hk/Mutual-Market/Stock-Connect?sc_lang=zh-CN 
+同花顺数据中心  http://data.10jqka.com.cn/hgt/hgtb/ 
+
+### 陆港通实时资金流向汇总 
+文件夹同表名: hkland_historytradestat 
+网站数据源: 
+港交所官网 https://sc.hkex.com.hk/TuniS/www.hkex.com.hk/Mutual-Market/Stock-Connect?sc_lang=zh-CN （数据推算） 
+同花顺数据中心 http://data.10jqka.com.cn/hgt/hgtb/ 
+东财数据中心http://data.eastmoney.com/hsgt/index.html 
+
+### 陆港通十大成交股
+文件夹同表名: hkland_toptrade
+网站数据源: 
+港交所 https://www.hkex.com.hk/Mutual-Market/Stock-Connect/Statistics/Historical-Daily?sc_lang=zh-HK#select4=1&select5=0&select3=0&select2=2&select1=19 
+东财数据中心http://data.eastmoney.com/hsgt/index.html 
+同花顺数据中心：http://data.10jqka.com.cn/hgt/hgtb/ 
 
 
 ### 说明
