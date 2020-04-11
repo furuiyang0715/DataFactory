@@ -3,12 +3,14 @@ import datetime
 import json
 import logging
 import sys
+import traceback
 import urllib.parse
 
 import requests
 
 sys.path.append("./../")
 
+from hkland_historytradestat.configs import LOCAL
 from hkland_historytradestat.base_spider import BaseSpider
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -20,7 +22,7 @@ class EMLgthisdspiderSpider(BaseSpider):
             'Referer': 'http://data.eastmoney.com/hsgt/index.html',
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.80 Safari/537.36'
         }
-        self.page_num = 1000
+        self.page_num = 100
         self.table_name = "hkland_historytradestat"
 
     def _start(self):
@@ -38,22 +40,59 @@ class EMLgthisdspiderSpider(BaseSpider):
 
         :return:
         """
+        if LOCAL:
+            self._create_table()
 
         js_dic = {'1': 'LjQxjkJV',
                   '3': 'waGmTUWT',
                   '2': 'ffVlSXoE',
                   '4': 'PLmMnPai'}
-        category_lis = ['1', '2', '3', '4']
+        category_lis = [
+            # '1',
+            '2',
+            # '3',
+            # '4',
+        ]
         for category in category_lis:
             url1 = """http://dcfm.eastmoney.com/EM_MutiSvcExpandInterface/api/js/get?type=HSGTHIS&token=70f12f2f4f091e459a279469fe49eca5&filter=(MarketType={})"""
             url2 = """&js=var%"""
             url3 ="""{%22data%22:(x),%22pages%22:(tp)}"""
             url4 = """&sr=-1&st=DetailDate&ps={}&p={}"""
-            for page in range(10):
+
+            for page in range(100):
+                print("page is {}".format(page))
                 url = url1.format(category) + url2 + js_dic[category] + url3 + url4.format(self.page_num, page)
                 datas = self._get_datas(url)
+                if datas:
+                    print(datas[0])
+                    print(datas[-1])
+                    self.save_many(datas)
+                    print("SAVE OVER")
                 if not datas:
                     break
+
+    def save(self, client, to_insert, table, update_fields: list):
+        try:
+            insert_sql, values = self.contract_sql(to_insert, table, update_fields)
+            count = client.insert(insert_sql, values)
+        except:
+            traceback.print_exc()
+            logger.warning("失败")
+            count = None
+        else:
+            if count:
+                logger.info("更入新数据 {}".format(to_insert))
+        finally:
+            client.end()
+        return count
+
+    def save_many(self, datas):
+        update_fields = ['Date', "MoneyIn", "MoneyBalance", "MoneyInHistoryTotal", "NetBuyAmount", "BuyAmount",
+                         "SellAmount", "MarketType", "MarketTypeCode"]
+        product = self._init_pool(self.product_cfg)
+        for data in datas:
+            self.save(product, data, self.table_name, update_fields)
+        product.dispose()
 
     def _get_datas(self, url):
         items = []
@@ -124,9 +163,9 @@ class EMLgthisdspiderSpider(BaseSpider):
                 item['CMFTime'] = datetime.datetime.now()
                 items.append(item)
                 # print(item)
-                update_fields = ['Date', "MoneyIn", "MoneyBalance", "MoneyInHistoryTotal", "NetBuyAmount", "BuyAmount",
-                                 "SellAmount", "MarketType", "MarketTypeCode"]
-                self._save(item, self.table_name, update_fields)
+                # update_fields = ['Date', "MoneyIn", "MoneyBalance", "MoneyInHistoryTotal", "NetBuyAmount", "BuyAmount",
+                #                  "SellAmount", "MarketType", "MarketTypeCode"]
+                # self._save(item, self.table_name, update_fields)
         return items
 
     def _create_table(self):
@@ -169,8 +208,13 @@ class EMLgthisdspiderSpider(BaseSpider):
         product.insert(sql)
         product.dispose()
 
+    def start(self):
+        try:
+            self._start()
+        except:
+            traceback.print_exc()
+
 
 if __name__ == "__main__":
     his = EMLgthisdspiderSpider()
-    his._create_table()
-    his._start()
+    his.start()
