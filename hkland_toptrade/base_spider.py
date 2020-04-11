@@ -4,7 +4,7 @@ import traceback
 from hkland_toptrade.configs import (SPIDER_MYSQL_HOST, SPIDER_MYSQL_PORT, SPIDER_MYSQL_USER,
                                      SPIDER_MYSQL_PASSWORD, SPIDER_MYSQL_DB, PRODUCT_MYSQL_HOST,
                                      PRODUCT_MYSQL_USER, PRODUCT_MYSQL_PORT, PRODUCT_MYSQL_PASSWORD,
-                                     PRODUCT_MYSQL_DB)
+                                     PRODUCT_MYSQL_DB, JUY_HOST, JUY_PORT, JUY_USER, JUY_PASSWD, JUY_DB)
 from hkland_toptrade.sql_pool import PyMysqlPoolBase
 
 logger = logging.getLogger("__name__")
@@ -26,6 +26,14 @@ class BaseSpider(object):
         "user": PRODUCT_MYSQL_USER,
         "password": PRODUCT_MYSQL_PASSWORD,
         "db": PRODUCT_MYSQL_DB,
+    }
+
+    juyuan_cfg = {
+        "host": JUY_HOST,
+        "port": JUY_PORT,
+        "user": JUY_USER,
+        "password": JUY_PASSWD,
+        "db": JUY_DB,
     }
 
     def _init_pool(self, cfg: dict):

@@ -19,6 +19,24 @@ class EMLgttop10tradedsharesspiderSpider(BaseSpider):
         self.day = day    # datetime.datetime.strftime("%Y-%m-%d")
         self.url = 'http://data.eastmoney.com/hsgt/top10/{}.html'.format(day)
 
+    def _get_inner_code_map(self, market_type):
+        """https://dd.gildata.com/#/tableShow/27/column///
+           https://dd.gildata.com/#/tableShow/718/column///
+        """
+        juyuan = self._init_pool(self.juyuan_cfg)
+        if market_type in ("sh", "sz"):
+            sql = 'SELECT SecuCode,InnerCode from SecuMain WHERE SecuCategory in (1, 2) and SecuMarket in (83, 90) and ListedSector in (1, 2, 6, 7);'
+        else:
+            sql = '''SELECT SecuCode,InnerCode from hk_secumain WHERE SecuCategory in (51, 3, 53, 78) and SecuMarket in (72) and ListedSector in (1, 2, 6, 7);'''
+        ret = juyuan.select_all(sql)
+        juyuan.dispose()
+        info = {}
+        for r in ret:
+            key = r.get("SecuCode")
+            value = r.get('InnerCode')
+            info[key] = value
+        return info
+
     def _start(self):
         resp = requests.get(self.url, headers=self.headers)
         if resp.status_code == 200:
@@ -31,6 +49,11 @@ class EMLgttop10tradedsharesspiderSpider(BaseSpider):
             data3 = re.findall('var DATA3 = (.*);', body)[0]
             # 港股通(深)十大成交股
             data4 = re.findall('var DATA4 = (.*);', body)[0]
+
+            sh_innercode_map = self._get_inner_code_map("sh")
+            sz_innercode_map = self._get_inner_code_map("sz")
+            hk_innercode_map = self._get_inner_code_map("hk")
+
             for data in [data1, data2, data3, data4]:
                 data = json.loads(data)
                 top_datas = data.get("data")
@@ -39,7 +62,8 @@ class EMLgttop10tradedsharesspiderSpider(BaseSpider):
                 for top_data in top_datas:
                     item = dict()
                     item['Date'] = self.day   # 时间
-                    item['SecuCode'] = top_data.get("Code")  # 证券代码
+                    secu_code = top_data.get("Code")
+                    item['SecuCode'] = secu_code  # 证券代码
                     item['SecuAbbr'] = top_data.get("Name")   # 证券简称
                     item['Close'] = top_data.get('Close')  # 收盘价
                     item['ChangePercent'] = top_data.get('ChangePercent')  # 涨跌幅
@@ -54,6 +78,7 @@ class EMLgttop10tradedsharesspiderSpider(BaseSpider):
                         # item['TMCJE'] = top_data['HGTMCJE']
                         # 成交金额
                         item['TCJJE'] = top_data['HGTCJJE']
+                        item['InnerCode'] = sh_innercode_map.get(secu_code)
 
                     elif top_data['MarketType'] == 2.0:
                         item['CategoryCode'] = 'GGh'
@@ -66,6 +91,8 @@ class EMLgttop10tradedsharesspiderSpider(BaseSpider):
                         # item['TMCJE'] = top_data['GGTHMCJE']
                         # 港股通(沪)成交金额(港元）
                         item['TCJJE'] = top_data['GGTHCJJE']
+                        item['InnerCode'] = hk_innercode_map.get(secu_code)
+
                     elif top_data['MarketType'] == 3.0:
                         item['CategoryCode'] = 'SG'
                         item['Category'] = '深股通'
@@ -77,6 +104,8 @@ class EMLgttop10tradedsharesspiderSpider(BaseSpider):
                         # item['TMCJE'] = top_data['SGTMCJE']
                         # 成交金额
                         item['TCJJE'] = top_data['SGTCJJE']
+                        item['InnerCode'] = sz_innercode_map.get(secu_code)
+
                     elif top_data['MarketType'] == 4.0:
                         item['CategoryCode'] = 'GGs'
                         item['Category'] = '港股通(深)'
@@ -88,6 +117,8 @@ class EMLgttop10tradedsharesspiderSpider(BaseSpider):
                         # item['TMCJE'] = top_data['GGTSMCJE']
                         # 港股通(沪)成交金额(港元）
                         item['TCJJE'] = top_data['GGTSCJJE']
+                        item['InnerCode'] = hk_innercode_map.get(secu_code)
+
                     else:
                         raise
                     print(item)
