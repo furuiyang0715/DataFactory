@@ -2,11 +2,22 @@
 
 import datetime
 import json
+import logging
 import re
+import sys
+import time
+import traceback
 
 import requests
+import schedule
+
+sys.path.append("./../")
 
 from hkland_toptrade.base_spider import BaseSpider
+from hkland_toptrade.configs import LOCAL
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 
 class EMLgttop10tradedsharesspiderSpider(BaseSpider):
@@ -18,6 +29,7 @@ class EMLgttop10tradedsharesspiderSpider(BaseSpider):
         }
         self.day = day    # datetime.datetime.strftime("%Y-%m-%d")
         self.url = 'http://data.eastmoney.com/hsgt/top10/{}.html'.format(day)
+        self.table_name = 'hkland_toptrade'
 
     def _get_inner_code_map(self, market_type):
         """https://dd.gildata.com/#/tableShow/27/column///
@@ -38,6 +50,9 @@ class EMLgttop10tradedsharesspiderSpider(BaseSpider):
         return info
 
     def _start(self):
+        if LOCAL:
+            self._create_table()
+
         resp = requests.get(self.url, headers=self.headers)
         if resp.status_code == 200:
             body = resp.text
@@ -57,8 +72,8 @@ class EMLgttop10tradedsharesspiderSpider(BaseSpider):
             for data in [data1, data2, data3, data4]:
                 data = json.loads(data)
                 top_datas = data.get("data")
-                # fields = ['Date', 'SecuCode', 'InnerCode', 'SecuAbbr', 'Close', 'ChangePercent', 'TJME', 'TMRJE',
-                #           'TCJJE', 'CategoryCode']
+                print()
+                # print(top_datas)
                 for top_data in top_datas:
                     item = dict()
                     item['Date'] = self.day   # 时间
@@ -67,9 +82,12 @@ class EMLgttop10tradedsharesspiderSpider(BaseSpider):
                     item['SecuAbbr'] = top_data.get("Name")   # 证券简称
                     item['Close'] = top_data.get('Close')  # 收盘价
                     item['ChangePercent'] = top_data.get('ChangePercent')  # 涨跌幅
+                    item['CMFID'] = 1  # 兼容之前的程序 写死
+                    item['CMFTime'] = datetime.datetime.now()   # 兼容和之前的程序 用当前的时间代替
+                    # '类别代码:GGh: 港股通(沪), GGs: 港股通(深), HG: 沪股通, SG: 深股通',
                     if top_data['MarketType'] == 1.0:
                         item['CategoryCode'] = 'HG'
-                        item['Category'] = '沪股通'
+                        # item['Category'] = '沪股通'
                         # 净买额
                         item['TJME'] = top_data['HGTJME']
                         # 买入金额
@@ -82,7 +100,7 @@ class EMLgttop10tradedsharesspiderSpider(BaseSpider):
 
                     elif top_data['MarketType'] == 2.0:
                         item['CategoryCode'] = 'GGh'
-                        item['Category'] = '港股通(沪)'
+                        # item['Category'] = '港股通(沪)'
                         # 港股通(沪)净买额(港元）
                         item['TJME'] = top_data['GGTHJME']
                         # 港股通(沪)买入金额(港元）
@@ -95,7 +113,7 @@ class EMLgttop10tradedsharesspiderSpider(BaseSpider):
 
                     elif top_data['MarketType'] == 3.0:
                         item['CategoryCode'] = 'SG'
-                        item['Category'] = '深股通'
+                        # item['Category'] = '深股通'
                         # 净买额
                         item['TJME'] = top_data['SGTJME']
                         # 买入金额
@@ -108,7 +126,7 @@ class EMLgttop10tradedsharesspiderSpider(BaseSpider):
 
                     elif top_data['MarketType'] == 4.0:
                         item['CategoryCode'] = 'GGs'
-                        item['Category'] = '港股通(深)'
+                        # item['Category'] = '港股通(深)'
                         # 港股通(沪)净买额(港元）
                         item['TJME'] = top_data['GGTSJME']
                         # 港股通(沪)买入金额(港元）
@@ -121,12 +139,14 @@ class EMLgttop10tradedsharesspiderSpider(BaseSpider):
 
                     else:
                         raise
-                    print(item)
+                    # print(item)
+                    update_fields = ['Date', 'SecuCode', 'InnerCode', 'SecuAbbr', 'Close', 'ChangePercent',
+                                     'TJME', 'TMRJE', 'TCJJE', 'CategoryCode']
+                    self._save(item, self.table_name, update_fields)
 
     def _create_table(self):
-        # fields = ['Date', 'SecuCode', 'InnerCode', 'SecuAbbr', 'Close', 'ChangePercent', 'TJME', 'TMRJE', 'TCJJE', 'CategoryCode',]
         sql = '''
-        CREATE TABLE IF NOT EXISTS `hkland_toptrade` (
+        CREATE TABLE IF NOT EXISTS `{}` (
           `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
           `Date` date NOT NULL COMMENT '时间',
           `SecuCode` varchar(10) COLLATE utf8_bin NOT NULL COMMENT '证券代码',
@@ -146,16 +166,60 @@ class EMLgttop10tradedsharesspiderSpider(BaseSpider):
           UNIQUE KEY `un` (`SecuCode`,`Date`,`CategoryCode`) USING BTREE,
           UNIQUE KEY `un2` (`InnerCode`,`Date`,`CategoryCode`) USING BTREE
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='陆港通十大成交股';
-        '''
+        '''.format(self.table_name)
         product = self._init_pool(self.product_cfg)
         product.insert(sql)
         product.dispose()
 
+    def start(self):
+        try:
+            self._start()
+        except:
+            traceback.print_exc()
+
+
+def schedule_task():
+    t_day = datetime.datetime.today()
+    for i in range(4):
+        day = t_day - datetime.timedelta(days=i)   # 0, 1, 2, 3
+        day_str = day.strftime("%Y-%m-%d")
+        print()
+        print(day_str)
+        top10 = EMLgttop10tradedsharesspiderSpider(day_str)
+        top10.start()
+
+
+def main():
+    schedule_task()
+    schedule.every().day.at("15:03").do(schedule_task)
+    schedule.every().day.at("16:13").do(schedule_task)
+
+    schedule.every().day.at("02:00").do(schedule_task)
+
+    while True:
+        print("当前调度系统中的任务列表是{}".format(schedule.jobs))
+        schedule.run_pending()
+        time.sleep(180)
+
 
 if __name__ == "__main__":
-    t_day = datetime.datetime.today()
-    day = t_day - datetime.timedelta(days=4)
-    day_str = day.strftime("%Y-%m-%d")
-    top10 = EMLgttop10tradedsharesspiderSpider(day_str)
-    top10._create_table()
-    top10._start()
+
+    main()
+
+
+'''
+docker build -f Dockerfile_top -t registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_toptrade:v1 .
+docker push registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_toptrade:v1 
+sudo docker pull registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_toptrade:v1 
+
+
+# remote 
+sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name toptrade \
+--env LOCAL=0 \
+registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_toptrade:v1 
+
+# local
+sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name toptrade \
+--env LOCAL=1 \
+registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_toptrade:v1 
+'''

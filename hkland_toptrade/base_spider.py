@@ -7,7 +7,8 @@ from hkland_toptrade.configs import (SPIDER_MYSQL_HOST, SPIDER_MYSQL_PORT, SPIDE
                                      PRODUCT_MYSQL_DB, JUY_HOST, JUY_PORT, JUY_USER, JUY_PASSWD, JUY_DB)
 from hkland_toptrade.sql_pool import PyMysqlPoolBase
 
-logger = logging.getLogger("__name__")
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 
 class BaseSpider(object):
