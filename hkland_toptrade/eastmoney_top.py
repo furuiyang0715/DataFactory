@@ -157,6 +157,8 @@ class EMLgttop10tradedsharesspiderSpider(BaseSpider):
                                      'TJME', 'TMRJE', 'TCJJE', 'CategoryCode']
                     self._save(item, self.table_name, update_fields)
 
+        self.refresh_update_time()
+
     def _create_table(self):
         sql = '''
         CREATE TABLE IF NOT EXISTS `{}` (

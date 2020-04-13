@@ -30,6 +30,7 @@ class EMLgthisdspiderSpider(BaseSpider):
         }
         self.page_num = 100
         self.table_name = "hkland_historytradestat"
+        self.tool_table_name = 'base_table_updatetime'
 
     def _start(self):
         """
@@ -82,6 +83,19 @@ class EMLgthisdspiderSpider(BaseSpider):
                             break
                 else:
                     break
+        self.refresh_update_time()
+
+    def refresh_update_time(self):
+        product = self._init_pool(self.product_cfg)
+        sql = '''select max(UPDATETIMEJZ) as max_dt from {}; '''.format(self.table_name)
+        max_dt = product.select_one(sql).get("max_dt")
+        logger.info("最新的更新时间是{}".format(max_dt))
+
+        refresh_sql = '''replace into {} (id,TableName, LastUpdateTime,IsValid) values (4, "hkland_historytradestat", '{}', 1); 
+        '''.format(self.tool_table_name, max_dt)
+        count = product.update(refresh_sql)
+        logger.info(count)   # 1 首次插入 2 替换插入
+        product.dispose()
 
     def save(self, client, to_insert, table, update_fields: list):
         try:
