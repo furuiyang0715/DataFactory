@@ -30,6 +30,7 @@ class EMLgttop10tradedsharesspiderSpider(BaseSpider):
         self.day = day    # datetime.datetime.strftime("%Y-%m-%d")
         self.url = 'http://data.eastmoney.com/hsgt/top10/{}.html'.format(day)
         self.table_name = 'hkland_toptrade'
+        self.tool_table_name = 'base_table_updatetime'
 
     def _get_inner_code_map(self, market_type):
         """https://dd.gildata.com/#/tableShow/27/column///
@@ -48,6 +49,18 @@ class EMLgttop10tradedsharesspiderSpider(BaseSpider):
             value = r.get('InnerCode')
             info[key] = value
         return info
+
+    def refresh_update_time(self):
+        product = self._init_pool(self.product_cfg)
+        sql = '''select max(UPDATETIMEJZ) as max_dt from {}; '''.format(self.table_name)
+        max_dt = product.select_one(sql).get("max_dt")
+        logger.info("最新的更新时间是{}".format(max_dt))
+
+        refresh_sql = '''replace into {} (id,TableName, LastUpdateTime,IsValid) values (10, "hkland_toptrade", '{}', 1); 
+        '''.format(self.tool_table_name, max_dt)
+        count = product.update(refresh_sql)
+        logger.info(count)   # 1 首次插入 2 替换插入
+        product.dispose()
 
     def _start(self):
         if LOCAL:
