@@ -48,7 +48,7 @@ class FlowMerge(object):
         self.year = self.today.year
         self.month = self.today.month
         self.day = self.today.day
-        self.offset = 1
+        self.offset = 0
 
         self.exchange_table_name = 'hkland_flow_exchange'
         self.eastmoney_table_name = 'hkland_flow_eastmoney'
@@ -442,7 +442,9 @@ registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_flow_merge:v1
 docker logs -ft --tail 1000 flow_merge 
 
 # local 
-sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name flow_merge registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_flow_merge:v1 
+sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name flow_merge \
+registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_flow_merge:v1 
+
 '''
 
 
