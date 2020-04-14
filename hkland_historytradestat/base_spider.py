@@ -1,5 +1,4 @@
 import logging
-import traceback
 
 from hkland_historytradestat.configs import (SPIDER_MYSQL_USER, SPIDER_MYSQL_PORT, SPIDER_MYSQL_PASSWORD,
                                              SPIDER_MYSQL_HOST, SPIDER_MYSQL_DB, PRODUCT_MYSQL_HOST, PRODUCT_MYSQL_PORT,
@@ -71,19 +70,3 @@ class BaseSpider(object):
         sql = base_sql + on_update_sql + """;"""
         vs.extend(update_vs)
         return sql, tuple(vs)
-
-    def _save(self, to_insert, table, update_fields: list):
-        spider = self._init_pool(self.spider_cfg)
-        try:
-            insert_sql, values = self.contract_sql(to_insert, table, update_fields)
-            count = spider.insert(insert_sql, values)
-        except:
-            traceback.print_exc()
-            logger.warning("失败")
-            count = None
-        else:
-            if count:
-                logger.info("更入新数据 {}".format(to_insert))
-        finally:
-            spider.dispose()
-        return count

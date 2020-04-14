@@ -78,6 +78,7 @@ class EMLgthisdspiderSpider(BaseSpider):
                     print(max_dt)
                     self.save_many(datas)
                     if not FIRST:
+                        # FIXME 暂定: 历史数据往前回溯 20 天
                         if max_dt < datetime.datetime.today() - datetime.timedelta(days=20):
                             print("SAVE OVER")
                             break
@@ -246,9 +247,7 @@ def task():
 
 def main():
     task()
-    schedule.every().day.at("15:03").do(task)
-    schedule.every().day.at("16:13").do(task)
-    schedule.every().day.at("02:00").do(task)
+    schedule.every(10).minutes.do(task)
 
     while True:
         print("当前调度系统中的任务列表是{}".format(schedule.jobs))

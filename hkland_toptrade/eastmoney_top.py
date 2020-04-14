@@ -85,8 +85,7 @@ class EMLgttop10tradedsharesspiderSpider(BaseSpider):
             for data in [data1, data2, data3, data4]:
                 data = json.loads(data)
                 top_datas = data.get("data")
-                print()
-                # print(top_datas)
+                print(top_datas)
                 for top_data in top_datas:
                     item = dict()
                     item['Date'] = self.day   # 时间
@@ -159,6 +158,25 @@ class EMLgttop10tradedsharesspiderSpider(BaseSpider):
 
         self.refresh_update_time()
 
+    def _save(self, to_insert, table, update_fields: list):
+        product = self._init_pool(self.product_cfg)
+        try:
+            insert_sql, values = self.contract_sql(to_insert, table, update_fields)
+            count = product.insert(insert_sql, values)
+        except:
+            traceback.print_exc()
+            logger.warning("失败")
+            count = None
+        else:
+            if count:
+                logger.info("更入新数据 {}".format(to_insert))
+            else:
+                pass
+                # logger.info("{} 数据已插入 ".format(to_insert))
+        finally:
+            product.dispose()
+        return count
+
     def _create_table(self):
         sql = '''
         CREATE TABLE IF NOT EXISTS `{}` (
@@ -195,10 +213,18 @@ class EMLgttop10tradedsharesspiderSpider(BaseSpider):
 
 def schedule_task():
     t_day = datetime.datetime.today()
-    for i in range(4):
-        day = t_day - datetime.timedelta(days=i)   # 0, 1, 2, 3
+
+    start_time = datetime.datetime(t_day.year, t_day.month, t_day.day, 9, 0, 0)
+    end_time = datetime.datetime(t_day.year, t_day.month, t_day.day, 15, 0, 0)
+
+    if (t_day >= start_time and t_day <= end_time):
+        logger.warning("在盘中不更新数据")
+        return
+
+    for i in range(1):
+        # FIXME 只能获取最近一天的数据
+        day = t_day - datetime.timedelta(days=i)
         day_str = day.strftime("%Y-%m-%d")
-        print()
         print(day_str)
         top10 = EMLgttop10tradedsharesspiderSpider(day_str)
         top10.start()
@@ -206,15 +232,13 @@ def schedule_task():
 
 def main():
     schedule_task()
-    schedule.every().day.at("15:03").do(schedule_task)
-    schedule.every().day.at("16:13").do(schedule_task)
 
-    schedule.every().day.at("02:00").do(schedule_task)
+    schedule.every(10).minutes.do(schedule_task)
 
     while True:
         print("当前调度系统中的任务列表是{}".format(schedule.jobs))
         schedule.run_pending()
-        time.sleep(180)
+        time.sleep(60)
 
 
 if __name__ == "__main__":
