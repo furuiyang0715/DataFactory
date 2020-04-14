@@ -70,6 +70,7 @@ class EMLgthisdspiderSpider(BaseSpider):
             for page in range(100):
                 print("page is {}".format(page))
                 url = url1.format(category) + url2 + js_dic[category] + url3 + url4.format(self.page_num, page)
+                # TODO  请求失败重试的问题
                 datas = self._get_datas(url)
                 if datas:
                     max_dt = datetime.datetime.strptime(datas[0].get("Date"), "%Y-%m-%dT%H:%M:%S")
@@ -78,8 +79,8 @@ class EMLgthisdspiderSpider(BaseSpider):
                     print(max_dt)
                     self.save_many(datas)
                     if not FIRST:
-                        # FIXME 暂定: 历史数据往前回溯 20 天
-                        if max_dt < datetime.datetime.today() - datetime.timedelta(days=20):
+                        # FIXME 暂定: 历史数据往前回溯 10 天
+                        if max_dt < datetime.datetime.today() - datetime.timedelta(days=10):
                             print("SAVE OVER")
                             break
                 else:
@@ -269,7 +270,7 @@ sudo docker pull registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_history:v
 # remote  
 sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name hkland_history \
 --env LOCAL=0 \
---env FIRST=1 \
+--env FIRST=0 \
 registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_history:v1 
 
 
