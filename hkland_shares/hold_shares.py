@@ -434,7 +434,7 @@ class HoldShares(object):
                 if self.type in ("sh", "sz"):
                     data.update({"HKTradeDay": shhk_calendar_map.get(dt)})
                     update_fields.append("HKTradeDay")
-                print(data)
+                # print(data)
                 self._save(product, data, self.table_name, update_fields)
 
         product.dispose()
@@ -445,7 +445,7 @@ now = lambda: time.time()
 
 
 def spider_task():
-    # 凌晨更新迁前一天的数据
+    # 凌晨更新前一天的数据
     t1 = now()
     for _type in ("sh", "sz", "hk"):
         print("{} SPIDER START.".format(_type))
@@ -455,7 +455,7 @@ def spider_task():
 
 
 def sync_task():
-    # 获取最近一周的数据进行天填充以及同步
+    # 获取最近 4 天的数据进行天填充以及同步
     t1 = now()
     for _type in ("hk", "sh", "sz"):
         print("{} SYNC START.".format(_type))
@@ -467,10 +467,11 @@ def sync_task():
 def main():
     if SPIDER:
         spider_task()
-        schedule.every().day.at("03:00").do(spider_task)
+        schedule.every().hour.do(spider_task)
     if SYNC:
         sync_task()
         schedule.every().day.at("04:00").do(sync_task)
+        schedule.every().day.at("08:00").do(sync_task)
 
     while True:
         print("当前调度系统中的任务列表是{}".format(schedule.jobs))

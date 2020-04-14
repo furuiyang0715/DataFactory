@@ -187,7 +187,7 @@ class FlowMerge(object):
         """9:30-11:30; 13:00-15:00  (11:30-9:30)*60+1 + (15-13)*60+1 = 242"""
         morning_start = datetime.datetime(self.year, self.month, self.day, 9, 30, 0)
         morning_end = datetime.datetime(self.year, self.month, self.day, 11, 30, 0)
-        afternoon_start = datetime.datetime(self.year, self.month, self.day, 13, 0, 0)
+        afternoon_start = datetime.datetime(self.year, self.month, self.day, 13, 1, 0)
         afternoon_end = datetime.datetime(self.year, self.month, self.day, 15, 0, 0)
         this_moment = datetime.datetime.now()
         this_moment_min = datetime.datetime(this_moment.year, this_moment.month, this_moment.day,
@@ -268,7 +268,15 @@ class FlowMerge(object):
         """9:00-12:00; 13:00-16:10     (12-9)*60 + (16-13) *60 + 10 + 2 = 372"""
         morning_start = datetime.datetime(self.year, self.month, self.day, 9, 0, 0)
         morning_end = datetime.datetime(self.year, self.month, self.day, 12, 0, 0)
-        afternoon_start = datetime.datetime(self.year, self.month, self.day, 13, 0, 0)
+        """
+        软件上，早晨第一根 K 线是 09:30--09:31,
+        中午最后一根 K 线是 11:29--11:30/13:00,   
+        下午第一根 K 线是 13:00--13:01,
+        下午最后一根 K 线是 14:59--15:00
+        
+        北向同理 
+        """
+        afternoon_start = datetime.datetime(self.year, self.month, self.day, 13, 1, 0)
         afternoon_end = datetime.datetime(self.year, self.month, self.day, 16, 10, 0)
         this_moment = datetime.datetime.now()
         this_moment_min = datetime.datetime(this_moment.year, this_moment.month, this_moment.day,
