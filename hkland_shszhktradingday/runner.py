@@ -44,7 +44,7 @@ def main():
     schedule.every().day.at("12:00").do(task)
 
     while True:
-        logger.info("当前调度系统中的任务列表是{}".format(schedule.jobs))
+        # logger.info("当前调度系统中的任务列表是{}".format(schedule.jobs))
         schedule.run_pending()
         time.sleep(180)
 
