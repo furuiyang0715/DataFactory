@@ -225,7 +225,7 @@ def schedule_task():
         # FIXME 只能获取最近一天的数据
         day = t_day - datetime.timedelta(days=i)
         day_str = day.strftime("%Y-%m-%d")
-        print(day_str)
+        print(day_str)  # 如果当前还未出 十大成交股数据 返回空列表
         top10 = EMLgttop10tradedsharesspiderSpider(day_str)
         top10.start()
 
