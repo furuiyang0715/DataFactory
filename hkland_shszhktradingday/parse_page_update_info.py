@@ -20,9 +20,3 @@ def get_lastest_update_dt():
     update_dt = datetime.datetime.strptime(dt_str, "%Y年%m月%d日")
     # print(update_dt)
     return update_dt
-
-
-
-
-
-

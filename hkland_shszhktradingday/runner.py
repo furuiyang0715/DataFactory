@@ -1,4 +1,5 @@
 import datetime
+import logging
 import sys
 import time
 import schedule
@@ -7,8 +8,10 @@ sys.path.append("./../")
 
 from hkland_shszhktradingday.down_load_lastest_file import download_lastst_csv_file
 from hkland_shszhktradingday.gene_trading_days import CSVLoader
-from hkland_shszhktradingday.my_log import logger
 from hkland_shszhktradingday.parse_page_update_info import get_lastest_update_dt
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 
 def task():
@@ -47,3 +50,14 @@ main()
 
 if __name__ == "__main__":
     main()
+
+
+'''delopy
+docker build -t registry.cn-shenzhen.aliyuncs.com/jzdev/dcfactory/hk_land_trading_days:v0.0.1 .
+docker push registry.cn-shenzhen.aliyuncs.com/jzdev/dcfactory/hk_land_trading_days:v0.0.1
+sudo docker pull registry.cn-shenzhen.aliyuncs.com/jzdev/dcfactory/hk_land_trading_days:v0.0.1
+
+sudo docker run --log-opt max-size=10m --log-opt max-file=3 \
+-itd --name trade_days --env LOCAL=0 \
+registry.cn-shenzhen.aliyuncs.com/jzdev/dcfactory/hk_land_trading_days:v0.0.1
+'''
