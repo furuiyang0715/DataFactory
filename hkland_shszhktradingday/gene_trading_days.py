@@ -193,6 +193,8 @@ class CSVLoader(object):
         else:
             if count:
                 print("更入新数据 {}".format(to_insert))
+            else:
+                print("已有数据 {}".format(to_insert))
         finally:
             client.end()
         return count
