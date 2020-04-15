@@ -14,15 +14,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(level
 logger = logging.getLogger(__name__)
 
 
-def task():
-    now = datetime.datetime.now()
-    logger.info("Now: {}".format(now))
-    lastest_update_dt = get_lastest_update_dt()
-    logger.info("Last Update Time: {}".format(lastest_update_dt))
-    if not lastest_update_dt >= now - datetime.timedelta(days=2):
-        logger.info("No Update in Latest 2 Days, Return.")
-        return
-
+def update_calendar():
     logger.info("开始下载更新后的文件")
     download_lastst_csv_file()
     logger.info("下载完毕")
@@ -33,8 +25,20 @@ def task():
         ll.start()
 
 
+def task():
+    now = datetime.datetime.now()
+    logger.info("Now: {}".format(now))
+    lastest_update_dt = get_lastest_update_dt()
+    logger.info("Last Update Time: {}".format(lastest_update_dt))
+    if not lastest_update_dt >= now - datetime.timedelta(days=2):
+        logger.info("No Update in Latest 2 Days, Return.")
+        return
+
+    update_calendar()
+
+
 def main():
-    task()
+    update_calendar()
 
     schedule.every().day.at("08:00").do(task)
     schedule.every().day.at("12:00").do(task)
