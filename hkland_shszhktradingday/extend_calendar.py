@@ -156,3 +156,8 @@ class ExtendCalendar(object):
 if __name__ == "__main__":
     e = ExtendCalendar()
     e.start()
+
+'''
+select count(*)  from hkland_shszhktradingday where TradingType = 1 and IfTradingDay = 1; 
+select min(EndDate), max(EndDate) from hkland_shszhktradingday where TradingType = 1 and IfTradingDay = 1; 
+'''
