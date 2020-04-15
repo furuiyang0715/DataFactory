@@ -3,17 +3,20 @@
 import datetime
 import json
 import logging
+import pprint
 import re
 import traceback
 import requests
 import sys
 
-sys.path.append("./../")
 
-from hkland_flow.configs import (SPIDER_MYSQL_HOST, SPIDER_MYSQL_PORT, SPIDER_MYSQL_USER,
-                                 SPIDER_MYSQL_PASSWORD, SPIDER_MYSQL_DB, DC_HOST, DC_PORT, DC_USER,
-                                 DC_PASSWD, DC_DB)
-from hkland_flow.sql_pool import PyMysqlPoolBase
+sys.path.append("./../")
+from hkland_historytradestat.configs import (PRODUCT_MYSQL_HOST, PRODUCT_MYSQL_USER, PRODUCT_MYSQL_PASSWORD,
+                                             PRODUCT_MYSQL_DB, DC_HOST, DC_PORT, DC_USER, DC_PASSWD,
+                                             DC_DB, SPIDER_MYSQL_HOST, SPIDER_MYSQL_PORT,
+                                             SPIDER_MYSQL_USER, SPIDER_MYSQL_PASSWORD, SPIDER_MYSQL_DB,
+                                             PRODUCT_MYSQL_PORT, LOCAL)
+from hkland_historytradestat.sql_pool import PyMysqlPoolBase
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -34,6 +37,14 @@ class HkexlugutongshishispiderSpider(object):
         "user": SPIDER_MYSQL_USER,
         "password": SPIDER_MYSQL_PASSWORD,
         "db": SPIDER_MYSQL_DB,
+    }
+
+    product_cfg = {
+        "host": PRODUCT_MYSQL_HOST,
+        "port": PRODUCT_MYSQL_PORT,
+        "user": PRODUCT_MYSQL_USER,
+        "password": PRODUCT_MYSQL_PASSWORD,
+        "db": PRODUCT_MYSQL_DB,
     }
 
     def __init__(self):
@@ -61,11 +72,12 @@ class HkexlugutongshishispiderSpider(object):
 
     @staticmethod
     def re_data(data):
+        """人民币的单位是百万 """
         ret = re.findall("RMB(.*) Mil", data)  # RMB52,000 Mil
         if ret:
             data = ret[0]
             data = data.replace(",", '')
-            return int(data) * 100
+            return int(data)
 
     def contract_sql(self, to_insert: dict, table: str, update_fields: list):
         ks = []
@@ -103,6 +115,9 @@ class HkexlugutongshishispiderSpider(object):
         return count
 
     def _start(self):
+        if LOCAL:
+            self._create_stock_table()
+
         # 北向资金
         north_urls = [
             'http://sc.hkex.com.hk/TuniS/www.hkex.com.hk/chi/csm/script/data_NBSH_Turnover_chi.js',  # 沪股通成交额
@@ -117,83 +132,114 @@ class HkexlugutongshishispiderSpider(object):
 
         ]
 
-        logger.info("开始处理北向资金")
-        logger.info("开始处理沪股通每日额度信息")
+        logger.info("开始处理 北向资金 >> 沪股通每日额度信息")
         body = requests.get(north_urls[1], headers=self.headers).text
-        datas = json.loads(
-            body.rstrip(";").lstrip("northbound11 =").lstrip("northbound12 =").lstrip("northbound21 =").lstrip(
-                "northbound22 ="))
+        datas = json.loads(body.rstrip(";").lstrip("northbound11 =").lstrip("northbound12 =").lstrip("northbound21 =").lstrip("northbound22 ="))
         show_dt = datas[0].get("section")[0].get("subtitle")[1]
         show_dt = datetime.datetime.strptime(show_dt, "%d/%m/%Y").strftime("%Y-%m-%d")
         flow_info = datas[0].get("section")[0].get("item")
         sh_item = dict()
-        # 类别:1 南向, 2 北向
         sh_item['Category'] = 2
-        # 分钟时间
         m_dt = flow_info[1][0]
         m_dt = re.findall("余额 \(于 (.*)\)", m_dt)[0]
         complete_dt = " ".join([show_dt, m_dt])
-        complete_dt = str(datetime.datetime.strptime(complete_dt, "%Y-%m-%d %H:%M"))
-        # 分钟交易时间
-        sh_item['DateTime'] = complete_dt
-        # 沪股通/港股通(沪)当日资金流向(万）此处北向资金表示沪股通
-        sh_item['ShHkFlow'] = self.re_data(flow_info[0][1]) - self.re_data(flow_info[1][1])
-        # 沪股通/港股通(沪)当日资金余额（万） 此处北向资金表示沪股通
-        sh_item['ShHkBalance'] = self.re_data(flow_info[1][1])
-        logger.info("开始处理深股通每日额度信息")
-        body = requests.get(north_urls[3], headers=self.headers).text
-        datas = json.loads(
-            body.rstrip(";").lstrip("northbound11 =").lstrip("northbound12 =").lstrip("northbound21 =").lstrip(
-                "northbound22 ="))
-        show_dt = datas[0].get("section")[0].get("subtitle")[1]
-        show_dt = datetime.datetime.strptime(show_dt, "%d/%m/%Y").strftime("%Y-%m-%d")
-        flow_info = datas[0].get("section")[0].get("item")
-        m_dt = flow_info[1][0]
-        m_dt = re.findall("余额 \(于 (.*)\)", m_dt)[0]
-        complete_dt = " ".join([show_dt, m_dt])
-        complete_dt = str(datetime.datetime.strptime(complete_dt, "%Y-%m-%d %H:%M"))
-        sz_item = dict()
-        # 类别:1 南向, 2 北向
-        sz_item['Category'] = 2
-        # 分钟交易时间
-        sz_item['DateTime'] = complete_dt
-        # 深股通/港股通(深)当日资金流向(万） 北向时为深股通
-        sz_item['SzHkFlow'] = self.re_data(flow_info[0][1]) - self.re_data(flow_info[1][1])
-        # 深股通/港股通(深)当日资金余额（万）北向时为深股通
-        sz_item['SzHkBalance'] = self.re_data(flow_info[1][1])
-        print(sz_item)
-        if sh_item['DateTime'] == sz_item['DateTime']:
-            sh_item.update(sz_item)
-            # 南北向资金,当日净流入
-            sh_item['Netinflow'] = sh_item['ShHkFlow'] + sh_item['SzHkFlow']
-            print(sh_item)
-            #  id | Date                | MoneyIn | MoneyBalance | MoneyInHistoryTotal | NetBuyAmount | BuyAmount | SellAmount
-            #  | MarketTypeCode | MarketType | CMFID  | CMFTime             | CREATETIMEJZ        | UPDATETIMEJZ
+        complete_dt = datetime.datetime.strptime(complete_dt, "%Y-%m-%d %H:%M")
+        # 网站上的时间
+        sh_item['Date'] = complete_dt
+        sh_item['MoneyBalance'] = self.re_data(flow_info[1][1])
+        # 沪股通/港股通(沪)当日资金流向(百万）当日资金流入 = 额度 - 余额
+        sh_item['MoneyIn'] = self.re_data(flow_info[0][1]) - self.re_data(flow_info[1][1])
+        body = requests.get(north_urls[0], headers=self.headers).text
+        datas = json.loads(body.rstrip(";").lstrip("northbound11 =").lstrip("northbound12 =").lstrip("northbound21 =").lstrip("northbound22 ="))
+        buy_sell_info = datas[0].get("section")[0].get("item")
+        buy_amount = self.re_data(buy_sell_info[1][1])
+        sell_amount = self.re_data(buy_sell_info[2][1])
+        sh_item['BuyAmount'] = buy_amount
+        sh_item['SellAmount'] = sell_amount
+        sh_item['NetBuyAmount'] = buy_amount - sell_amount
+        # 上一天的累计值
+        _yesterday = datetime.datetime.combine(complete_dt, datetime.time.min) - datetime.timedelta(days=1)
+        last_history_total = self.select_yesterday_total(_yesterday)
+        # 今日的累计净买额 = 上一天的累计净买额 + 今日的净买额
+        now_history_total = last_history_total + sh_item['NetBuyAmount']
+        sh_item['MoneyInHistoryTotal'] = now_history_total
+        sh_item['MarketTypeCode'] = 1
+        sh_item['MarketType'] = '沪股通'
+        # print(sh_item)
 
-            # update_fields = ['Category', 'DateTime', 'ShHkFlow', 'ShHkBalance', 'SzHkFlow', 'SzHkBalance', 'Netinflow']
-            # self._save(sh_item, self.table_name, update_fields)
+
+
+
+
+        # # 沪股通/港股通(沪)当日资金余额（万） 此处北向资金表示沪股通
+        # sh_item['ShHkBalance'] = self.re_data(flow_info[1][1])
+        # logger.info("开始处理深股通每日额度信息")
+        # body = requests.get(north_urls[3], headers=self.headers).text
+        # datas = json.loads(
+        #     body.rstrip(";").lstrip("northbound11 =").lstrip("northbound12 =").lstrip("northbound21 =").lstrip(
+        #         "northbound22 ="))
+        # show_dt = datas[0].get("section")[0].get("subtitle")[1]
+        # show_dt = datetime.datetime.strptime(show_dt, "%d/%m/%Y").strftime("%Y-%m-%d")
+        # flow_info = datas[0].get("section")[0].get("item")
+        # m_dt = flow_info[1][0]
+        # m_dt = re.findall("余额 \(于 (.*)\)", m_dt)[0]
+        # complete_dt = " ".join([show_dt, m_dt])
+        # complete_dt = str(datetime.datetime.strptime(complete_dt, "%Y-%m-%d %H:%M"))
+        # sz_item = dict()
+        # # 类别:1 南向, 2 北向
+        # sz_item['Category'] = 2
+        # # 分钟交易时间
+        # sz_item['DateTime'] = complete_dt
+        # # 深股通/港股通(深)当日资金流向(万） 北向时为深股通
+        # sz_item['SzHkFlow'] = self.re_data(flow_info[0][1]) - self.re_data(flow_info[1][1])
+        # # 深股通/港股通(深)当日资金余额（万）北向时为深股通
+        # sz_item['SzHkBalance'] = self.re_data(flow_info[1][1])
+        # print(sz_item)
+        # if sh_item['DateTime'] == sz_item['DateTime']:
+        #     sh_item.update(sz_item)
+        #     # 南北向资金,当日净流入
+        #     sh_item['Netinflow'] = sh_item['ShHkFlow'] + sh_item['SzHkFlow']
+        #     print(sh_item)
+        #     #  id | Date                | MoneyIn | MoneyBalance | MoneyInHistoryTotal | NetBuyAmount | BuyAmount | SellAmount
+        #     #  | MarketTypeCode | MarketType | CMFID  | CMFTime             | CREATETIMEJZ        | UPDATETIMEJZ
+        #
+        #     # update_fields = ['Category', 'DateTime', 'ShHkFlow', 'ShHkBalance', 'SzHkFlow', 'SzHkBalance', 'Netinflow']
+        #     # self._save(sh_item, self.table_name, update_fields)
 
     def _create_stock_table(self):
+        # 历史资金累计流入 其实是净买额累计流入
+
+        fields = ['Date',
+                  'MoneyIn',
+                  'MoneyBalance',
+                  'MoneyInHistoryTotal',
+                  'NetBuyAmount',
+                  'BuyAmount',
+                  'SellAmount',
+                  'MarketTypeCode',
+                  'MarketType',
+                  ]
         sql = '''
-        CREATE TABLE `hkland_historytradestat` (
+        CREATE TABLE IF NOT EXISTS `exchange_generate_historytradestat` (
           `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-          `Date` datetime NOT NULL COMMENT '日期',
+          `Date` datetime NOT NULL COMMENT '时间',
           `MoneyIn` decimal(20,4) NOT NULL COMMENT '当日资金流入(百万）',
           `MoneyBalance` decimal(20,4) NOT NULL COMMENT '当日余额（百万）',
-          `MoneyInHistoryTotal` decimal(20,4) NOT NULL COMMENT '历史资金累计流入(百万元）',
+          `MoneyInHistoryTotal` decimal(20,4) NOT NULL COMMENT '历史资金累计流入(其实是净买额累计流入)(百万元）',
           `NetBuyAmount` decimal(20,4) NOT NULL COMMENT '当日成交净买额(百万元）',
           `BuyAmount` decimal(20,4) NOT NULL COMMENT '买入成交额(百万元）',
           `SellAmount` decimal(20,4) NOT NULL COMMENT '卖出成交额(百万元）',
           `MarketTypeCode` int(11) NOT NULL COMMENT '市场类型代码',
           `MarketType` varchar(20) COLLATE utf8_bin DEFAULT NULL COMMENT '市场类型',
-          `CMFID` bigint(20) NOT NULL COMMENT '来源ID',
-          `CMFTime` datetime NOT NULL COMMENT '来源日期',
           `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
           `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
           PRIMARY KEY (`id`),
           UNIQUE KEY `un` (`Date`,`MarketTypeCode`)
-        ) ENGINE=InnoDB AUTO_INCREMENT=136784 DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='陆股通资金流向汇总(港股通币种为港元，陆股通币种为人民币)'; 
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='交易所计算陆股通资金流向汇总(港股通币种为港元，陆股通币种为人民币)'; 
         '''
+        client = self._init_pool(self.product_cfg)
+        client.insert(sql)
+        client.dispose()
 
 
 if __name__ == "__main__":
