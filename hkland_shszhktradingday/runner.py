@@ -19,11 +19,13 @@ def task():
     if not lastest_update_dt >= now - datetime.timedelta(days=2):
         logger.info("No Update in Latest 2 Days, Return.")
         return
-    print()
 
+    logger.info("开始下载更新后的文件")
     download_lastst_csv_file()
+    logger.info("下载完毕")
 
     for file_path, year in [('2019 Calendar_csv_c.csv', 2019), ('2020 Calendar_csv_c.csv', 2020)]:
+        logger.info("开始刷新 {} 年的数据".format(year))
         ll = CSVLoader(csv_file_path=file_path, year=year)
         ll.start()
 
@@ -31,9 +33,11 @@ def task():
 def main():
     task()
 
-    schedule.every().day.at("05:00").do(task)
+    schedule.every().day.at("08:00").do(task)
+    schedule.every().day.at("12:00").do(task)
 
     while True:
+        logger.info("当前调度系统中的任务列表是{}".format(schedule.jobs))
         schedule.run_pending()
         time.sleep(180)
 

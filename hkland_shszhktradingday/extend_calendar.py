@@ -10,7 +10,9 @@ from hkland_shszhktradingday.sql_pool import PyMysqlPoolBase
 
 
 class ExtendCalendar(object):
-    """根据历史资金流向扩充交易日历"""
+    """根据历史资金流向扩充交易日历
+       只运行一次
+    """
     dc_cfg = {
         "host": DATACENTER_HOST,
         "port": DATACENTER_PORT,

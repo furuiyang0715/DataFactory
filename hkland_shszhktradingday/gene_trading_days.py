@@ -1,16 +1,15 @@
 import csv
 import datetime
-import pprint
-import sys
 import traceback
 
 import pandas as pd
 
-from hkland_shszhktradingday.configs import DATACENTER_HOST, DATACENTER_PORT, DATACENTER_USER, DATACENTER_PASSWD, \
-    DATACENTER_DB, \
-    TARGET_HOST, TARGET_PORT, TARGET_USER, TARGET_PASSWD, TARGET_DB, LOCAL, TEST_HOST, TEST_PORT, TEST_USER, \
-    TEST_PASSWD, TEST_DB
-from hkland_shszhktradingday.my_log import logger
+
+from hkland_shszhktradingday.configs import (DATACENTER_HOST, DATACENTER_PORT, DATACENTER_USER,
+                                             DATACENTER_PASSWD, DATACENTER_DB, TARGET_HOST,
+                                             TARGET_PORT, TARGET_USER, TARGET_PASSWD, TARGET_DB,
+                                             LOCAL, TEST_HOST, TEST_PORT, TEST_USER, TEST_PASSWD,
+                                             TEST_DB)
 from hkland_shszhktradingday.sql_pool import PyMysqlPoolBase
 
 
@@ -104,17 +103,6 @@ class CSVLoader(object):
             "五": 5,
         }
 
-        # stats_map = {
-        #     # '全天': 1,
-        #     '半日市': 2,
-        #     '假期': 3,
-        # }
-        #
-        # trade_map = {
-        #     '關閉': 0,
-        #     # '开市': 1,
-        # }
-
         for record in records:
             end_date = record.get('日期')
             end_date = datetime.datetime.strptime(end_date, "%Y-%m-%d")
@@ -175,22 +163,51 @@ class CSVLoader(object):
             # 插入
             self.insert_many([base72_83, base83_72, base72_90, base90_72])
 
-    def insert_many(self, datas, replace=True):
-        target = self.init_sql_pool(self.target_cfg)
-        data = datas[0]
-        fields = sorted(data.keys())
-        columns = ", ".join(fields)
-        placeholders = ', '.join(['%s'] * len(data))
-        if not replace:
-            insert_sql = "INSERT INTO %s ( %s ) VALUES ( %s ); " % (self.table_name, columns, placeholders)
+    def contract_sql(self, to_insert: dict, table: str, update_fields: list):
+        ks = []
+        vs = []
+        for k in to_insert:
+            ks.append(k)
+            vs.append(to_insert.get(k))
+        fields_str = "(" + ",".join(ks) + ")"
+        values_str = "(" + "%s," * (len(vs) - 1) + "%s" + ")"
+        base_sql = '''INSERT INTO `{}` '''.format(table) + fields_str + ''' values ''' + values_str
+        on_update_sql = ''' ON DUPLICATE KEY UPDATE '''
+        update_vs = []
+        for update_field in update_fields:
+            on_update_sql += '{}=%s,'.format(update_field)
+            update_vs.append(to_insert.get(update_field))
+        on_update_sql = on_update_sql.rstrip(",")
+        sql = base_sql + on_update_sql + """;"""
+        vs.extend(update_vs)
+        return sql, tuple(vs)
+
+    def _save(self, client, to_insert, table, update_fields: list):
+        try:
+            insert_sql, values = self.contract_sql(to_insert, table, update_fields)
+            count = client.insert(insert_sql, values)
+        except:
+            traceback.print_exc()
+            print("失败")
+            count = None
         else:
-            insert_sql = "REPLACE INTO %s ( %s ) VALUES ( %s ); " % (self.table_name, columns, placeholders)
-        values = []
+            if count:
+                print("更入新数据 {}".format(to_insert))
+        finally:
+            client.end()
+        return count
+
+    def insert_many(self, datas):
+        client = self.init_sql_pool(self.target_cfg)
+        fields = ['InfoSource', 'EndDate', 'TradingType', 'IfTradingDay',
+                  'IfWeekEnd', 'IfMonthEnd', 'IfQuarterEnd', 'IfYearEnd']
         for data in datas:
-            value = tuple(data.get(field) for field in fields)
-            values.append(value)
-        target.insert_many(insert_sql, values)
-        target.dispose()
+            self._save(client, data, self.table_name, fields)
+
+        try:
+            client.dispose()
+        except:
+            pass
 
     def check_if_end(self, end_date, info_source):
         dc = self.init_sql_pool(self.dc_cfg)
