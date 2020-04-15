@@ -60,4 +60,8 @@ sudo docker pull registry.cn-shenzhen.aliyuncs.com/jzdev/dcfactory/hk_land_tradi
 sudo docker run --log-opt max-size=10m --log-opt max-file=3 \
 -itd --name trade_days --env LOCAL=0 \
 registry.cn-shenzhen.aliyuncs.com/jzdev/dcfactory/hk_land_trading_days:v0.0.1
+
+# 手动更新一次扩充程序 
+docker exec -it trade_days /bin/bash 
+python extend_calendar.py 
 '''

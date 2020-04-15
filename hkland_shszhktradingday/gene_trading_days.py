@@ -50,6 +50,7 @@ class CSVLoader(object):
         self.csv_file_path = csv_file_path
         self.year = year
         self.table_name = 'hkland_shszhktradingday'
+        self.tool_table_name = 'base_table_updatetime'
 
     def init_sql_pool(self, sql_cfg: dict):
         pool = PyMysqlPoolBase(**sql_cfg)
@@ -261,6 +262,18 @@ class CSVLoader(object):
 
             self.insert_many([base72_83, base83_72, base72_90, base90_72])
 
+    def refresh_update_time(self):
+        product = self.init_sql_pool(self.target_cfg)
+        sql = '''select max(UPDATETIMEJZ) as max_dt from {}; '''.format(self.table_name)
+        max_dt = product.select_one(sql).get("max_dt")
+        print("最新的更新时间是{}".format(max_dt))
+
+        refresh_sql = '''replace into {} (id, TableName, LastUpdateTime,IsValid) values (11, "hkland_shszhktradingday", '{}', 1); 
+        '''.format(self.tool_table_name, max_dt)
+        count = product.update(refresh_sql)
+        print(count)   # 1 首次插入 2 替换插入
+        product.dispose()
+
     def _start(self):
         if LOCAL:
             self.create_table()
@@ -270,6 +283,8 @@ class CSVLoader(object):
 
         wks = self.gene_wk_days(self.year)
         self.process_wk_records(wks)
+
+        self.refresh_update_time()
 
     def start(self):
         try:
