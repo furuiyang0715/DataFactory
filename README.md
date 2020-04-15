@@ -32,6 +32,20 @@ hkland_hkscc 陆股通持股记录 V2
 运行时间: 按照要求是每天的 8: 00 以及 12: 00 各更新一遍。 
 其实每天去检查网站时间戳一次, 若有变化则进行更新。并且刷新更新时间戳。 
 
+根据: https://baike.baidu.com/item/%E6%B2%AA%E6%B8%AF%E9%80%9A/13613585 
+沪港通的开通时间是 2014年11月17日 
+对应： 
+
+    select min(EndDate), max(EndDate) from hkland_shszhktradingday where TradingType = 1 and IfTradingDay = 1; 
+    select min(EndDate), max(EndDate) from hkland_shszhktradingday where TradingType = 2 and IfTradingDay = 1; 
+
+根据: https://baike.baidu.com/item/%E6%B7%B1%E6%B8%AF%E9%80%9A
+深港通的开通时间是 2016年12月5日 
+对应: 
+
+    select min(EndDate), max(EndDate) from hkland_shszhktradingday where TradingType = 3 and IfTradingDay = 1;
+    select min(EndDate), max(EndDate) from hkland_shszhktradingday where TradingType = 4 and IfTradingDay = 1;
+
 ### 陆股通实时资金流向 
 文件夹同表名: hkland_flow 
 网站数据源:
