@@ -36,7 +36,8 @@ class ExtendCalendar(object):
             1: 72,     # 北向沪股通, 消息源是港交所
             2: 83,     # 南向 港股通(沪）,消息源是上交所
             3: 72,     # 北向深股通, 消息源是港交所
-            4: 90,     # 南向 港股通(深), 消息源是深交所
+            # 4: 90,
+            4: 83,     # 南向 港股通(深), 消息源是深交所,  83 和 90 对于 const_tradingday 表的查询统一使用 83
         }
 
     def _init_pool(self, cfg):
@@ -148,8 +149,8 @@ class ExtendCalendar(object):
             3: 深股通 
             4: 港股通(深) 
             """
-            # print(mtype)
-            # self._check(mtype)
+            print(mtype)
+            self._check(mtype)
             self._extend(mtype)
 
 

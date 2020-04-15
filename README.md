@@ -25,6 +25,10 @@ hkland_hkscc 陆股通持股记录 V2
 #### 陆股通交易日表 
 文件夹同表名: hkland_shszhktradingday 
 
+数据源: https://www.hkex.com.hk/Mutual-Market/Stock-Connect/Reference-Materials/Trading-Hour,-Trading-and-Settlement-Calendar?sc_lang=zh-HK 
+
+同时根据历史的每日资金流向汇总进行了交易日的扩充。 
+
 运行时间: 按照要求是每天的 8: 00 以及 12: 00 各更新一遍。 
 其实每天去检查网站时间戳一次, 若有变化则进行更新。并且刷新更新时间戳。 
 
@@ -47,7 +51,7 @@ hkland_hkscc 陆股通持股记录 V2
 一共是 (12 - 9)*60 + (16:10-13:00)*60 + 1 = 180 + 190 + 1 = 371 根。 
 
 
-### 陆港通实时资金流向汇总 
+### 陆港通每日资金流向汇总 
 文件夹同表名: hkland_historytradestat 
 网站数据源: 
 港交所官网 https://sc.hkex.com.hk/TuniS/www.hkex.com.hk/Mutual-Market/Stock-Connect?sc_lang=zh-CN （数据推算） 
