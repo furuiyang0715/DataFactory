@@ -413,7 +413,8 @@ class HoldShares(object):
         spider = self._init_pool(self.spider_cfg)
 
         start_dt = self.today - datetime.timedelta(days=4)
-        end_dt = self.today
+        # FIXME 在每天的凌晨启动 只能重刷前一天的数据
+        end_dt = self.today - datetime.timedelta(days=1)
 
         dt = start_dt
         _map = {}
