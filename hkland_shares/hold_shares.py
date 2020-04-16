@@ -447,7 +447,8 @@ class HoldShares(object):
 
         product = self._init_pool(self.product_cfg)
         select_fields = ['SecuCode', 'InnerCode', 'SecuAbbr', 'Percent', 'ShareNum', 'UPDATETIMEJZ']
-        update_fields = ['Date', 'SecuCode', 'InnerCode', 'SecuAbbr', 'Percent', 'ShareNum']
+        # 加入了 CMFTime 即使用的数据源也要计入在内
+        update_fields = ['Date', 'SecuCode', 'InnerCode', 'SecuAbbr', 'Percent', 'ShareNum', 'CMFTime']
         select_str = ",".join(select_fields).rstrip(",")
         for dt in _map:
             sql = '''select {} from {} where Date = '{}'; '''.format(select_str, self.spider_table, _map.get(dt))
@@ -506,9 +507,6 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-    # h = HoldShares("hk")
-    # h._sync()
 
 
 '''
