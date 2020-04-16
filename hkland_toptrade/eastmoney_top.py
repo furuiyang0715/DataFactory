@@ -1,12 +1,15 @@
 # -*- coding: utf-8 -*-
-
+import base64
 import datetime
+import hashlib
+import hmac
 import json
 import logging
 import re
 import sys
 import time
 import traceback
+import urllib.parse
 
 import requests
 import schedule
@@ -14,7 +17,7 @@ import schedule
 sys.path.append("./../")
 
 from hkland_toptrade.base_spider import BaseSpider
-from hkland_toptrade.configs import LOCAL
+from hkland_toptrade.configs import LOCAL, SECRET, TOKEN
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -82,6 +85,7 @@ class EMLgttop10tradedsharesspiderSpider(BaseSpider):
             sz_innercode_map = self._get_inner_code_map("sz")
             hk_innercode_map = self._get_inner_code_map("hk")
 
+            jishu = []
             for data in [data1, data2, data3, data4]:
                 data = json.loads(data)
                 print(data)
@@ -155,7 +159,12 @@ class EMLgttop10tradedsharesspiderSpider(BaseSpider):
                     # print(item)
                     update_fields = ['Date', 'SecuCode', 'InnerCode', 'SecuAbbr', 'Close', 'ChangePercent',
                                      'TJME', 'TMRJE', 'TCJJE', 'CategoryCode']
-                    self._save(item, self.table_name, update_fields)
+                    ret = self._save(item, self.table_name, update_fields)
+                    if ret == 1:
+                        jishu.append(ret)
+            if len(jishu) != 0:
+                self.ding("【datacenter】当前的时间是{}, 数据库 {} 更入了 {} 条新数据".format(
+                    datetime.datetime.now(), self.table_name, len(jishu)))
 
         self.refresh_update_time()
 
@@ -205,25 +214,73 @@ class EMLgttop10tradedsharesspiderSpider(BaseSpider):
         product.insert(sql)
         product.dispose()
 
+    def ding(self, msg):
+        def get_url():
+            timestamp = str(round(time.time() * 1000))
+            secret_enc = SECRET.encode('utf-8')
+            string_to_sign = '{}\n{}'.format(timestamp, SECRET)
+            string_to_sign_enc = string_to_sign.encode('utf-8')
+            hmac_code = hmac.new(secret_enc, string_to_sign_enc, digestmod=hashlib.sha256).digest()
+            sign = urllib.parse.quote_plus(base64.b64encode(hmac_code))
+            url = 'https://oapi.dingtalk.com/robot/send?access_token={}&timestamp={}&sign={}'.format(
+                TOKEN, timestamp, sign)
+            return url
+
+        url = get_url()
+        header = {
+            "Content-Type": "application/json",
+            "Charset": "UTF-8"
+        }
+        message = {
+            "msgtype": "text",
+            "text": {
+                "content": "{}@15626046299".format(msg)
+            },
+            "at": {
+                "atMobiles": [
+                    "15626046299",
+                ],
+                "isAtAll": False
+            }
+        }
+        message_json = json.dumps(message)
+        resp = requests.post(url=url, data=message_json, headers=header)
+        if resp.status_code == 200:
+            pass
+        else:
+            logger.warning("钉钉消息发送失败")
+
     def start(self):
-        try:
-            self._start()
-        except:
-            traceback.print_exc()
+        count = 3
+        while True:
+            try:
+                self._start()
+            except Exception as e:
+                count -= 1
+                if count < 0:
+                    self.ding("【datacenter】当前时间{}, 十大成教股程序 {} 出错了, 错误原因是 {}".format(
+                        datetime.datetime.now(), self.table_name, e))
+                    # break # TODO 出错就一直 ding
+                    time.sleep(3)
+                else:
+                    traceback.print_exc()
+                    print("十大成交股爬取程序失败, 重启.")
+            else:
+                break
 
 
 def schedule_task():
     t_day = datetime.datetime.today()
 
-    start_time = datetime.datetime(t_day.year, t_day.month, t_day.day, 9, 0, 0)
-    end_time = datetime.datetime(t_day.year, t_day.month, t_day.day, 15, 0, 0)
+    start_time = datetime.datetime(t_day.year, t_day.month, t_day.day, 16, 10, 0)
+    end_time = datetime.datetime(t_day.year, t_day.month, t_day.day, 20, 0, 0)
 
-    if (t_day >= start_time and t_day <= end_time):
-        logger.warning("在盘中不更新数据")
+    if not (t_day >= start_time and t_day <= end_time):
+        logger.warning("不在 16:10 到 20:00 的更新时段内")
         return
 
     for i in range(1):
-        # FIXME 只能获取最近一天的数据
+        # FIXME 十大成交股只能获取最近一天的数据
         day = t_day - datetime.timedelta(days=i)
         day_str = day.strftime("%Y-%m-%d")
         print(day_str)  # 如果当前还未出 十大成交股数据 返回空列表
@@ -234,12 +291,11 @@ def schedule_task():
 def main():
     schedule_task()
 
-    schedule.every(10).minutes.do(schedule_task)
+    schedule.every(3).minutes.do(schedule_task)
 
     while True:
-        print("当前调度系统中的任务列表是{}".format(schedule.jobs))
         schedule.run_pending()
-        time.sleep(60)
+        time.sleep(10)
 
 
 if __name__ == "__main__":

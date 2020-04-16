@@ -435,6 +435,7 @@ class HoldShares(object):
                 if count < 0:
                     traceback.print_exc()
                     self.ding("当前时间{}, 爬虫程序{}出错了, 错误原因是{}".format(datetime.datetime.now(), self.spider_table, e))
+                    time.sleep(3)   # 4 次重试后出错就一直 ding
                 else:
                     print("爬虫程序失败, 重启.")
             else:
@@ -450,6 +451,7 @@ class HoldShares(object):
                 if count < 0:
                     traceback.print_exc()
                     self.ding("当前时间{}, 同步程序{}出错了, 错误原因是{}".format(datetime.datetime.now(), self.table_name, e))
+                    time.sleep(3)   # 出错一直 ding
                 else:
                     print("同步程序失败, 重启.")
             else:
