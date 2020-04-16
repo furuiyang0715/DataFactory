@@ -114,6 +114,13 @@ class HkexlugutongshishispiderSpider(object):
             spider.dispose()
         return count
 
+    def select_yesterday_total(self, _yesterday):
+        """查找距给出时间最近的一个时间点的累计值"""
+        dc = self._init_pool(self.dc_cfg)
+
+
+        pass
+
     def _start(self):
         if LOCAL:
             self._create_stock_table()

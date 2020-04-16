@@ -332,12 +332,6 @@ class HoldShares(object):
                 update_fields = ['SecuCode', 'InnerCode', 'SecuAbbr', 'Date', 'Percent', 'ShareNum']
                 self._save(spider, item, self.spider_table, update_fields)
 
-    def start(self):
-        try:
-            self._start()
-        except:
-            traceback.print_exc()
-
     # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>> 数据加工处理分界线 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     def _create_product_table(self):
         sql1 = '''
@@ -381,6 +375,36 @@ class HoldShares(object):
         product.insert(sql1)
         product.insert(sql2)
         product.dispose()
+
+    def start(self):
+        count = 3
+        while True:
+            try:
+                self._start()
+            except:
+                count -= 1
+                if count < 0:
+                    traceback.print_exc()
+                    raise
+                else:
+                    print("爬虫程序失败重启.")
+            else:
+                break
+
+    def sync(self):
+        count = 3
+        while True:
+            try:
+                self._sync()
+            except:
+                count -= 1
+                if count < 0:
+                    traceback.print_exc()
+                    raise
+                else:
+                    print("同步程序失败重启")
+            else:
+                break
 
     def _sync(self):
         if LOCAL:
@@ -450,7 +474,7 @@ def spider_task():
     for _type in ("sh", "sz", "hk"):
         print("{} SPIDER START.".format(_type))
         h = HoldShares(_type)
-        h._start()
+        h.start()
         print("Time: {} s".format(now() - t1))
 
 
@@ -460,7 +484,7 @@ def sync_task():
     for _type in ("hk", "sh", "sz"):
         print("{} SYNC START.".format(_type))
         h = HoldShares(_type)
-        h._sync()
+        h.sync()
         print("Time: {} s".format(now() - t1))
 
 
@@ -525,5 +549,10 @@ sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name flow_sha
 --env SYNC=1 \
 --env SPIDER=0 \
 registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_shares:v1 
+
+
+
+# sql 检查语句 
+select * from hkland_shares where InnerCode = 3 order by Date desc limit 5; 
 
 '''
