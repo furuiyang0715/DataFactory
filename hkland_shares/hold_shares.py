@@ -558,6 +558,7 @@ def main():
         schedule.every().hour.do(spider_task)
     if SYNC:
         sync_task()
+        schedule.every().day.at("01:30").do(sync_task)
         schedule.every().day.at("04:00").do(sync_task)
         schedule.every().day.at("08:00").do(sync_task)
 
