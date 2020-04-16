@@ -525,6 +525,8 @@ class HoldShares(object):
 
         if len(jishu) != 0:
             self.ding("【datacenter】当前的时间是{}, dc 数据库 {} 更入了 {} 条新数据".format(datetime.datetime.now(), self.table_name, len(jishu)))
+        else:
+            print(len(jishu))
 
 
 now = lambda: time.time()
