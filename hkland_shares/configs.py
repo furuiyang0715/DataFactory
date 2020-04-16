@@ -24,6 +24,9 @@ JUY_DB = env.get("JUY_DB", cf.get('juyuan', 'JUY_DB'))
 # deploy
 LOCAL = bool(int(env.get("LOCAL", cf.get('deploy', 'LOCAL'))))
 FIRST = bool(int(env.get("FIRST", cf.get('deploy', 'FIRST'))))
+SECRET = env.get("SECRET", cf.get('deploy', 'SECRET'))
+TOKEN = env.get("TOKEN", cf.get('deploy', 'TOKEN'))
+
 
 
 # test
