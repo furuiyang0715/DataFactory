@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
+import base64
 import datetime
+import hashlib
+import hmac
 import json
 import logging
 import os
@@ -13,7 +16,7 @@ import schedule
 
 sys.path.append("./../")
 
-from hkland_historytradestat.configs import LOCAL
+from hkland_historytradestat.configs import LOCAL, SECRET, TOKEN
 from hkland_historytradestat.base_spider import BaseSpider
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -60,6 +63,7 @@ class EMLgthisdspiderSpider(BaseSpider):
             '3',
             '4',
         ]
+        jishu = []
         for category in category_lis:
             print(category)
             url1 = """http://dcfm.eastmoney.com/EM_MutiSvcExpandInterface/api/js/get?type=HSGTHIS&token=70f12f2f4f091e459a279469fe49eca5&filter=(MarketType={})"""
@@ -77,7 +81,8 @@ class EMLgthisdspiderSpider(BaseSpider):
                     min_dt = datetime.datetime.strptime(datas[-1].get("Date"), "%Y-%m-%dT%H:%M:%S")
                     print(min_dt)
                     print(max_dt)
-                    self.save_many(datas)
+                    ret = self.save_many(datas)
+                    jishu.extend(ret)
                     if not FIRST:
                         # FIXME 暂定: 历史数据往前回溯 10 天
                         if max_dt < datetime.datetime.today() - datetime.timedelta(days=10):
@@ -86,6 +91,48 @@ class EMLgthisdspiderSpider(BaseSpider):
                 else:
                     break
         self.refresh_update_time()
+
+        if len(jishu) != 0:
+            self.ding("【datacenter】当前的时间是{}, 数据库 {} 更入了 {} 条新数据".format(
+                datetime.datetime.now(), self.table_name, len(jishu)))
+        else:
+            print("len of jishu:{}".format(len(jishu)))
+
+    def ding(self, msg):
+        def get_url():
+            timestamp = str(round(time.time() * 1000))
+            secret_enc = SECRET.encode('utf-8')
+            string_to_sign = '{}\n{}'.format(timestamp, SECRET)
+            string_to_sign_enc = string_to_sign.encode('utf-8')
+            hmac_code = hmac.new(secret_enc, string_to_sign_enc, digestmod=hashlib.sha256).digest()
+            sign = urllib.parse.quote_plus(base64.b64encode(hmac_code))
+            url = 'https://oapi.dingtalk.com/robot/send?access_token={}&timestamp={}&sign={}'.format(
+                TOKEN, timestamp, sign)
+            return url
+
+        url = get_url()
+        header = {
+            "Content-Type": "application/json",
+            "Charset": "UTF-8"
+        }
+        message = {
+            "msgtype": "text",
+            "text": {
+                "content": "{}@15626046299".format(msg)
+            },
+            "at": {
+                "atMobiles": [
+                    "15626046299",
+                ],
+                "isAtAll": False
+            }
+        }
+        message_json = json.dumps(message)
+        resp = requests.post(url=url, data=message_json, headers=header)
+        if resp.status_code == 200:
+            pass
+        else:
+            logger.warning("钉钉消息发送失败")
 
     def refresh_update_time(self):
         product = self._init_pool(self.product_cfg)
@@ -118,10 +165,14 @@ class EMLgthisdspiderSpider(BaseSpider):
         #  Date                | MoneyIn    | MoneyBalance | MoneyInHistoryTotal | NetBuyAmount | BuyAmount  | SellAmount | MarketTypeCode | MarketType
         update_fields = ['Date', "MoneyIn", "MoneyBalance", "MoneyInHistoryTotal", "NetBuyAmount", "BuyAmount",
                          "SellAmount", "MarketType", "MarketTypeCode"]
+        jishu = []
         product = self._init_pool(self.product_cfg)
         for data in datas:
-            self.save(product, data, self.table_name, update_fields)
+            ret = self.save(product, data, self.table_name, update_fields)
+            if ret == 1:
+                jishu.append(ret)
         product.dispose()
+        return jishu
 
     def _get_datas(self, url):
         items = []
@@ -235,13 +286,34 @@ class EMLgthisdspiderSpider(BaseSpider):
         product.dispose()
 
     def start(self):
-        try:
-            self._start()
-        except:
-            traceback.print_exc()
+        count = 3
+        while True:
+            try:
+                self._start()
+            except Exception as e:
+                count -= 1
+                if count < 0:
+                    self.ding("【datacenter】当前时间{}, 资金流向历史程序 {} 出错了, 错误原因是 {}".format(
+                        datetime.datetime.now(), self.table_name, e))
+                    # break # TODO 出错就一直 ding
+                    time.sleep(3)
+                else:
+                    traceback.print_exc()
+                    print("资金流向历史 程序失败, 重启.")
+            else:
+                break
 
 
 def task():
+    t_day = datetime.datetime.today()
+
+    start_time = datetime.datetime(t_day.year, t_day.month, t_day.day, 16, 10, 0)
+    end_time = datetime.datetime(t_day.year, t_day.month, t_day.day, 20, 0, 0)
+
+    if not (t_day >= start_time and t_day <= end_time):
+        logger.warning("不在 16:10 到 20:00 的更新时段内")
+        return
+
     his = EMLgthisdspiderSpider()
     his.start()
 

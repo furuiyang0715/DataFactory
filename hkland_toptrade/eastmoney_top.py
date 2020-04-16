@@ -258,7 +258,7 @@ class EMLgttop10tradedsharesspiderSpider(BaseSpider):
             except Exception as e:
                 count -= 1
                 if count < 0:
-                    self.ding("【datacenter】当前时间{}, 十大成教股程序 {} 出错了, 错误原因是 {}".format(
+                    self.ding("【datacenter】当前时间{}, 十大成交股程序 {} 出错了, 错误原因是 {}".format(
                         datetime.datetime.now(), self.table_name, e))
                     # break # TODO 出错就一直 ding
                     time.sleep(3)
