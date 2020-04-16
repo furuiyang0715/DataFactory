@@ -1,5 +1,7 @@
+import base64
 import datetime
 import hashlib
+import hmac
 import json
 import logging
 import os
@@ -8,6 +10,7 @@ import re
 import sys
 import time
 import traceback
+import urllib.parse
 
 import pandas as pd
 import requests
@@ -20,7 +23,7 @@ sys.path.append("./../")
 from hkland_shares.configs import (SPIDER_MYSQL_HOST, SPIDER_MYSQL_PORT, SPIDER_MYSQL_USER, SPIDER_MYSQL_PASSWORD,
                                    SPIDER_MYSQL_DB, PRODUCT_MYSQL_HOST, PRODUCT_MYSQL_PORT, PRODUCT_MYSQL_USER,
                                    PRODUCT_MYSQL_PASSWORD, PRODUCT_MYSQL_DB, JUY_HOST, JUY_PORT, JUY_USER, JUY_PASSWD,
-                                   JUY_DB, DC_HOST, DC_PORT, DC_USER, DC_PASSWD, DC_DB, LOCAL)
+                                   JUY_DB, DC_HOST, DC_PORT, DC_USER, DC_PASSWD, DC_DB, LOCAL, SECRET, TOKEN)
 from hkland_shares.sql_pool import PyMysqlPoolBase
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -213,6 +216,42 @@ class HoldShares(object):
         else:
             raise
 
+    def ding(self, msg):
+        def get_url():
+            timestamp = str(round(time.time() * 1000))
+            secret_enc = SECRET.encode('utf-8')
+            string_to_sign = '{}\n{}'.format(timestamp, SECRET)
+            string_to_sign_enc = string_to_sign.encode('utf-8')
+            hmac_code = hmac.new(secret_enc, string_to_sign_enc, digestmod=hashlib.sha256).digest()
+            sign = urllib.parse.quote_plus(base64.b64encode(hmac_code))
+            url = 'https://oapi.dingtalk.com/robot/send?access_token={}&timestamp={}&sign={}'.format(
+                TOKEN, timestamp, sign)
+            return url
+
+        url = get_url()
+        header = {
+            "Content-Type": "application/json",
+            "Charset": "UTF-8"
+        }
+        message = {
+            "msgtype": "text",
+            "text": {
+                "content": "{}@15626046299".format(msg)
+            },
+            "at": {
+                "atMobiles": [
+                    "15626046299",
+                ],
+                "isAtAll": False
+            }
+        }
+        message_json = json.dumps(message)
+        resp = requests.post(url=url, data=message_json, headers=header)
+        if resp.status_code == 200:
+            pass
+        else:
+            logger.warning("钉钉消息发送失败")
+
     def _trans_secucode(self, secu_code: str):
         """香港 大陆证券代码转换
         规则: 沪: 60-> 9
@@ -269,9 +308,6 @@ class HoldShares(object):
 
     def _start(self):
         self._create_table()
-        # print(self.url)
-        # print(self.check_day)
-        # print(pprint.pformat(self.post_params))
         resp = requests.post(self.url, data=self.post_params)
         if resp.status_code == 200:
             body = resp.text
@@ -283,8 +319,12 @@ class HoldShares(object):
             date = re.findall(r"持股日期: (\d{4}/\d{2}/\d{2})", date)[0]
             print(date)
             trs = doc.xpath('//*[@id="mutualmarket-result"]/tbody/tr')
-            item = {}
+
+            jishu = []
+            update_fields = ['SecuCode', 'InnerCode', 'SecuAbbr', 'Date', 'Percent', 'ShareNum']
+            spider = self._init_pool(self.spider_cfg)
             for tr in trs:
+                item = {}
                 # 股份代码
                 secu_code = tr.xpath('./td[1]/div[2]/text()')[0].strip()
                 # item['SecuCode'] = secu_code
@@ -326,11 +366,20 @@ class HoldShares(object):
                     item['SecuCode'] = self.suffix_process(_secu_code)
                 else:
                     raise
-                # print(item)
 
-                spider = self._init_pool(self.spider_cfg)
-                update_fields = ['SecuCode', 'InnerCode', 'SecuAbbr', 'Date', 'Percent', 'ShareNum']
-                self._save(spider, item, self.spider_table, update_fields)
+                ret = self._save(spider, item, self.spider_table, update_fields)
+                if ret == 1:
+                    jishu.append(ret)
+
+            try:
+                spider.dispose()
+            except:
+                pass
+
+            if len(jishu) != 0:
+                self.ding("当前的时间是{}, 爬虫数据库 {} 更入了 {} 条新数据".format(datetime.datetime.now(), self.spider_table, len(jishu)))
+            else:
+                print(len(jishu))
 
     # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>> 数据加工处理分界线 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     def _create_product_table(self):
@@ -381,13 +430,13 @@ class HoldShares(object):
         while True:
             try:
                 self._start()
-            except:
+            except Exception as e:
                 count -= 1
                 if count < 0:
                     traceback.print_exc()
-                    raise
+                    self.ding("当前时间{}, 爬虫程序{}出错了, 错误原因是{}".format(datetime.datetime.now(), self.spider_table, e))
                 else:
-                    print("爬虫程序失败重启.")
+                    print("爬虫程序失败, 重启.")
             else:
                 break
 
@@ -396,13 +445,13 @@ class HoldShares(object):
         while True:
             try:
                 self._sync()
-            except:
+            except Exception as e:
                 count -= 1
                 if count < 0:
                     traceback.print_exc()
-                    raise
+                    self.ding("当前时间{}, 同步程序{}出错了, 错误原因是{}".format(datetime.datetime.now(), self.table_name, e))
                 else:
-                    print("同步程序失败重启")
+                    print("同步程序失败, 重启.")
             else:
                 break
 
@@ -442,14 +491,17 @@ class HoldShares(object):
                 dt += datetime.timedelta(days=1)
 
             # print(pprint.pformat(shhk_calendar_map))
-
         # print(pprint.pformat(_map))
 
         product = self._init_pool(self.product_cfg)
         select_fields = ['SecuCode', 'InnerCode', 'SecuAbbr', 'Percent', 'ShareNum', 'UPDATETIMEJZ']
-        # 加入了 CMFTime 即使用的数据源也要计入在内
-        update_fields = ['Date', 'SecuCode', 'InnerCode', 'SecuAbbr', 'Percent', 'ShareNum', 'CMFTime']
+        # FIXME 加入了 CMFTime 即使用的数据源也要计入在内
+        update_fields = ['Date', 'SecuCode', 'InnerCode', 'SecuAbbr', 'Percent', 'ShareNum',
+                         # 'CMFTime',
+                         ]
         select_str = ",".join(select_fields).rstrip(",")
+
+        jishu = []
         for dt in _map:
             sql = '''select {} from {} where Date = '{}'; '''.format(select_str, self.spider_table, _map.get(dt))
             datas = spider.select_all(sql)
@@ -461,10 +513,18 @@ class HoldShares(object):
                     data.update({"HKTradeDay": shhk_calendar_map.get(dt)})
                     update_fields.append("HKTradeDay")
                 # print(data)
-                self._save(product, data, self.table_name, update_fields)
+                ret = self._save(product, data, self.table_name, update_fields)
+                if ret == 1:
+                    jishu.append(ret)
 
-        product.dispose()
-        spider.dispose()
+        try:
+            product.dispose()
+            spider.dispose()
+        except:
+            pass
+
+        if len(jishu) != 0:
+            self.ding("【datacenter】当前的时间是{}, dc 数据库 {} 更入了 {} 条新数据".format(datetime.datetime.now(), self.table_name, len(jishu)))
 
 
 now = lambda: time.time()

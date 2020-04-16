@@ -84,6 +84,7 @@ class EMLgttop10tradedsharesspiderSpider(BaseSpider):
 
             for data in [data1, data2, data3, data4]:
                 data = json.loads(data)
+                print(data)
                 top_datas = data.get("data")
                 print(top_datas)
                 for top_data in top_datas:
