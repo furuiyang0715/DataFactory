@@ -25,7 +25,11 @@ class SSEStatsOnTime(object):
             m_today = str(datas['date'])
             m_today = "-".join([m_today[:4], m_today[4:6], m_today[6:8]])
             m_time = str(datas['status'][0][1])
-            m_time = ":".join([m_time[:2], m_time[2:4], m_time[4:6]])
+            # 区分小时时间是 2 位数和 1 位数的 即 9 点以及之前的数据 10 点以及之后的数据
+            if len(m_time) >= 9:    # {'date': 20200417, 'status': [[100547000, 100547000], [417, 418], ['3       ', '111     '], 42000000000, 41207590461, '2']}
+                m_time = ":".join([m_time[:2], m_time[2:4], m_time[4:6]])
+            else: # {'date': 20200417, 'status': [[94338000, 94337000], [417, 418], ['3       ', '111     '], 42000000000, 41543482907, '2']}
+                m_time = ":".join([m_time[:1], m_time[1:3], m_time[3:5]])
             _time = " ".join([m_today, m_time])
             item['Time'] = _time
 
