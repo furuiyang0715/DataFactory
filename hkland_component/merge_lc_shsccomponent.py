@@ -3,6 +3,7 @@ import pickle
 import sys
 import traceback
 
+from hkland_component import tools
 from hkland_component.configs import LOCAL
 from hkland_component.merge_tools import MergeTools
 from hkland_component.my_log import logger
@@ -212,6 +213,7 @@ class SHMergeTools(MergeTools):
         spider_hu_list = set(get_spider_hu_list())
         target_hu_list = set(get_target_hu_list())
         logger.info(spider_hu_list == target_hu_list)
+        return spider_hu_list == target_hu_list
 
     def check_hk_list(self):
         def get_spider_hk_list():
@@ -234,6 +236,7 @@ class SHMergeTools(MergeTools):
         spider_hk_list = set(get_spider_hk_list())
         target_hk_list = set(get_target_hk_list())
         logger.info(spider_hk_list == target_hk_list)
+        return spider_hk_list == target_hk_list
 
     def _create_table(self):
         sql = """
@@ -392,7 +395,7 @@ class SHMergeTools(MergeTools):
 
         logger.info("沪股通的成分变更中需要新插入的数据量(len(new_hu_changes)) 是: {}".format(len(new_hu_changes)))
         self.process_hu_changes(new_hu_changes)
-        self.check_hu_list()   # 注意 如果是在本地测试一直性的话，需要先执行爬虫库数据迁移到测试库的脚本
+        ret1 = self.check_hu_list()   # 注意 如果是在本地测试一直性的话，需要先执行爬虫库数据迁移到测试库的脚本
 
         # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>南北分割线>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
@@ -409,7 +412,12 @@ class SHMergeTools(MergeTools):
 
         logger.info("港股通(沪)的成分变更中需要新插入的数据量(len(new_hk_changes))是: {}".format(len(new_hk_changes)))
         self.process_hk_changes(new_hk_changes)
-        self.check_hk_list()
+        ret2 = self.check_hk_list()
+
+        if not ret1 or not ret2:
+            tools.ding_msg("沪股 {} 合资格股核对有误".format(datetime.datetime.now()))
+        else:
+            tools.ding_msg("沪股 {} 合资格股核对一致".format(datetime.datetime.now()))
 
         # 刷新最后更新时间
         self.refresh_update_time()

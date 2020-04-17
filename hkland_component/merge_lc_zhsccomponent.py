@@ -2,6 +2,7 @@ import datetime
 import pickle
 import traceback
 
+from hkland_component import tools
 from hkland_component.configs import LOCAL
 from hkland_component.merge_tools import MergeTools
 from hkland_component.my_log import logger
@@ -172,6 +173,7 @@ class ZHMergeTools(MergeTools):
         spider_zh_list = set(get_spider_zh_list())
         target_zh_list = set(get_target_zh_list())
         logger.info(spider_zh_list == target_zh_list)
+        return spider_zh_list == target_zh_list
 
     def check_hk_list(self):
         def get_spider_hk_list():
@@ -194,6 +196,7 @@ class ZHMergeTools(MergeTools):
         spider_hk_list = set(get_spider_hk_list())
         target_hk_list = set(get_target_hk_list())
         logger.info(spider_hk_list == target_hk_list)
+        return spider_hk_list == target_hk_list
 
     def get_hk_changes(self):
         # 获取深港通中港的更改
@@ -362,7 +365,7 @@ class ZHMergeTools(MergeTools):
         self.dumps_zh_changes(zh_changes)
         logger.info("需要新插入的深股通成分股变更的数量(len(new_zh_changes)) 是: {} ".format(len(new_zh_changes)))
         self.process_zh_changes(new_zh_changes)
-        self.check_zh_list()
+        ret1 = self.check_zh_list()
 
         # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>南北向数据分割线>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
@@ -376,7 +379,12 @@ class ZHMergeTools(MergeTools):
         logger.info("需要新插入的港股通(深)成分股变更的数量(len(new_hk_changes)) 是: {}".format(len(new_hk_changes)))
         self.dumps_hk_changes(hk_changes)
         self.process_hk_changes(new_hk_changes)
-        self.check_hk_list()
+        ret2 = self.check_hk_list()
+
+        if not ret1 or not ret2:
+            tools.ding_msg("港股 {} 合资格股核对有误".format(datetime.datetime.now()))
+        else:
+            tools.ding_msg("港股 {} 合资格股核对一致".format(datetime.datetime.now()))
 
         # 刷新表的最后更新时间
         self.refresh_update_time()
