@@ -415,9 +415,9 @@ class SHMergeTools(MergeTools):
         ret2 = self.check_hk_list()
 
         if not ret1 or not ret2:
-            tools.ding_msg("沪股 {} 合资格股核对有误".format(datetime.datetime.now()))
+            tools.ding_msg("沪港股 {} 合资格股核对有误".format(datetime.datetime.now()))
         else:
-            tools.ding_msg("沪股 {} 合资格股核对一致".format(datetime.datetime.now()))
+            tools.ding_msg("沪港股 {} 合资格股核对一致".format(datetime.datetime.now()))
 
         # 刷新最后更新时间
         self.refresh_update_time()

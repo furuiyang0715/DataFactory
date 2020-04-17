@@ -26,3 +26,8 @@ docker build -t registry.cn-shenzhen.aliyuncs.com/jzdev/dcfactory/kland_componen
 docker push registry.cn-shenzhen.aliyuncs.com/jzdev/dcfactory/kland_component:v0.0.1
 sudo docker pull registry.cn-shenzhen.aliyuncs.com/jzdev/dcfactory/kland_component:v0.0.1
 sudo docker run -itd --name  component --env LOCAL=0 registry.cn-shenzhen.aliyuncs.com/jzdev/dcfactory/kland_component:v0.0.1
+
+
+### wiki 
+https://wikijs.jingzhuan.cn/%E6%95%B0%E6%8D%AE/%E7%9B%AE%E5%BD%95-%E8%A1%8D%E7%94%9F%E6%95%B0%E6%8D%AE%E5%BA%93%E6%96%87%E6%A1%A3/%E9%99%86%E6%B8%AF%E9%80%9A-%E6%B2%AA%E6%B8%AF%E9%80%9A%E6%88%90%E5%88%86%E8%82%A1%E5%8F%98%E6%9B%B4
+https://wikijs.jingzhuan.cn/%E6%95%B0%E6%8D%AE/%E7%9B%AE%E5%BD%95-%E8%A1%8D%E7%94%9F%E6%95%B0%E6%8D%AE%E5%BA%93%E6%96%87%E6%A1%A3/%E9%99%86%E6%B8%AF%E9%80%9A-%E6%B7%B1%E6%B8%AF%E9%80%9A%E6%88%90%E5%88%86%E8%82%A1%E5%8F%98%E6%9B%B4

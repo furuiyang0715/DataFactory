@@ -382,9 +382,9 @@ class ZHMergeTools(MergeTools):
         ret2 = self.check_hk_list()
 
         if not ret1 or not ret2:
-            tools.ding_msg("港股 {} 合资格股核对有误".format(datetime.datetime.now()))
+            tools.ding_msg("深港股 {} 合资格股核对有误".format(datetime.datetime.now()))
         else:
-            tools.ding_msg("港股 {} 合资格股核对一致".format(datetime.datetime.now()))
+            tools.ding_msg("深港股 {} 合资格股核对一致".format(datetime.datetime.now()))
 
         # 刷新表的最后更新时间
         self.refresh_update_time()
