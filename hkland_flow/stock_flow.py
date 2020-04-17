@@ -11,7 +11,7 @@ import requests
 import sys
 
 sys.path.append("./../")
-
+from hkland_flow import tools
 from hkland_flow.configs import (SPIDER_MYSQL_HOST, SPIDER_MYSQL_PORT, SPIDER_MYSQL_USER,
                                  SPIDER_MYSQL_PASSWORD, SPIDER_MYSQL_DB, DC_HOST, DC_PORT, DC_USER,
                                  DC_PASSWD, DC_DB)
@@ -84,7 +84,10 @@ class HkexlugutongshishispiderSpider(object):
         try:
             self._create_table()
             self._start()
-        except:
+            # 1 / 0
+        except Exception as e:
+            # 只是发送钉邮 但是并不终止程序
+            tools.ding_msg("交易所实时数据爬取失败了 失败的原因是{}".format(e))
             traceback.print_exc()
 
     def contract_sql(self, to_insert: dict, table: str, update_fields: list):
