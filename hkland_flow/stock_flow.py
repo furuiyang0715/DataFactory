@@ -305,7 +305,9 @@ class HkexlugutongshishispiderSpider(object):
         sh_item['Category'] = 1    # 南向数据
         sh_dt = info.get("Time")
         sh_dt = datetime.datetime.strptime(sh_dt, "%Y-%m-%d %H:%M:%S")
-        sh_dt = str(datetime.datetime(sh_dt.year, sh_dt.month, sh_dt.day, sh_dt.hour, sh_dt.minute - 1, 0))
+        # sh_dt = str(datetime.datetime(sh_dt.year, sh_dt.month, sh_dt.day, sh_dt.hour, sh_dt.minute - 1, 0))
+        sh_dt = str(datetime.datetime(sh_dt.year, sh_dt.month, sh_dt.day, sh_dt.hour, sh_dt.minute, 0) - datetime.timedelta(minutes=1))
+
         sh_item['DateTime'] = sh_dt
         sh_item['ShHkFlow'] = (info.get("DailyLimit") - info.get("Balance")) / 10000
         sh_item['ShHkBalance'] = info.get("Balance") / 10000
