@@ -282,12 +282,12 @@ class ZHSCComponent(object):
         # for data in dc_datas:
         #     assert data in juyuan_datas
 
-        # zh_changes = self.get_zh_changes()
-        # self.process_zh_changes(zh_changes)
-        # self.check_zh_list()
+        zh_changes = self.get_zh_changes()
+        self.process_zh_changes(zh_changes)
+        self.check_zh_list()
 
-        # hk_changes = self.get_hk_changes()
-        # self.process_hk_changes(hk_changes)
+        hk_changes = self.get_hk_changes()
+        self.process_hk_changes(hk_changes)
         self.check_hk_list()
 
 

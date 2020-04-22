@@ -10,6 +10,9 @@
 import datetime
 import traceback
 
+import sys
+sys.path.append("./../")
+
 from hkland_component.configs import TARGET_HOST, TARGET_PORT, TARGET_USER, TARGET_PASSWD, TARGET_DB
 from hkland_component.my_log import logger
 from hkland_component.sql_pool import PyMysqlPoolBase
@@ -160,3 +163,4 @@ def human_insert(table: str, data: dict):
 
 
 ret = human_insert("hkland_sgcomponent", {'CompType': 4, 'SecuCode': '00697', 'InDate': datetime.datetime(2020, 4, 15, 0, 0), 'InnerCode': 1000543, 'Flag': 1})
+print(ret)

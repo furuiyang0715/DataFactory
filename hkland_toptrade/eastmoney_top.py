@@ -261,7 +261,7 @@ class EMLgttop10tradedsharesspiderSpider(BaseSpider):
                     self.ding("【datacenter】当前时间{}, 十大成交股程序 {} 出错了, 错误原因是 {}".format(
                         datetime.datetime.now(), self.table_name, e))
                     # break # TODO 出错就一直 ding
-                    time.sleep(3)
+                    time.sleep(10)
                 else:
                     traceback.print_exc()
                     print("十大成交股爬取程序失败, 重启.")
