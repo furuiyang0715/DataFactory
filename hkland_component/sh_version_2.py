@@ -82,7 +82,22 @@ class SHSCComponent(object):
         self.stats_transfer = [
             'Transfer to List of Special SSE Securities/Special China Connect Securities (stocks eligible for sell only)',
         ]
+        self.tool_table_name = 'base_table_updatetime'
         self.ding_info = ''
+
+    def refresh_update_time(self):
+        target = self.init_sql_pool(self.target_cfg)
+        sql = '''select max(UPDATETIMEJZ) as max_dt from {}; '''.format(self.target_table_name)
+        max_dt = target.select_one(sql).get("max_dt")
+        logger.info("最新的更新时间是{}".format(max_dt))
+        refresh_sql = '''replace into {} (id,TableName, LastUpdateTime,IsValid) values (2, 'hkland_hgcomponent', '{}', 1); 
+        '''.format(self.tool_table_name,
+                   # self.target_table_name,
+                   max_dt)
+        logger.info(refresh_sql)
+        count = target.update(refresh_sql)
+        logger.info(count)  # 1 首次插入 2 替换插入
+        target.dispose()
 
     def juyuan_stats(self):
         fields_str = ",".join(self.fields)
@@ -169,6 +184,8 @@ class SHSCComponent(object):
         spider_hk_list = set(get_spider_hk_list())
         target_hk_list = set(get_target_hk_list())
         logger.info(spider_hk_list == target_hk_list)
+        print(spider_hk_list - target_hk_list)
+        print(target_hk_list - spider_hk_list)
         return spider_hk_list == target_hk_list
 
     def check_sh_list(self):
@@ -194,6 +211,8 @@ class SHSCComponent(object):
         spider_hu_list = set(get_spider_hu_list())
         target_hu_list = set(get_target_hu_list())
         logger.info(spider_hu_list == target_hu_list)
+        print(spider_hu_list - target_hu_list)
+        print(target_hu_list - spider_hu_list)
         return spider_hu_list == target_hu_list
 
     def process_hk_changes(self, hk_changes):
@@ -227,6 +246,8 @@ class SHSCComponent(object):
                 record = {"CompType": 1, "SecuCode": secu_code, "OutDate": effective_date}
                 is_exist = self.check_target_exist(record)
                 if not is_exist:
+                    inner_code = get_hk_inner_code(secu_code)
+                    record.update({"InnerCode": inner_code, "Flag": 2})
                     logger.info("需要新增一条调出记录{}".format(record))
                     info = "港股(深)成分变更: 需要新增一条调出记录{}\n".format(record)
                     self.ding_info += info
@@ -336,12 +357,11 @@ class SHSCComponent(object):
         tools.ding_msg(self.ding_info)
 
 
-if __name__ == "__main__":
-    t1 = nnow()
-    tool = SHSCComponent()
-    tool.start()
-    print("用时 {} 秒".format(nnow() - t1))
-    sys.exit(0)
+# if __name__ == "__main__":
+#     t1 = nnow()
+#     tool = SHSCComponent()
+#     tool.start()
+#     print("用时 {} 秒".format(nnow() - t1))
 
 
 class ZHSCComponent(object):
@@ -411,8 +431,22 @@ class ZHSCComponent(object):
         self.stats_transfer = [
             'Transfer to List of Special SZSE Securities/Special China Connect Securities (stocks eligible for sell only)'
         ]
-
+        self.tool_table_name = 'base_table_updatetime'
         self.ding_info = ''
+
+    def refresh_update_time(self):
+        target = self.init_sql_pool(self.target_cfg)
+        sql = '''select max(UPDATETIMEJZ) as max_dt from {}; '''.format(self.target_table_name)
+        max_dt = target.select_one(sql).get("max_dt")
+        logger.info("最新的更新时间是{}".format(max_dt))
+        refresh_sql = '''replace into {} (id,TableName, LastUpdateTime,IsValid) values (7, 'hkland_sgcomponent', '{}', 1); 
+        '''.format(self.tool_table_name,
+                   # self.target_table_name,
+                   max_dt)
+        logger.info(refresh_sql)
+        count = target.update(refresh_sql)
+        logger.info(count)  # 1 首次插入 2 替换插入
+        target.dispose()
 
     def juyuan_stats(self):
         fields_str = ",".join(self.fields)
@@ -650,8 +684,17 @@ class ZHSCComponent(object):
         tools.ding_msg(self.ding_info)
 
 
-if __name__ == "__main__":
+def task():
+    t1 = nnow()
+    tool = SHSCComponent()
+    tool.start()
+    print("沪港通 用时 {} 秒".format(nnow() - t1))
+
     t1 = nnow()
     tool = ZHSCComponent()
     tool.start()
-    print("用时 {} 秒".format(nnow() - t1))
+    print("深港通 用时 {} 秒".format(nnow() - t1))
+
+
+if __name__ == "__main__":
+    task()

@@ -162,5 +162,6 @@ def human_insert(table: str, data: dict):
     save(data, table, fields)
 
 
-ret = human_insert("hkland_sgcomponent", {'CompType': 4, 'SecuCode': '00697', 'InDate': datetime.datetime(2020, 4, 15, 0, 0), 'InnerCode': 1000543, 'Flag': 1})
-print(ret)
+human_insert("hkland_sgcomponent", {'CompType': 4, 'SecuCode': '00697', 'InDate': datetime.datetime(2020, 4, 15, 0, 0), 'InnerCode': 1000543, 'Flag': 1})
+
+human_insert("hkland_sgcomponent", {'CompType': 1, 'SecuCode': '00187', 'OutDate': datetime.datetime(2020, 4, 20, 0, 0)})
