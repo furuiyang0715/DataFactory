@@ -12,6 +12,8 @@ import schedule
 
 sys.path.append("./../")
 
+from hkland_elistocks import tools
+from hkland_elistocks.snail import records_sh, records_sz
 from hkland_elistocks.my_log import logger
 from hkland_elistocks.list_check import list_check
 from hkland_elistocks.single_process import fix
@@ -127,12 +129,13 @@ def task_2():
     """直接检查两个数据点之间的差异"""
     sh = SHHumanTools()
     zh = ZHHumanTools()
+    info = ''
     for ins in (sh, zh):
-        print(">>>"*50)
         ret = ins.get_distinct_spider_udpate_time()
         dt_list = sorted([r.get("Time") for r in ret])
+        print("{} 至今全部的更新时间列表是{}".format(ins.table_name, dt_list))
         latest_records = ins.select_latest_records()
-        last_but_one_records = ins.select_onetime_records(dt_list[-2])
+        first_records = ins.select_onetime_records(dt_list[0])
 
         # 去掉一些无关字段
         for r in latest_records:
@@ -142,7 +145,7 @@ def task_2():
             r.pop("ItemID")
             r.pop("UPDATETIMEJZ")
 
-        for r in last_but_one_records:
+        for r in first_records:
             r.pop("id")
             r.pop("Time")
             r.pop("CREATETIMEJZ")
@@ -152,69 +155,23 @@ def task_2():
         to_insert = []
         to_delete = []
         for one in latest_records:
-            if not one in last_but_one_records:
+            if not one in first_records and not one in records_sh and not one in records_sz:
                 to_insert.append(one)
 
-        for one in last_but_one_records:
-            if not one in latest_records:
+        for one in first_records:
+            if not one in latest_records and not one in records_sh and not one in records_sz:
                 to_delete.append(one)
 
-        print(pprint.pformat(to_delete))
-        print(pprint.pformat(to_insert))
-
-        for one in to_insert:
-            secu_code = one.get("SSESCode")
-            change = one.get("Ch_ange")
-            remarks = one.get("Remarks")
-            effective_date = one.get("EffectiveDate")
-            update_dt = one.get("UPDATETIMEJZ")
-            if change == ins.stats_transfer:
-                if ins.sentense3 in remarks:
-                    logger.info("结束 1 3 4, 生成 2")
-                else:
-                    logger.info("结束 1, 生成 2")
-                    records = ins.show_code_target_records(secu_code)
-                    in_record = None
-                    for r in records:
-                        if r.get("Flag") == 1 and r.get('TargetCategory') == 1:
-                            in_record = copy.deepcopy(r)
-                    if in_record:
-                        in_record.update({'OutDate': effective_date, 'Flag': 2})
-                        in_record.pop("CREATETIMEJZ")
-                        in_record.pop("UPDATETIMEJZ")
-                        logger.info(in_record)
-                        ins.update(in_record)
-
-                    record_new = copy.deepcopy(records[0])
-                    record_new.update({"TargetCategory": 2, 'InDate': effective_date, "OutDate": None, 'Flag': 1, 'CMFTime': update_dt})
-                    record_new.pop("CREATETIMEJZ")
-                    record_new.pop("UPDATETIMEJZ")
-                    record_new.pop("ID")
-                    ins.update(record_new)
-            elif change == 'Buy orders resumed':
-                print("触发持股比例暂停买入")
-                secu_code = one.get("SSESCode")
-                change = one.get("Ch_ange")
-                remarks = one.get("Remarks")
-                effective_date = one.get("EffectiveDate")
-                update_dt = one.get("UPDATETIMEJZ")
-
-                records = ins.show_code_target_records(secu_code)
-                record_new = copy.deepcopy(records[0])
-
-                record_new.update({"TargetCategory": 5, 'InDate': effective_date, "OutDate": None, 'Flag': 1, 'CMFTime': update_dt})
-                record_new.pop("CREATETIMEJZ")
-                record_new.pop("UPDATETIMEJZ")
-                record_new.pop("ID")
-                # print(record_new)
-                # print(ins.table_name)
-                ins.update(record_new)
-
-        # 更新最新插入时间
+        # print(pprint.pformat(to_delete))
+        # print(pprint.pformat(to_insert))
+        info += "{} 与第一相比 应该删除的记录是: {}\n".format(ins.table_name, len(to_delete))
+        info += "{} 与第一次相比, 应该增加的记录是: {}\n".format(ins.table_name, len(to_insert))
         ins.refresh_update_time()
 
-    print(">>>" * 50)
-    list_check()
+    r1, r2 = list_check()
+    info += "沪股合资格校对的结果是 {}, 深股合资格校对的结果是 {}\n".format(r1, r2)
+    print(info)
+    tools.ding_msg(info)
 
 
 # task_2()
@@ -231,4 +188,5 @@ def main():
         time.sleep(1800)
 
 
-main()
+if __name__ == "__main__":
+    main()

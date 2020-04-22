@@ -62,6 +62,10 @@ else:
     TARGET_PASSWD = TEST_PASSWD
     TARGET_DB = TEST_DB
 
+# deploy
+SECRET = env.get("SECRET", cf.get('deploy', 'SECRET'))
+TOKEN = env.get("TOKEN", cf.get('deploy', 'TOKEN'))
+
 
 if __name__ == "__main__":
     import sys

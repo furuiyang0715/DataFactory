@@ -41,8 +41,10 @@ def demo_1():
     '''
     ret = target.select_all(sql)
     ret = set([r.get("SecuCode") for r in ret])
-    print(ret - list_1)
-    print(list_1 - ret)
+    # print("sh-1: ", ret - list_1, list_1 - ret)
+    if not (ret - list_1) and not (list_1 - ret):
+        return True
+    return False
 
 
 def demo_2():
@@ -53,8 +55,11 @@ def demo_2():
     sql = '''select SecuCode from hkland_hgelistocks where TradingType = 1 and TargetCategory = 2 and Flag = 1; '''
     ret = target.select_all(sql)
     ret = set([r.get("SecuCode") for r in ret])
-    print(ret - list_1)
-    print(list_1 - ret)
+    # print("sh-2: ", ret - list_1, list_1 - ret)
+    if not (ret - list_1) and not (list_1 - ret):
+        return True
+    else:
+        return False
 
 
 def demo_3():
@@ -64,8 +69,11 @@ def demo_3():
     sql = '''select SecuCode from hkland_hgelistocks where TradingType = 1 and TargetCategory = 3 and Flag = 1; '''
     ret = target.select_all(sql)
     ret = set([r.get("SecuCode") for r in ret])
-    print(ret - list_1)
-    print(list_1 - ret)
+    # print("sh-3: ", ret - list_1, list_1 - ret)
+    if not (ret - list_1) and not (list_1 - ret):
+        return True
+    else:
+        return False
 
 
 def demo_4():
@@ -77,8 +85,11 @@ def demo_4():
     '''
     ret = target.select_all(sql)
     ret = set([r.get("SecuCode") for r in ret])
-    print(ret - list_1)
-    print(list_1 - ret)
+    # print("sh-4: ", ret - list_1, list_1 - ret)
+    if not (ret - list_1) and not (list_1 - ret):
+        return True
+    else:
+        return False
 
 
 def run_1():
@@ -88,8 +99,11 @@ def run_1():
     sql = '''select SecuCode from hkland_sgelistocks where TradingType = 3 and TargetCategory = 1 and Flag = 1; '''
     ret = target.select_all(sql)
     ret = set([r.get("SecuCode") for r in ret])
-    print(ret - list_1)
-    print(list_1 - ret)
+    # print("sz-1: ",  ret - list_1, list_1 - ret)
+    if not (ret - list_1) and not (list_1 - ret):
+        return True
+    else:
+        return False
 
 
 def run_2():
@@ -99,8 +113,11 @@ def run_2():
     sql = '''select SecuCode from hkland_sgelistocks where TradingType = 3 and TargetCategory = 2 and Flag = 1; '''
     ret = target.select_all(sql)
     ret = set([r.get("SecuCode") for r in ret])
-    print(ret - list_1)
-    print(list_1 - ret)
+    # print("sz-2: ", ret - list_1, list_1 - ret)
+    if not (ret - list_1) and not (list_1 - ret):
+        return True
+    else:
+        return False
 
 
 def run_3():
@@ -110,8 +127,11 @@ def run_3():
     sql = '''select SecuCode from hkland_sgelistocks where TradingType = 3 and TargetCategory = 3 and Flag = 1; '''
     ret = target.select_all(sql)
     ret = set([r.get("SecuCode") for r in ret])
-    print(ret - list_1)
-    print(list_1 - ret)
+    # print("sz-3: ", ret - list_1, list_1 - ret)
+    if not (ret - list_1) and not (list_1 - ret):
+        return True
+    else:
+        return False
 
 
 def run_4():
@@ -121,34 +141,20 @@ def run_4():
     sql = '''select SecuCode from hkland_sgelistocks where TradingType = 3 and TargetCategory = 4 and Flag = 1; '''
     ret = target.select_all(sql)
     ret = set([r.get("SecuCode") for r in ret])
-    print(ret - list_1)
-    print(list_1 - ret)
+    # print("sz-4: ", ret - list_1, list_1 - ret)
+    if not (ret - list_1) and not (list_1 - ret):
+        return True
+    else:
+        return False
 
 
 def list_check():
-    demo_1()
-    print()
+    ret1 = demo_1() and demo_2() and demo_3() and demo_4()
 
-    demo_2()
-    print()
+    ret2 = run_1() and run_2() and run_3() and run_4()
+    # print(ret1, ret2)
 
-    demo_3()
-    print()
-
-    demo_4()
-    print()
-
-    run_1()
-    print()
-
-    run_2()
-    print()
-
-    run_3()
-    print()
-
-    run_4()
-    print()
+    return ret1, ret2
 
 
 if __name__ == "__main__":
