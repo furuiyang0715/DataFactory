@@ -19,6 +19,31 @@ from hkland_component.my_log import logger
 from hkland_component.sql_pool import PyMysqlPoolBase
 
 '''
+查询出全部有过更名情况的： 
+mysql> select SSESCode, EffectiveDate, Ch_ange  from hkex_lgt_change_of_szse_securities_lists where Ch_ange like "%Stock Name are changed to%";
++----------+---------------+--------------------------------------------------------------------------------------------------------------+
+| SSESCode | EffectiveDate | Ch_ange                                                                                                      |
++----------+---------------+--------------------------------------------------------------------------------------------------------------+
+| 000043   | 2019-12-16    | SZSE Stock Code and Stock Name are changed to 001914 and CHINA MERCHANTS PPTY OPERATION&SERVICE respectively |
+| 000022   | 2018-12-27    | SZSE Stock Code and Stock Name are changed to 1872 and CHINA MERCHANTS PORT GROUP respectively               |
+| 000043   | 2019-12-16    | SZSE Stock Code and Stock Name are changed to 001914 and CHINA MERCHANTS PPTY OPERATION&SERVICE respectively |
+| 000022   | 2018-12-27    | SZSE Stock Code and Stock Name are changed to 1872 and CHINA MERCHANTS PORT GROUP respectively               |
+| 000043   | 2019-12-16    | SZSE Stock Code and Stock Name are changed to 001914 and CHINA MERCHANTS PPTY OPERATION&SERVICE respectively |
+| 000022   | 2018-12-27    | SZSE Stock Code and Stock Name are changed to 1872 and CHINA MERCHANTS PORT GROUP respectively               |
++----------+---------------+--------------------------------------------------------------------------------------------------------------+
+6 rows in set (0.02 sec)
+
+mysql> select SSESCode, EffectiveDate, Ch_ange  from hkex_lgt_change_of_sse_securities_lists where Ch_ange like "%Stock Name are changed to%";
++----------+---------------+----------------------------------------------------------------------------------------------+
+| SSESCode | EffectiveDate | Ch_ange                                                                                      |
++----------+---------------+----------------------------------------------------------------------------------------------+
+| 601313   | 2018-02-26    | SSE Stock Code and Stock Name are changed to 601360 and 360 SECURITY TECHNOLOGY respectively |
+| 601313   | 2018-02-26    | SSE Stock Code and Stock Name are changed to 601360 and 360 SECURITY TECHNOLOGY respectively |
+| 601313   | 2018-02-26    | SSE Stock Code and Stock Name are changed to 601360 and 360 SECURITY TECHNOLOGY respectively |
++----------+---------------+----------------------------------------------------------------------------------------------+
+3 rows in set (0.06 sec) 
+
+
 mysql>select SSESCode, EffectiveDate, Ch_ange from hkex_lgt_change_of_szse_securities_lists where SSESCode = '000043' order by  EffectiveDate;
 +----------+---------------+------------------------------------------------------------------------------------------------------------------+
 | SSESCode | EffectiveDate | Ch_ange                                                                                                          |
