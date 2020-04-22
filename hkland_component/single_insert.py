@@ -13,6 +13,7 @@ import traceback
 import sys
 sys.path.append("./../")
 
+from hkland_component.sh_version_2 import SHSCComponent, ZHSCComponent
 from hkland_component.configs import TARGET_HOST, TARGET_PORT, TARGET_USER, TARGET_PASSWD, TARGET_DB
 from hkland_component.my_log import logger
 from hkland_component.sql_pool import PyMysqlPoolBase
@@ -164,4 +165,22 @@ def human_insert(table: str, data: dict):
 
 human_insert("hkland_sgcomponent", {'CompType': 4, 'SecuCode': '00697', 'InDate': datetime.datetime(2020, 4, 15, 0, 0), 'InnerCode': 1000543, 'Flag': 1})
 
-human_insert("hkland_sgcomponent", {'CompType': 1, 'SecuCode': '00187', 'OutDate': datetime.datetime(2020, 4, 20, 0, 0)})
+
+# 港股(深)成分变更: 需要新增一条调出记录{'CompType': 1, 'SecuCode': '00187', 'OutDate': datetime.datetime(2020, 4, 20, 0, 0), 'InnerCode': 1000176, 'Flag': 2}
+# mysql> select * from hkland_hgcomponent where  SecuCode = '00187';
+# +------+----------+-----------+----------+---------------------+---------------------+------+---------------------+---------------------+-------+---------+
+# | ID   | CompType | InnerCode | SecuCode | InDate              | OutDate             | Flag | CREATETIMEJZ        | UPDATETIMEJZ        | CMFID | CMFTime |
+# +------+----------+-----------+----------+---------------------+---------------------+------+---------------------+---------------------+-------+---------+
+# | 2953 |        1 |   1000176 | 00187    | 2015-04-13 00:00:00 | 2017-04-24 00:00:00 |    2 | 2020-03-21 17:17:15 | 2020-03-21 17:17:15 |  NULL | NULL    |
+# | 2954 |        1 |   1000176 | 00187    | 2018-04-23 00:00:00 | NULL                |    1 | 2020-03-21 17:17:15 | 2020-03-21 17:17:15 |  NULL | NULL    |
+# +------+----------+-----------+----------+---------------------+---------------------+------+---------------------+---------------------+-------+---------+
+# 2 rows in set (0.01 sec)
+human_insert("hkland_hgcomponent", {'CompType': 1, 'SecuCode': '00187', 'OutDate': datetime.datetime(2020, 4, 20, 0, 0), 'InnerCode': 1000176,
+              'Flag': 2, "InDate": datetime.datetime(2018, 4, 23, 0, 0),
+              })
+
+
+sh = SHSCComponent()
+zh = ZHSCComponent()
+sh.refresh_update_time()
+zh.refresh_update_time()

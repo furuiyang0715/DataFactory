@@ -14,4 +14,5 @@ WORKDIR /hkland_component
 
 RUN pip install -r requirements.txt -i https://pypi.douban.com/simple
 
-ENTRYPOINT ["python", "main.py"]
+#ENTRYPOINT ["python", "main.py"]
+ENTRYPOINT ["python", "sh_version_2.py"]
