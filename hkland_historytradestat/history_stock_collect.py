@@ -53,6 +53,8 @@ class HistoryCalSpider(object):
         }
         self.table_name = 'hkland_flow_exchange'
         self.today = datetime.datetime.today()
+        self.hk_sh_his = self.select_last_total(1).get("MoneyInHistoryTotal")
+        self.hk_sz_his = self.select_last_total(3).get("MoneyInHistoryTotal")
 
     def _init_pool(self, cfg: dict):
         """
@@ -125,12 +127,12 @@ class HistoryCalSpider(object):
     #     'http://sc.hkex.com.hk/TuniS/www.hkex.com.hk/chi/csm/script/data_SBSZ_Turnover_chi.js',  # '港股通（深）成交额'
     # ]
 
-    def select_yesterday_total(self, _yesterday):
+    def select_last_total(self, market_type):
         """查找距给出时间最近的一个时间点的累计值"""
         dc = self._init_pool(self.dc_cfg)
-
-
-        pass
+        sql = '''select Date, MoneyInHistoryTotal from hkland_historytradestat where Date = (select max(Date) from hkland_historytradestat) and MarketTypeCode = {};'''.format(market_type)
+        ret = dc.select_one(sql)
+        return ret
 
     def hk_sz(self):
         """深股通"""
@@ -139,7 +141,7 @@ class HistoryCalSpider(object):
 
         body = requests.get(url, headers=self.headers).text
         datas = json.loads(body.rstrip(";").lstrip("northbound11 =").lstrip("northbound12 =").lstrip("northbound21 =").lstrip("northbound22 ="))
-        print(pprint.pformat(datas))
+        logger.info("\n"+pprint.pformat(datas))
         '''
         [{'category': 'Northbound',
           'section': [{'item': [['额度', 'RMB52,000 Mil', {}],
@@ -179,7 +181,7 @@ class HistoryCalSpider(object):
         datas2 = json.loads(
             body2.rstrip(";").lstrip("northbound11 =").lstrip("northbound12 =").lstrip("northbound21 =").lstrip(
                 "northbound22 ="))
-        print(pprint.pformat(datas2))
+        logger.info("\n"+pprint.pformat(datas2))
         '''
         [{'category': 'Northbound',
           'section': [{'item': [['买入及卖出', 'RMB19,462 Mil', {}],
@@ -195,6 +197,10 @@ class HistoryCalSpider(object):
         logger.info("当前分钟的买入金额是 {} 百万, 卖出金额是 {} 百万".format(buy_amount, sell_amount))
         logger.info("当前分钟的净流入是 {} 百万".format(netbuyamount))
 
+        # 当前分钟的历史资金累计流入(百万) = 上一天的历史资金累计流入(百万) + 当前分钟的当日成交净买额(百万元)
+        moneyinhistorytotal = self.hk_sz_his + netbuyamount
+        logger.info("当前分钟的历史资金累计流入是{}百万".format(moneyinhistorytotal))
+
         item = {
             "Date": show_dt,  # 陆股通交易时间
             "MoneyBalance": money_balance,  # 当日余额(百万）
@@ -202,10 +208,12 @@ class HistoryCalSpider(object):
             "BuyAmount": buy_amount,  # 当日买入成交额(百万元)
             "SellAmount": sell_amount,  # 当日卖出成交额(百万元)
             "NetBuyAmount": netbuyamount,  # 当日成交净买额(百万元)  = (当日)买入成交额(百万元) - (当日)卖出成交额(百万元)
-            "MoneyInHistoryTotal": "",  # 历史资金累计流入(百万) = 上一天的历史资金累计流入(百万) + 今天的当日成交净买额(百万元)
-            "MarketTypeCode": '',  # 市场类型代码
-            "MarketType": "",  # 市场类型
+            "MoneyInHistoryTotal": moneyinhistorytotal,  # 历史资金累计流入(百万) = 上一天的历史资金累计流入(百万) + 今天的当日成交净买额(百万元)
+            "MarketTypeCode": 3,  # 市场类型代码
+            "MarketType": '深股通',  # 市场类型
         }
+
+        logger.info("生成一条深股通数据: {}".format(item))
 
     def hk_sh(self):
         """沪股通"""
@@ -214,7 +222,7 @@ class HistoryCalSpider(object):
 
         body = requests.get(url, headers=self.headers).text
         datas = json.loads(body.rstrip(";").lstrip("northbound11 =").lstrip("northbound12 =").lstrip("northbound21 =").lstrip("northbound22 ="))
-        print(pprint.pformat(datas))
+        logger.info("\n"+pprint.pformat(datas))
         '''
         [{'category': 'Northbound',
           'section': [{'item': [['额度', 'RMB52,000 Mil', {}],
@@ -252,7 +260,7 @@ class HistoryCalSpider(object):
 
         body2 = requests.get(url2, headers=self.headers).text
         datas2 = json.loads(body2.rstrip(";").lstrip("northbound11 =").lstrip("northbound12 =").lstrip("northbound21 =").lstrip("northbound22 ="))
-        print(pprint.pformat(datas2))
+        logger.info("\n"+pprint.pformat(datas2))
         '''
         [{'category': 'Northbound',
           'section': [{'item': [['买入及卖出', 'RMB14,239 Mil', {}],
@@ -268,6 +276,10 @@ class HistoryCalSpider(object):
         logger.info("当前分钟的买入金额是 {} 百万, 卖出金额是 {} 百万".format(buy_amount, sell_amount))
         logger.info("当前分钟的净流入是 {} 百万".format(netbuyamount))
 
+        # 当前分钟的历史资金累计流入(百万) = 上一天的历史资金累计流入(百万) + 当前分钟的当日成交净买额(百万元)
+        moneyinhistorytotal = self.hk_sh_his + netbuyamount
+        logger.info("当前分钟的历史资金累计流入是{}百万".format(moneyinhistorytotal))
+
         item = {
             "Date": show_dt,     # 陆股通交易时间
             "MoneyBalance": money_balance,   # 当日余额(百万）
@@ -275,10 +287,12 @@ class HistoryCalSpider(object):
             "BuyAmount": buy_amount,   # 当日买入成交额(百万元)
             "SellAmount": sell_amount,   # 当日卖出成交额(百万元)
             "NetBuyAmount": netbuyamount,  # 当日成交净买额(百万元)  = (当日)买入成交额(百万元) - (当日)卖出成交额(百万元)
-            "MoneyInHistoryTotal": "",   # 历史资金累计流入(百万) = 上一天的历史资金累计流入(百万) + 今天的当日成交净买额(百万元)
-            "MarketTypeCode": '',   # 市场类型代码
-            "MarketType": "",    # 市场类型
+            "MoneyInHistoryTotal": moneyinhistorytotal,   # 历史资金累计流入(百万) = 上一天的历史资金累计流入(百万) + 今天的当日成交净买额(百万元)
+            "MarketTypeCode": 1,   # 市场类型代码
+            "MarketType": "沪股通",    # 市场类型
         }
+
+        logger.info("生成一条沪股通数据: {}".format(item))
 
 
         # body = requests.get(north_urls[0], headers=self.headers).text
@@ -371,4 +385,6 @@ class HistoryCalSpider(object):
 
 if __name__ == "__main__":
     h = HistoryCalSpider()
+    # h.hk_sh()
+
     h.hk_sz()
