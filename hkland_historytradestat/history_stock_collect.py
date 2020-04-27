@@ -15,7 +15,7 @@ from hkland_historytradestat.configs import (PRODUCT_MYSQL_HOST, PRODUCT_MYSQL_U
                                              PRODUCT_MYSQL_DB, DC_HOST, DC_PORT, DC_USER, DC_PASSWD,
                                              DC_DB, SPIDER_MYSQL_HOST, SPIDER_MYSQL_PORT,
                                              SPIDER_MYSQL_USER, SPIDER_MYSQL_PASSWORD, SPIDER_MYSQL_DB,
-                                             PRODUCT_MYSQL_PORT, LOCAL)
+                                             PRODUCT_MYSQL_PORT)
 from hkland_historytradestat.sql_pool import PyMysqlPoolBase
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -56,6 +56,7 @@ class HistoryCalSpider(object):
         self.hk_sh_his = self.select_last_total(1).get("MoneyInHistoryTotal")
         self.hk_sz_his = self.select_last_total(3).get("MoneyInHistoryTotal")
         self.sh_hk_his = self.select_last_total(2).get("MoneyInHistoryTotal")
+        self.sz_hk_his = self.select_last_total(4).get("MoneyInHistoryTotal")
 
     def _init_pool(self, cfg: dict):
         """
@@ -126,17 +127,6 @@ class HistoryCalSpider(object):
             spider.dispose()
         return count
 
-    # north_urls = [
-    #     'http://sc.hkex.com.hk/TuniS/www.hkex.com.hk/chi/csm/script/data_NBSH_Turnover_chi.js',  # 沪股通成交额
-    #     'http://sc.hkex.com.hk/TuniS/www.hkex.com.hk/chi/csm/script/data_NBSH_QuotaUsage_chi.js',  # 沪股通每日资金余额
-    #     'http://sc.hkex.com.hk/TuniS/www.hkex.com.hk/chi/csm/script/data_NBSZ_Turnover_chi.js',  # 深股通成交额
-    #     'http://sc.hkex.com.hk/TuniS/www.hkex.com.hk/chi/csm/script/data_NBSZ_QuotaUsage_chi.js',  # 深股通每日资金余额
-    # ]
-    # south_urls = [
-    #     'http://sc.hkex.com.hk/TuniS/www.hkex.com.hk/chi/csm/script/data_SBSH_Turnover_chi.js',  # '港股通（沪）成交额'
-    #     'http://sc.hkex.com.hk/TuniS/www.hkex.com.hk/chi/csm/script/data_SBSZ_Turnover_chi.js',  # '港股通（深）成交额'
-    # ]
-
     def select_last_total(self, market_type):
         """查找距给出时间最近的一个时间点的累计值"""
         dc = self._init_pool(self.dc_cfg)
@@ -144,9 +134,55 @@ class HistoryCalSpider(object):
         ret = dc.select_one(sql)
         return ret
 
+    def sh_sz(self):
+        """港股通 深"""
+        url2 = 'http://sc.hkex.com.hk/TuniS/www.hkex.com.hk/chi/csm/script/data_SBSZ_Turnover_chi.js'   # '港股通（深）成交额'
+
+        body2 = requests.get(url2, headers=self.headers).text
+        datas2 = json.loads(
+            body2.rstrip(";").lstrip("southbound11 =").lstrip("southbound12 =").lstrip("southbound21 =").lstrip(
+                "southbound22 ="))
+        logger.info("\n" + pprint.pformat(datas2))
+        '''
+        [{'category': 'Southbound',
+          'section': [{'item': [['买入及卖出', 'HK$5,814 Mil', {}],
+                                ['买入', 'HK$3,304 Mil', {}],
+                                ['卖出', 'HK$2,510 Mil', {}]],
+                       'subtitle': ['成交额', '27/04/2020 (14:51)', {}]}],
+          'tablehead': ['港股通（深）', '']}]
+        '''
+        buy_sell_info = datas2[0].get("section")[0].get("item")
+        buy_amount = self.re_hk_data(buy_sell_info[1][1])
+        sell_amount = self.re_hk_data(buy_sell_info[2][1])
+        netbuyamount = buy_amount - sell_amount
+        logger.info("当前分钟的买入金额是 {} 百万港元, 卖出金额是 {} 百万港元".format(buy_amount, sell_amount))
+        logger.info("当前分钟的净流入是 {} 百万港元".format(netbuyamount))
+
+        # 当前分钟的历史资金累计流入(百万) = 上一天的历史资金累计流入(百万) + 当前分钟的当日成交净买额(百万元)
+        moneyinhistorytotal = self.sz_hk_his + netbuyamount
+        logger.info("当前分钟的历史资金累计流入是{}百万".format(moneyinhistorytotal))
+
+        date_min = datas2[0].get("section")[0].get("subtitle")[1]
+        date_min = datetime.datetime.strptime(date_min, "%d/%m/%Y (%H:%M)")
+        logger.info("解析出的当前的分钟时间是{}".format(date_min))
+
+        item = {
+            "Date": date_min,  # 具体到分钟的交易时间
+            # "MoneyBalance": money_balance,  # 当日余额(百万）
+            # "MoneyIn": money_in,  # 当日资金流入(百万) = 额度 - 余额
+            "BuyAmount": buy_amount,  # 当日买入成交额(百万元)
+            "SellAmount": sell_amount,  # 当日卖出成交额(百万元)
+            "NetBuyAmount": netbuyamount,  # 当日成交净买额(百万元)  = (当日)买入成交额(百万元) - (当日)卖出成交额(百万元)
+            "MoneyInHistoryTotal": moneyinhistorytotal,  # 历史资金累计流入(百万) = 上一天的历史资金累计流入(百万) + 今天的当日成交净买额(百万元)
+            "MarketTypeCode": 4,  # 市场类型代码
+            "MarketType": '港股通(深)',  # 市场类型
+        }
+
+        logger.info("生成一条港股通(深)数据: {}".format(item))
+
     def sh_hk(self):
         """港股通 沪"""
-        url = 'http://sc.hkex.com.hk/TuniS/www.hkex.com.hk/chi/csm/script/data_SBSH_QuotaUsage_chi.js'   # 港股通(沪) 每日资金余额
+        # url = 'http://sc.hkex.com.hk/TuniS/www.hkex.com.hk/chi/csm/script/data_SBSH_QuotaUsage_chi.js'   # 港股通(沪) 每日资金余额
         url2 = 'http://sc.hkex.com.hk/TuniS/www.hkex.com.hk/chi/csm/script/data_SBSH_Turnover_chi.js'   # '港股通（沪）成交额'
 
         # body = requests.get(url, headers=self.headers).text
@@ -367,60 +403,6 @@ class HistoryCalSpider(object):
 
         logger.info("生成一条沪股通数据: {}".format(item))
 
-
-        # body = requests.get(north_urls[0], headers=self.headers).text
-        # datas = json.loads(body.rstrip(";").lstrip("northbound11 =").lstrip("northbound12 =").lstrip("northbound21 =").lstrip("northbound22 ="))
-        # buy_sell_info = datas[0].get("section")[0].get("item")
-        # buy_amount = self.re_data(buy_sell_info[1][1])
-        # sell_amount = self.re_data(buy_sell_info[2][1])
-        # sh_item['BuyAmount'] = buy_amount
-        # sh_item['SellAmount'] = sell_amount
-        # sh_item['NetBuyAmount'] = buy_amount - sell_amount
-        # # 上一天的累计值
-        # _yesterday = datetime.datetime.combine(complete_dt, datetime.time.min) - datetime.timedelta(days=1)
-        # last_history_total = self.select_yesterday_total(_yesterday)
-        # # 今日的累计净买额 = 上一天的累计净买额 + 今日的净买额
-        # now_history_total = last_history_total + sh_item['NetBuyAmount']
-        # sh_item['MoneyInHistoryTotal'] = now_history_total
-        # sh_item['MarketTypeCode'] = 1
-        # sh_item['MarketType'] = '沪股通'
-        # # print(sh_item)
-
-        # # 沪股通/港股通(沪)当日资金余额（万） 此处北向资金表示沪股通
-        # sh_item['ShHkBalance'] = self.re_data(flow_info[1][1])
-        # logger.info("开始处理深股通每日额度信息")
-        # body = requests.get(north_urls[3], headers=self.headers).text
-        # datas = json.loads(
-        #     body.rstrip(";").lstrip("northbound11 =").lstrip("northbound12 =").lstrip("northbound21 =").lstrip(
-        #         "northbound22 ="))
-        # show_dt = datas[0].get("section")[0].get("subtitle")[1]
-        # show_dt = datetime.datetime.strptime(show_dt, "%d/%m/%Y").strftime("%Y-%m-%d")
-        # flow_info = datas[0].get("section")[0].get("item")
-        # m_dt = flow_info[1][0]
-        # m_dt = re.findall("余额 \(于 (.*)\)", m_dt)[0]
-        # complete_dt = " ".join([show_dt, m_dt])
-        # complete_dt = str(datetime.datetime.strptime(complete_dt, "%Y-%m-%d %H:%M"))
-        # sz_item = dict()
-        # # 类别:1 南向, 2 北向
-        # sz_item['Category'] = 2
-        # # 分钟交易时间
-        # sz_item['DateTime'] = complete_dt
-        # # 深股通/港股通(深)当日资金流向(万） 北向时为深股通
-        # sz_item['SzHkFlow'] = self.re_data(flow_info[0][1]) - self.re_data(flow_info[1][1])
-        # # 深股通/港股通(深)当日资金余额（万）北向时为深股通
-        # sz_item['SzHkBalance'] = self.re_data(flow_info[1][1])
-        # print(sz_item)
-        # if sh_item['DateTime'] == sz_item['DateTime']:
-        #     sh_item.update(sz_item)
-        #     # 南北向资金,当日净流入
-        #     sh_item['Netinflow'] = sh_item['ShHkFlow'] + sh_item['SzHkFlow']
-        #     print(sh_item)
-        #     #  id | Date                | MoneyIn | MoneyBalance | MoneyInHistoryTotal | NetBuyAmount | BuyAmount | SellAmount
-        #     #  | MarketTypeCode | MarketType | CMFID  | CMFTime             | CREATETIMEJZ        | UPDATETIMEJZ
-        #
-        #     # update_fields = ['Category', 'DateTime', 'ShHkFlow', 'ShHkBalance', 'SzHkFlow', 'SzHkBalance', 'Netinflow']
-        #     # self._save(sh_item, self.table_name, update_fields)
-
     # def _create_stock_table(self):
     #     # 历史资金累计流入 其实是净买额累计流入
     #     fields = ['Date',
@@ -462,4 +444,6 @@ if __name__ == "__main__":
 
     # h.hk_sz()
 
-    h.sh_hk()
+    # h.sh_hk()
+
+    h.sh_sz()
