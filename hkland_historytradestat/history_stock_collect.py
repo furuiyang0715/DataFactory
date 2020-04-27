@@ -1,12 +1,17 @@
 # -*- coding: utf-8 -*-
-
+import base64
 import datetime
+import hashlib
+import hmac
 import json
 import logging
 import os
 import pprint
 import re
+import time
 import traceback
+import urllib.parse
+
 import requests
 import sys
 from apscheduler.schedulers.blocking import BlockingScheduler
@@ -17,7 +22,7 @@ from hkland_historytradestat.configs import (PRODUCT_MYSQL_HOST, PRODUCT_MYSQL_U
                                              PRODUCT_MYSQL_DB, DC_HOST, DC_PORT, DC_USER, DC_PASSWD,
                                              DC_DB, SPIDER_MYSQL_HOST, SPIDER_MYSQL_PORT,
                                              SPIDER_MYSQL_USER, SPIDER_MYSQL_PASSWORD, SPIDER_MYSQL_DB,
-                                             PRODUCT_MYSQL_PORT)
+                                             PRODUCT_MYSQL_PORT, SECRET, TOKEN)
 from hkland_historytradestat.sql_pool import PyMysqlPoolBase
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -27,7 +32,7 @@ logger = logging.getLogger(__name__)
 class SSEStatsOnTime(object):
     """
     http://www.sse.com.cn/services/hkexsc/home/
-
+    港股通(沪)
     """
     def __init__(self):
         self.url = 'http://yunhq.sse.com.cn:32041//v1/hkp/status/amount_status'
@@ -64,7 +69,10 @@ class SSEStatsOnTime(object):
 
 
 class SZSEStatsOnTime(object):
-    """http://www.szse.cn/szhk/index.html"""
+    """
+    http://www.szse.cn/szhk/index.html
+    港股通(深)
+    """
     def __init__(self):
         self.url = 'http://www.szse.cn/api/market/sgt/dailyamount'
         self.headers = {
@@ -119,6 +127,10 @@ class HistoryCalSpider(object):
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.80 Safari/537.36',
         }
         self.today = datetime.datetime.today()
+        # 1 沪股通
+        # 2 港股通（沪）
+        # 3 深股通
+        # 4 港股通（深）
         self.hk_sh_his = self.select_last_total(1).get("MoneyInHistoryTotal")
         self.hk_sz_his = self.select_last_total(3).get("MoneyInHistoryTotal")
         self.sh_hk_his = self.select_last_total(2).get("MoneyInHistoryTotal")
@@ -135,6 +147,42 @@ class HistoryCalSpider(object):
             'MarketTypeCode',
             'MarketType',
         ]
+
+    def ding(self, msg):
+        def get_url():
+            timestamp = str(round(time.time() * 1000))
+            secret_enc = SECRET.encode('utf-8')
+            string_to_sign = '{}\n{}'.format(timestamp, SECRET)
+            string_to_sign_enc = string_to_sign.encode('utf-8')
+            hmac_code = hmac.new(secret_enc, string_to_sign_enc, digestmod=hashlib.sha256).digest()
+            sign = urllib.parse.quote_plus(base64.b64encode(hmac_code))
+            url = 'https://oapi.dingtalk.com/robot/send?access_token={}&timestamp={}&sign={}'.format(
+                TOKEN, timestamp, sign)
+            return url
+
+        url = get_url()
+        header = {
+            "Content-Type": "application/json",
+            "Charset": "UTF-8"
+        }
+        message = {
+            "msgtype": "text",
+            "text": {
+                "content": "{}@15626046299".format(msg)
+            },
+            "at": {
+                "atMobiles": [
+                    "15626046299",
+                ],
+                "isAtAll": False
+            }
+        }
+        message_json = json.dumps(message)
+        resp = requests.post(url=url, data=message_json, headers=header)
+        if resp.status_code == 200:
+            pass
+        else:
+            logger.warning("钉钉消息发送失败")
 
     def _init_pool(self, cfg: dict):
         """
@@ -217,9 +265,7 @@ class HistoryCalSpider(object):
         url2 = 'http://sc.hkex.com.hk/TuniS/www.hkex.com.hk/chi/csm/script/data_SBSZ_Turnover_chi.js'   # '港股通（深）成交额'
 
         body2 = requests.get(url2, headers=self.headers).text
-        datas2 = json.loads(
-            body2.rstrip(";").lstrip("southbound11 =").lstrip("southbound12 =").lstrip("southbound21 =").lstrip(
-                "southbound22 ="))
+        datas2 = json.loads(body2.rstrip(";").lstrip("southbound11 =").lstrip("southbound12 =").lstrip("southbound21 =").lstrip("southbound22 ="))
         logger.info("\n" + pprint.pformat(datas2))
         '''
         [{'category': 'Southbound',
@@ -251,6 +297,7 @@ class HistoryCalSpider(object):
         money_balance = ret.get("Balance")
         money_in = money_limit - money_balance
 
+        # 港元到百万港元的转换
         money_balance = int(money_balance / 100 / 10000)
         money_in = int(money_in / 100 / 10000)
 
@@ -268,25 +315,11 @@ class HistoryCalSpider(object):
 
         logger.info("生成一条港股通(深)数据: {}".format(item))
         self._save(item, self.table_name, self.fields)
+        return item
 
     def sh_hk(self):
         """港股通 沪"""
-        # url = 'http://sc.hkex.com.hk/TuniS/www.hkex.com.hk/chi/csm/script/data_SBSH_QuotaUsage_chi.js'   # 港股通(沪) 每日资金余额
         url2 = 'http://sc.hkex.com.hk/TuniS/www.hkex.com.hk/chi/csm/script/data_SBSH_Turnover_chi.js'   # '港股通（沪）成交额'
-
-        # body = requests.get(url, headers=self.headers).text
-        # datas = json.loads(body.rstrip(";").lstrip("southbound11 =").lstrip("southbound12 =").lstrip("southbound21 =").lstrip("southbound22 ="))
-        # logger.info("\n" + pprint.pformat(datas))
-        # '''
-        # [{'category': 'Southbound',
-        #   'section': [{'item': [],
-        #                'subtitle': ['请参阅<A '
-        #                             'href=http://www.sse.com.cn/services/hkexsc/home/ '
-        #                             'target=_blank alt=SSE>上海证券交易所网站</a>。',
-        #                             {'colspan': 2}]}],
-        #   'tablehead': ['港股通（沪）', ''],
-        #   'type': 'noHeader'}]
-        # '''
 
         body2 = requests.get(url2, headers=self.headers).text
         datas2 = json.loads(body2.rstrip(";").lstrip("southbound11 =").lstrip("southbound12 =").lstrip("southbound21 =").lstrip("southbound22 ="))
@@ -338,6 +371,7 @@ class HistoryCalSpider(object):
 
         logger.info("生成一条港股通(沪)数据: {}".format(item))
         self._save(item, self.table_name, self.fields)
+        return item
 
     def hk_sz(self):
         """深股通"""
@@ -407,8 +441,6 @@ class HistoryCalSpider(object):
         logger.info("当前分钟的历史资金累计流入是{}百万".format(moneyinhistorytotal))
 
         item = {
-            # "Date": show_dt,  # 陆股通交易时间
-            # "Time": complete_dt,   # 具体的分钟时间
             "Date": complete_dt,   # 具体到分钟的交易时间
             "MoneyBalance": money_balance,  # 当日余额(百万）
             "MoneyIn": money_in,  # 当日资金流入(百万) = 额度 - 余额
@@ -422,6 +454,7 @@ class HistoryCalSpider(object):
 
         logger.info("生成一条深股通数据: {}".format(item))
         self._save(item, self.table_name, self.fields)
+        return item
 
     def hk_sh(self):
         """沪股通"""
@@ -489,8 +522,6 @@ class HistoryCalSpider(object):
         logger.info("当前分钟的历史资金累计流入是{}百万".format(moneyinhistorytotal))
 
         item = {
-            # "Date": show_dt,     # 陆股通交易日时间
-            # "Time": complete_dt,   # 分钟时间线
             "Date": complete_dt,    # 陆股通分钟时间点
             "MoneyBalance": money_balance,   # 当日余额(百万）
             "MoneyIn": money_in,   # 当日资金流入(百万) = 额度 - 余额
@@ -504,28 +535,31 @@ class HistoryCalSpider(object):
 
         logger.info("生成一条沪股通数据: {}".format(item))
         self._save(item, self.table_name, self.fields)
+        return item
 
     def start(self):
         try:
             self._create_stock_table()
 
-            self.hk_sh()
+            item_hk_sh = self.hk_sh()
             print()
             print()
 
-            self.hk_sz()
+            item_hk_sz = self.hk_sz()
             print()
             print()
 
-            self.sh_hk()
+            item_sh_hk = self.sh_hk()
             print()
             print()
 
-            self.sh_sz()
+            item_sh_sz = self.sh_sz()
             print()
             print()
-        except:
+            # self.ding("沪股通: {}\n深股通: {}\n港股通(沪): {}\n港股通(深):{}\n".format(item_hk_sh, item_hk_sz, item_sh_hk, item_sh_sz))
+        except Exception as e:
             traceback.print_exc()
+            self.ding("cal history error: {}".format(e))
 
     def _create_stock_table(self):
         # 历史资金累计流入 其实是净买额累计流入
