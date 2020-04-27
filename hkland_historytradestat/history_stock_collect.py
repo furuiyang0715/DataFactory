@@ -573,7 +573,7 @@ docker build -f Dockerfile_calhistory -t registry.cn-shenzhen.aliyuncs.com/jzdev
 docker push registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_calhistory:v1
 sudo docker pull registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_calhistory:v1
 
-sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name flow_merge \
+sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name cal_history \
 --env LOCAL=0 \
 registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_calhistory:v1
 '''
