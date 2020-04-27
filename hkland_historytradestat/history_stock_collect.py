@@ -55,6 +55,7 @@ class HistoryCalSpider(object):
         self.today = datetime.datetime.today()
         self.hk_sh_his = self.select_last_total(1).get("MoneyInHistoryTotal")
         self.hk_sz_his = self.select_last_total(3).get("MoneyInHistoryTotal")
+        self.sh_hk_his = self.select_last_total(2).get("MoneyInHistoryTotal")
 
     def _init_pool(self, cfg: dict):
         """
@@ -79,6 +80,15 @@ class HistoryCalSpider(object):
         if ret:
             data = ret[0]
             data = data.replace(",", '')
+            return int(data)
+
+    @staticmethod
+    def re_hk_data(data):
+        """港元的单位是百万"""
+        ret = re.findall(r"HK\$(.*) Mil", data)
+        if ret:
+            data = ret[0]
+            data = data.replace(",", "")
             return int(data)
 
     def contract_sql(self, to_insert: dict, table: str, update_fields: list):
@@ -133,6 +143,65 @@ class HistoryCalSpider(object):
         sql = '''select Date, MoneyInHistoryTotal from hkland_historytradestat where Date = (select max(Date) from hkland_historytradestat) and MarketTypeCode = {};'''.format(market_type)
         ret = dc.select_one(sql)
         return ret
+
+    def sh_hk(self):
+        """港股通 沪"""
+        url = 'http://sc.hkex.com.hk/TuniS/www.hkex.com.hk/chi/csm/script/data_SBSH_QuotaUsage_chi.js'   # 港股通(沪) 每日资金余额
+        url2 = 'http://sc.hkex.com.hk/TuniS/www.hkex.com.hk/chi/csm/script/data_SBSH_Turnover_chi.js'   # '港股通（沪）成交额'
+
+        # body = requests.get(url, headers=self.headers).text
+        # datas = json.loads(body.rstrip(";").lstrip("southbound11 =").lstrip("southbound12 =").lstrip("southbound21 =").lstrip("southbound22 ="))
+        # logger.info("\n" + pprint.pformat(datas))
+        # '''
+        # [{'category': 'Southbound',
+        #   'section': [{'item': [],
+        #                'subtitle': ['请参阅<A '
+        #                             'href=http://www.sse.com.cn/services/hkexsc/home/ '
+        #                             'target=_blank alt=SSE>上海证券交易所网站</a>。',
+        #                             {'colspan': 2}]}],
+        #   'tablehead': ['港股通（沪）', ''],
+        #   'type': 'noHeader'}]
+        # '''
+
+        body2 = requests.get(url2, headers=self.headers).text
+        datas2 = json.loads(body2.rstrip(";").lstrip("southbound11 =").lstrip("southbound12 =").lstrip("southbound21 =").lstrip("southbound22 ="))
+        logger.info("\n" + pprint.pformat(datas2))
+        '''
+        [{'category': 'Southbound',
+          'section': [{'item': [['买入及卖出', 'HK$5,668 Mil', {}],
+                                ['买入', 'HK$2,868 Mil', {}],
+                                ['卖出', 'HK$2,799 Mil', {}]],
+                       'subtitle': ['成交额', '27/04/2020 (14:30)', {}]}],
+          'tablehead': ['港股通（沪）', '']}]
+        '''
+        buy_sell_info = datas2[0].get("section")[0].get("item")
+        buy_amount = self.re_hk_data(buy_sell_info[1][1])
+        sell_amount = self.re_hk_data(buy_sell_info[2][1])
+        netbuyamount = buy_amount - sell_amount
+        logger.info("当前分钟的买入金额是 {} 百万港元, 卖出金额是 {} 百万港元".format(buy_amount, sell_amount))
+        logger.info("当前分钟的净流入是 {} 百万港元".format(netbuyamount))
+
+        # 当前分钟的历史资金累计流入(百万) = 上一天的历史资金累计流入(百万) + 当前分钟的当日成交净买额(百万元)
+        moneyinhistorytotal = self.sh_hk_his + netbuyamount
+        logger.info("当前分钟的历史资金累计流入是{}百万".format(moneyinhistorytotal))
+
+        date_min = datas2[0].get("section")[0].get("subtitle")[1]
+        date_min = datetime.datetime.strptime(date_min, "%d/%m/%Y (%H:%M)")
+        logger.info("解析出的当前的分钟时间是{}".format(date_min))
+
+        item = {
+            "Date": date_min,  # 具体到分钟的交易时间
+            # "MoneyBalance": money_balance,  # 当日余额(百万）
+            # "MoneyIn": money_in,  # 当日资金流入(百万) = 额度 - 余额
+            "BuyAmount": buy_amount,  # 当日买入成交额(百万元)
+            "SellAmount": sell_amount,  # 当日卖出成交额(百万元)
+            "NetBuyAmount": netbuyamount,  # 当日成交净买额(百万元)  = (当日)买入成交额(百万元) - (当日)卖出成交额(百万元)
+            "MoneyInHistoryTotal": moneyinhistorytotal,  # 历史资金累计流入(百万) = 上一天的历史资金累计流入(百万) + 今天的当日成交净买额(百万元)
+            "MarketTypeCode": 2,  # 市场类型代码
+            "MarketType": '港股通(沪)',  # 市场类型
+        }
+
+        logger.info("生成一条港股通(沪)数据: {}".format(item))
 
     def hk_sz(self):
         """深股通"""
@@ -202,7 +271,9 @@ class HistoryCalSpider(object):
         logger.info("当前分钟的历史资金累计流入是{}百万".format(moneyinhistorytotal))
 
         item = {
-            "Date": show_dt,  # 陆股通交易时间
+            # "Date": show_dt,  # 陆股通交易时间
+            # "Time": complete_dt,   # 具体的分钟时间
+            "Date": complete_dt,   # 具体到分钟的交易时间
             "MoneyBalance": money_balance,  # 当日余额(百万）
             "MoneyIn": money_in,  # 当日资金流入(百万) = 额度 - 余额
             "BuyAmount": buy_amount,  # 当日买入成交额(百万元)
@@ -281,7 +352,9 @@ class HistoryCalSpider(object):
         logger.info("当前分钟的历史资金累计流入是{}百万".format(moneyinhistorytotal))
 
         item = {
-            "Date": show_dt,     # 陆股通交易时间
+            # "Date": show_dt,     # 陆股通交易日时间
+            # "Time": complete_dt,   # 分钟时间线
+            "Date": complete_dt,    # 陆股通分钟时间点
             "MoneyBalance": money_balance,   # 当日余额(百万）
             "MoneyIn": money_in,   # 当日资金流入(百万) = 额度 - 余额
             "BuyAmount": buy_amount,   # 当日买入成交额(百万元)
@@ -387,4 +460,6 @@ if __name__ == "__main__":
     h = HistoryCalSpider()
     # h.hk_sh()
 
-    h.hk_sz()
+    # h.hk_sz()
+
+    h.sh_hk()
