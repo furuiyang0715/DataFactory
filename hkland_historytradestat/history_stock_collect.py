@@ -594,7 +594,9 @@ def task():
 if __name__ == '__main__':
     scheduler = BlockingScheduler()
     task()
-    scheduler.add_job(task, 'interval', seconds=10)
+    # TODO 在每天的 8-12 点 13-17 点 每隔 10 s 运行一次
+    scheduler.add_job(task, 'cron', hour='8-12, 13-17', minute="*", second='0, 10, 20, 30, 40, 50')
+    # scheduler.add_job(task, 'interval', seconds=10)
     logger.info('Press Ctrl+{0} to exit'.format('Break' if os.name == 'nt' else 'C'))
 
     try:
