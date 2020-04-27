@@ -43,4 +43,4 @@ class SSEStatsOnTime(object):
 
 if __name__ == "__main__":
     sse = SSEStatsOnTime()
-    sse.get_balance_info()
+    print(sse.get_balance_info())

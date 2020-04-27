@@ -30,4 +30,4 @@ class SZSEStatsOnTime(object):
 
 if __name__ == "__main__":
     sz = SZSEStatsOnTime()
-    sz.get_balance_info()
+    print(sz.get_balance_info())

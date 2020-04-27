@@ -22,6 +22,71 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(level
 logger = logging.getLogger(__name__)
 
 
+class SSEStatsOnTime(object):
+    """
+    http://www.sse.com.cn/services/hkexsc/home/
+
+    """
+    def __init__(self):
+        self.url = 'http://yunhq.sse.com.cn:32041//v1/hkp/status/amount_status'
+        self.headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.90 Safari/537.36',
+        }
+
+    def get_balance_info(self):
+        resp = requests.get(self.url)
+        if resp.status_code == 200:
+            datas = json.loads(resp.text)
+            item = dict()
+            # 交易所所属类型
+            item['Category'] = "SH"
+
+            # 当前的时间
+            m_today = str(datas['date'])
+            m_today = "-".join([m_today[:4], m_today[4:6], m_today[6:8]])
+            m_time = str(datas['status'][0][1])
+            # 区分小时时间是 2 位数和 1 位数的 即 9 点以及之前的数据 10 点以及之后的数据
+            if len(m_time) >= 9:    # {'date': 20200417, 'status': [[100547000, 100547000], [417, 418], ['3       ', '111     '], 42000000000, 41207590461, '2']}
+                m_time = ":".join([m_time[:2], m_time[2:4], m_time[4:6]])
+            else: # {'date': 20200417, 'status': [[94338000, 94337000], [417, 418], ['3       ', '111     '], 42000000000, 41543482907, '2']}
+                m_time = ":".join([m_time[:1], m_time[1:3], m_time[3:5]])
+            _time = " ".join([m_today, m_time])
+            item['Time'] = _time
+
+            # 当日额度
+            item['DailyLimit'] = datas['status'][3]
+            # 当日资金余额
+            item['Balance'] = datas['status'][4]
+            # print(item)
+            return item
+
+
+class SZSEStatsOnTime(object):
+    """http://www.szse.cn/szhk/index.html"""
+    def __init__(self):
+        self.url = 'http://www.szse.cn/api/market/sgt/dailyamount'
+        self.headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.90 Safari/537.36',
+        }
+
+    def get_balance_info(self):
+        resp = requests.get(self.url)
+        if resp.status_code == 200:
+            datas = json.loads(resp.text)
+            # print(datas)
+            item = dict()
+            # 交易所所属类型
+            item['Category'] = "SZ"
+            # 当前的时间
+            item['Time'] = datas.get("gxsj")
+            # 当日资金余额
+            item['Balance'] = int(datas['edye']) * pow(10, 6)
+            # 每日额度
+            item['DailyLimit'] = int(datas['mred']) * pow(10, 8)
+            # print(item)
+            return item
+
+
 class HistoryCalSpider(object):
     dc_cfg = {
         "host": DC_HOST,
@@ -51,12 +116,23 @@ class HistoryCalSpider(object):
         self.headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.80 Safari/537.36',
         }
-        self.table_name = 'hkland_flow_exchange'
         self.today = datetime.datetime.today()
         self.hk_sh_his = self.select_last_total(1).get("MoneyInHistoryTotal")
         self.hk_sz_his = self.select_last_total(3).get("MoneyInHistoryTotal")
         self.sh_hk_his = self.select_last_total(2).get("MoneyInHistoryTotal")
         self.sz_hk_his = self.select_last_total(4).get("MoneyInHistoryTotal")
+        self.table_name = 'hkland_calhistory'
+        self.fields = [
+            'Date',
+            'MoneyIn',
+            'MoneyBalance',
+            'MoneyInHistoryTotal',
+            'NetBuyAmount',
+            'BuyAmount',
+            'SellAmount',
+            'MarketTypeCode',
+            'MarketType',
+        ]
 
     def _init_pool(self, cfg: dict):
         """
@@ -166,10 +242,20 @@ class HistoryCalSpider(object):
         date_min = datetime.datetime.strptime(date_min, "%d/%m/%Y (%H:%M)")
         logger.info("解析出的当前的分钟时间是{}".format(date_min))
 
+        sz = SZSEStatsOnTime()
+        ret = sz.get_balance_info()
+        logger.info("从深交所接口获取的港股通(深)数据是{}".format(ret))
+        money_limit = ret.get("DailyLimit")
+        money_balance = ret.get("Balance")
+        money_in = money_limit - money_balance
+
+        money_balance = int(money_balance / 100 / 10000)
+        money_in = int(money_in / 100 / 10000)
+
         item = {
             "Date": date_min,  # 具体到分钟的交易时间
-            # "MoneyBalance": money_balance,  # 当日余额(百万）
-            # "MoneyIn": money_in,  # 当日资金流入(百万) = 额度 - 余额
+            "MoneyBalance": money_balance,  # 当日余额(百万）
+            "MoneyIn": money_in,  # 当日资金流入(百万) = 额度 - 余额
             "BuyAmount": buy_amount,  # 当日买入成交额(百万元)
             "SellAmount": sell_amount,  # 当日卖出成交额(百万元)
             "NetBuyAmount": netbuyamount,  # 当日成交净买额(百万元)  = (当日)买入成交额(百万元) - (当日)卖出成交额(百万元)
@@ -179,6 +265,7 @@ class HistoryCalSpider(object):
         }
 
         logger.info("生成一条港股通(深)数据: {}".format(item))
+        self._save(item, self.table_name, self.fields)
 
     def sh_hk(self):
         """港股通 沪"""
@@ -225,10 +312,20 @@ class HistoryCalSpider(object):
         date_min = datetime.datetime.strptime(date_min, "%d/%m/%Y (%H:%M)")
         logger.info("解析出的当前的分钟时间是{}".format(date_min))
 
+        sse = SSEStatsOnTime()
+        ret = sse.get_balance_info()
+        logger.info("上交所的港股通(沪)接口数据是{}".format(ret))
+        money_limit = ret.get("DailyLimit")
+        money_balance = ret.get("Balance")
+        money_in = money_limit - money_balance
+
+        money_balance = int(money_balance / 100 / 10000)
+        money_in = int(money_in / 100 / 10000)
+
         item = {
             "Date": date_min,  # 具体到分钟的交易时间
-            # "MoneyBalance": money_balance,  # 当日余额(百万）
-            # "MoneyIn": money_in,  # 当日资金流入(百万) = 额度 - 余额
+            "MoneyBalance": money_balance,  # 当日余额(百万）
+            "MoneyIn": money_in,  # 当日资金流入(百万) = 额度 - 余额
             "BuyAmount": buy_amount,  # 当日买入成交额(百万元)
             "SellAmount": sell_amount,  # 当日卖出成交额(百万元)
             "NetBuyAmount": netbuyamount,  # 当日成交净买额(百万元)  = (当日)买入成交额(百万元) - (当日)卖出成交额(百万元)
@@ -238,6 +335,7 @@ class HistoryCalSpider(object):
         }
 
         logger.info("生成一条港股通(沪)数据: {}".format(item))
+        self._save(item, self.table_name, self.fields)
 
     def hk_sz(self):
         """深股通"""
@@ -321,6 +419,7 @@ class HistoryCalSpider(object):
         }
 
         logger.info("生成一条深股通数据: {}".format(item))
+        self._save(item, self.table_name, self.fields)
 
     def hk_sh(self):
         """沪股通"""
@@ -402,21 +501,34 @@ class HistoryCalSpider(object):
         }
 
         logger.info("生成一条沪股通数据: {}".format(item))
+        self._save(item, self.table_name, self.fields)
+
+    def start(self):
+        try:
+            self._create_stock_table()
+
+            self.hk_sh()
+            print()
+            print()
+
+            self.hk_sz()
+            print()
+            print()
+
+            self.sh_hk()
+            print()
+            print()
+
+            self.sh_sz()
+            print()
+            print()
+        except:
+            traceback.print_exc()
 
     def _create_stock_table(self):
         # 历史资金累计流入 其实是净买额累计流入
-        # fields = ['Date',
-        #           'MoneyIn',
-        #           'MoneyBalance',
-        #           'MoneyInHistoryTotal',
-        #           'NetBuyAmount',
-        #           'BuyAmount',
-        #           'SellAmount',
-        #           'MarketTypeCode',
-        #           'MarketType',
-        #           ]
         sql = '''
-        CREATE TABLE IF NOT EXISTS `hkland_calhistory` (
+        CREATE TABLE IF NOT EXISTS `{}` (
           `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
           `Date` datetime NOT NULL COMMENT '分钟时间点',
           `MoneyIn` decimal(20,4) NOT NULL COMMENT '当日资金流入(百万）',
@@ -432,7 +544,7 @@ class HistoryCalSpider(object):
           PRIMARY KEY (`id`),
           UNIQUE KEY `un` (`Date`,`MarketTypeCode`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='交易所计算陆股通资金流向汇总(港股通币种为港元，陆股通币种为人民币)';
-        '''
+        '''.format(self.table_name)
         client = self._init_pool(self.spider_cfg)
         client.insert(sql)
         client.dispose()
@@ -440,10 +552,4 @@ class HistoryCalSpider(object):
 
 if __name__ == "__main__":
     h = HistoryCalSpider()
-    # h.hk_sh()
-
-    # h.hk_sz()
-
-    # h.sh_hk()
-
-    h.sh_sz()
+    h.start()
