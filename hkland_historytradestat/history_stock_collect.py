@@ -403,39 +403,39 @@ class HistoryCalSpider(object):
 
         logger.info("生成一条沪股通数据: {}".format(item))
 
-    # def _create_stock_table(self):
-    #     # 历史资金累计流入 其实是净买额累计流入
-    #     fields = ['Date',
-    #               'MoneyIn',
-    #               'MoneyBalance',
-    #               'MoneyInHistoryTotal',
-    #               'NetBuyAmount',
-    #               'BuyAmount',
-    #               'SellAmount',
-    #               'MarketTypeCode',
-    #               'MarketType',
-    #               ]
-    #     sql = '''
-    #     CREATE TABLE IF NOT EXISTS `hkland_calhistory` (
-    #       `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-    #       `Date` datetime NOT NULL COMMENT '时间',
-    #       `MoneyIn` decimal(20,4) NOT NULL COMMENT '当日资金流入(百万）',
-    #       `MoneyBalance` decimal(20,4) NOT NULL COMMENT '当日余额（百万）',
-    #       `MoneyInHistoryTotal` decimal(20,4) NOT NULL COMMENT '历史资金累计流入(其实是净买额累计流入)(百万元）',
-    #       `NetBuyAmount` decimal(20,4) NOT NULL COMMENT '当日成交净买额(百万元）',
-    #       `BuyAmount` decimal(20,4) NOT NULL COMMENT '买入成交额(百万元）',
-    #       `SellAmount` decimal(20,4) NOT NULL COMMENT '卖出成交额(百万元）',
-    #       `MarketTypeCode` int(11) NOT NULL COMMENT '市场类型代码',
-    #       `MarketType` varchar(20) COLLATE utf8_bin DEFAULT NULL COMMENT '市场类型',
-    #       `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
-    #       `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    #       PRIMARY KEY (`id`),
-    #       UNIQUE KEY `un` (`Date`,`MarketTypeCode`)
-    #     ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='交易所计算陆股通资金流向汇总(港股通币种为港元，陆股通币种为人民币)';
-    #     '''
-    #     client = self._init_pool(self.product_cfg)
-    #     client.insert(sql)
-    #     client.dispose()
+    def _create_stock_table(self):
+        # 历史资金累计流入 其实是净买额累计流入
+        # fields = ['Date',
+        #           'MoneyIn',
+        #           'MoneyBalance',
+        #           'MoneyInHistoryTotal',
+        #           'NetBuyAmount',
+        #           'BuyAmount',
+        #           'SellAmount',
+        #           'MarketTypeCode',
+        #           'MarketType',
+        #           ]
+        sql = '''
+        CREATE TABLE IF NOT EXISTS `hkland_calhistory` (
+          `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+          `Date` datetime NOT NULL COMMENT '分钟时间点',
+          `MoneyIn` decimal(20,4) NOT NULL COMMENT '当日资金流入(百万）',
+          `MoneyBalance` decimal(20,4) NOT NULL COMMENT '当日余额（百万）',
+          `MoneyInHistoryTotal` decimal(20,4) NOT NULL COMMENT '历史资金累计流入(其实是净买额累计流入)(百万元）',
+          `NetBuyAmount` decimal(20,4) NOT NULL COMMENT '当日成交净买额(百万元）',
+          `BuyAmount` decimal(20,4) NOT NULL COMMENT '买入成交额(百万元）',
+          `SellAmount` decimal(20,4) NOT NULL COMMENT '卖出成交额(百万元）',
+          `MarketTypeCode` int(11) NOT NULL COMMENT '市场类型代码',
+          `MarketType` varchar(20) COLLATE utf8_bin DEFAULT NULL COMMENT '市场类型',
+          `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
+          `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          PRIMARY KEY (`id`),
+          UNIQUE KEY `un` (`Date`,`MarketTypeCode`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='交易所计算陆股通资金流向汇总(港股通币种为港元，陆股通币种为人民币)';
+        '''
+        client = self._init_pool(self.spider_cfg)
+        client.insert(sql)
+        client.dispose()
 
 
 if __name__ == "__main__":
