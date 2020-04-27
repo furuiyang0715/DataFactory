@@ -132,7 +132,83 @@ class HistoryCalSpider(object):
 
         pass
 
+    def hk_sz(self):
+        """深股通"""
+        url = 'http://sc.hkex.com.hk/TuniS/www.hkex.com.hk/chi/csm/script/data_NBSZ_QuotaUsage_chi.js'  # 深股通每日资金余额
+        url2 = 'http://sc.hkex.com.hk/TuniS/www.hkex.com.hk/chi/csm/script/data_NBSZ_Turnover_chi.js'   # 深股通成交额
+
+        body = requests.get(url, headers=self.headers).text
+        datas = json.loads(body.rstrip(";").lstrip("northbound11 =").lstrip("northbound12 =").lstrip("northbound21 =").lstrip("northbound22 ="))
+        print(pprint.pformat(datas))
+        '''
+        [{'category': 'Northbound',
+          'section': [{'item': [['额度', 'RMB52,000 Mil', {}],
+                                ['余额 (于 11:13)', 'RMB50,693 Mil', {}],
+                                ['余额占额度百分比', '97%', {}]],
+                       'subtitle': ['每日额度', '27/04/2020', {}]}],
+          'tablehead': ['香港 > 深圳'],
+          'type': 'noHeader'}]
+        '''
+        # 当前日期
+        show_dt = datas[0].get("section")[0].get("subtitle")[1]
+        show_dt = datetime.datetime.strptime(show_dt, "%d/%m/%Y").strftime("%Y-%m-%d")
+        logger.info("当前的日期是{}".format(show_dt))
+
+        flow_info = datas[0].get("section")[0].get("item")
+
+        # 当前分钟时间
+        m_dt = flow_info[1][0]
+        m_dt = re.findall("余额 \(于 (.*)\)", m_dt)[0]
+        complete_dt = " ".join([show_dt, m_dt])
+        complete_dt = datetime.datetime.strptime(complete_dt, "%Y-%m-%d %H:%M")
+        logger.info("当前的分钟时间是{}".format(complete_dt))
+
+        # 当前分钟余额 单位: 百万
+        money_balance = self.re_data(flow_info[1][1])
+        logger.info("当前分钟的余额是{}百万".format(money_balance))
+
+        # 当日资金额度 单位: 百万
+        money_limit = self.re_data(flow_info[0][1])
+        logger.info("当日资金的额度是{}百万".format(money_limit))
+
+        # 当前分钟资金流入 = 额度 - 余额 单位: 百万
+        money_in = money_limit - money_balance
+        logger.info("当前分钟的资金流入是{}百万".format(money_in))
+
+        body2 = requests.get(url2, headers=self.headers).text
+        datas2 = json.loads(
+            body2.rstrip(";").lstrip("northbound11 =").lstrip("northbound12 =").lstrip("northbound21 =").lstrip(
+                "northbound22 ="))
+        print(pprint.pformat(datas2))
+        '''
+        [{'category': 'Northbound',
+          'section': [{'item': [['买入及卖出', 'RMB19,462 Mil', {}],
+                                ['买入', 'RMB10,347 Mil', {}],
+                                ['卖出', 'RMB9,115 Mil', {}]],
+                       'subtitle': ['成交额', '27/04/2020 (11:14)', {}]}],
+          'tablehead': ['深股通']}]
+        '''
+        buy_sell_info = datas2[0].get("section")[0].get("item")
+        buy_amount = self.re_data(buy_sell_info[1][1])
+        sell_amount = self.re_data(buy_sell_info[2][1])
+        netbuyamount = buy_amount - sell_amount
+        logger.info("当前分钟的买入金额是 {} 百万, 卖出金额是 {} 百万".format(buy_amount, sell_amount))
+        logger.info("当前分钟的净流入是 {} 百万".format(netbuyamount))
+
+        item = {
+            "Date": show_dt,  # 陆股通交易时间
+            "MoneyBalance": money_balance,  # 当日余额(百万）
+            "MoneyIn": money_in,  # 当日资金流入(百万) = 额度 - 余额
+            "BuyAmount": buy_amount,  # 当日买入成交额(百万元)
+            "SellAmount": sell_amount,  # 当日卖出成交额(百万元)
+            "NetBuyAmount": netbuyamount,  # 当日成交净买额(百万元)  = (当日)买入成交额(百万元) - (当日)卖出成交额(百万元)
+            "MoneyInHistoryTotal": "",  # 历史资金累计流入(百万) = 上一天的历史资金累计流入(百万) + 今天的当日成交净买额(百万元)
+            "MarketTypeCode": '',  # 市场类型代码
+            "MarketType": "",  # 市场类型
+        }
+
     def hk_sh(self):
+        """沪股通"""
         url = 'http://sc.hkex.com.hk/TuniS/www.hkex.com.hk/chi/csm/script/data_NBSH_QuotaUsage_chi.js'  # 沪股通每日资金余额
         url2 = 'http://sc.hkex.com.hk/TuniS/www.hkex.com.hk/chi/csm/script/data_NBSH_Turnover_chi.js'  # 沪股通成交额
 
@@ -295,4 +371,4 @@ class HistoryCalSpider(object):
 
 if __name__ == "__main__":
     h = HistoryCalSpider()
-    h._start()
+    h.hk_sz()
