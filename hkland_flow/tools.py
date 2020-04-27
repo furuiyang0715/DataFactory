@@ -42,27 +42,13 @@ def ding_msg(msg):
     }
 
     message_json = json.dumps(message)
-    resp = re.post(url=url, data=message_json, headers=header)
-    if resp.status_code == 200:
-        print("钉钉发送成功: {}".format(msg))
-    else:
-        print("钉钉消息发送失败 ")
-
-
-def demo():
     try:
-        "999" / 100
+        resp = re.post(url=url, data=message_json, headers=header)
     except:
-        exc_type, exc_value, exc_traceback_obj = sys.exc_info()
-        error_info = {
-            'msg': "程序运行出错",
-            'exc_type': exc_type,
-            'exc_value': exc_value,
-        }
-        ding_msg(error_info)
+        print("本次钉邮发送失败, 待发送消息的内容是: {}".format(msg))
+    else:
+        if resp.status_code == 200:
+            print("钉钉发送成功: {}".format(msg))
+        else:
+            print("钉钉消息发送失败 ")
 
-
-if __name__ == "__main__":
-    demo()
-
-    pass

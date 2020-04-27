@@ -88,7 +88,9 @@ class HkexlugutongshishispiderSpider(object):
         except Exception as e:
             # 只是发送钉邮 但是并不终止程序
             tools.ding_msg("交易所实时数据爬取失败了 失败的原因是{}".format(e))
-            traceback.print_exc()
+            # traceback.print_exc()
+            logger.info("因{}触发重试 ".format(e))
+            time.sleep(1)
 
     def contract_sql(self, to_insert: dict, table: str, update_fields: list):
         ks = []
@@ -389,4 +391,13 @@ docker logs -ft --tail 1000  flow_exchange
 
 # local 
 sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name flow_exchange registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_flow_exchange:v1 
+'''
+
+'''
+运行时异常： 
+(1) 2020年4月24日 数据库超时触发钉钉发送消息，钉钉 send_msg 流程未捕获异常。 造成 while True 程序中断。 
+比较奇怪的是 docker 中程序终止, 但是 docker 容器未退出。
+通过定时查看日志 发现程序在前一天已经中断了。 
+
+
 '''
