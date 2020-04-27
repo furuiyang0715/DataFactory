@@ -3,11 +3,13 @@
 import datetime
 import json
 import logging
+import os
 import pprint
 import re
 import traceback
 import requests
 import sys
+from apscheduler.schedulers.blocking import BlockingScheduler
 
 
 sys.path.append("./../")
@@ -550,6 +552,28 @@ class HistoryCalSpider(object):
         client.dispose()
 
 
-if __name__ == "__main__":
+def task():
     h = HistoryCalSpider()
     h.start()
+
+
+if __name__ == '__main__':
+    scheduler = BlockingScheduler()
+    task()
+    scheduler.add_job(task, 'interval', seconds=10)
+    logger.info('Press Ctrl+{0} to exit'.format('Break' if os.name == 'nt' else 'C'))
+
+    try:
+        scheduler.start()
+    except (KeyboardInterrupt, SystemExit):
+        pass
+
+'''
+docker build -f Dockerfile_calhistory -t registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_calhistory:v1 .
+docker push registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_calhistory:v1
+sudo docker pull registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_calhistory:v1
+
+sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name flow_merge \
+--env LOCAL=0 \
+registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_calhistory:v1
+'''
