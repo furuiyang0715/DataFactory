@@ -251,19 +251,17 @@ class EMLgttop10tradedsharesspiderSpider(BaseSpider):
             logger.warning("钉钉消息发送失败")
 
     def start(self):
-        count = 3
+        count = 0
         while True:
             try:
                 self._start()
             except Exception as e:
-                count -= 1
-                if count < 0:
-                    self.ding("【datacenter】当前时间{}, 十大成交股程序 {} 出错了, 错误原因是 {}".format(
-                        datetime.datetime.now(), self.table_name, e))
-                    # break # TODO 出错就一直 ding
-                    time.sleep(10)
-                else:
+                count += 1
+                if count > 5:
+                    self.ding("【datacenter】当前时间{}, 十大成交股程序 {} 第 {} 次尝试出错了, 错误原因是 {}".format(datetime.datetime.now(), self.table_name, count, e))
                     traceback.print_exc()
+                    time.sleep(30)
+                else:
                     print("十大成交股爬取程序失败, 重启.")
             else:
                 break
@@ -272,11 +270,11 @@ class EMLgttop10tradedsharesspiderSpider(BaseSpider):
 def schedule_task():
     t_day = datetime.datetime.today()
 
-    start_time = datetime.datetime(t_day.year, t_day.month, t_day.day, 16, 10, 0)
-    end_time = datetime.datetime(t_day.year, t_day.month, t_day.day, 20, 0, 0)
+    start_time = datetime.datetime(t_day.year, t_day.month, t_day.day, 17, 10, 0)
+    end_time = datetime.datetime(t_day.year, t_day.month, t_day.day, 18, 10, 0)
 
     if not (t_day >= start_time and t_day <= end_time):
-        logger.warning("不在 16:10 到 20:00 的更新时段内")
+        logger.warning("不在 17:10 到 18:10 的更新时段内")
         return
 
     for i in range(1):
@@ -291,11 +289,11 @@ def schedule_task():
 def main():
     schedule_task()
 
-    schedule.every(3).minutes.do(schedule_task)
+    schedule.every(1).minutes.do(schedule_task)
 
     while True:
         schedule.run_pending()
-        time.sleep(10)
+        time.sleep(100)
 
 
 if __name__ == "__main__":
