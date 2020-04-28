@@ -184,9 +184,14 @@ class HoldShares(object):
             logger.warning("失败")
         else:
             if count == 1:
-                logger.info("更入新数据 {}".format(to_insert))
+                logger.info("插入新数据 {}".format(to_insert))
+
+            elif count == 2:
+                logger.info("刷新数据{}".format(to_insert))
+
             else:
                 logger.info("已有数据 {} ".format(to_insert))
+
             sql_pool.end()
             return count
 
@@ -465,7 +470,7 @@ class HoldShares(object):
 
         spider = self._init_pool(self.spider_cfg)
 
-        start_dt = self.today - datetime.timedelta(days=1)
+        start_dt = self.today - datetime.timedelta(days=6)
         # FIXME 在每天的凌晨启动 只能重刷前一天的数据
         end_dt = self.today - datetime.timedelta(days=1)
 
@@ -503,7 +508,7 @@ class HoldShares(object):
         select_fields = ['SecuCode', 'InnerCode', 'SecuAbbr', 'Percent', 'ShareNum', 'UPDATETIMEJZ']
         # FIXME 加入了 CMFTime 即使用的数据源也要计入在内
         update_fields = ['Date', 'SecuCode', 'InnerCode', 'SecuAbbr', 'Percent', 'ShareNum',
-                         # 'CMFTime',
+                         'CMFTime',
                          ]
         select_str = ",".join(select_fields).rstrip(",")
 
@@ -518,7 +523,7 @@ class HoldShares(object):
                 if self.type in ("sh", "sz"):
                     data.update({"HKTradeDay": shhk_calendar_map.get(dt)})
                     update_fields.append("HKTradeDay")
-                print(data)
+                # print(data)
                 ret = self._save(product, data, self.table_name, update_fields)
                 if ret == 1:
                     jishu.append(ret)
@@ -542,9 +547,10 @@ def spider_task():
     # 凌晨更新前一天的数据
     t1 = now()
     for _type in (
-            # "sh",
-                  "sz",
-                  "hk"):
+            "sh",
+            "sz",
+            "hk",
+    ):
         print("{} SPIDER START.".format(_type))
         h = HoldShares(_type)
         h.start()
@@ -555,9 +561,10 @@ def sync_task():
     # 获取最近 4 天的数据进行天填充以及同步
     t1 = now()
     for _type in (
-            # "sh",
-                  "sz",
-            "hk"):
+            "sh",
+            "sz",
+            "hk",
+    ):
         print("{} SYNC START.".format(_type))
         h = HoldShares(_type)
         h.sync()
@@ -603,7 +610,7 @@ sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name flow_sha
 --env SPIDER=1 \
 registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_shares:v1 
 ## sync 
-sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name flow_shares_sync5sz \
+sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name flow_shares_sync0428 \
 --env LOCAL=0 \
 --env SYNC=1 \
 --env SPIDER=0 \
