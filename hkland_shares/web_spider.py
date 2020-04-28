@@ -395,7 +395,7 @@ def spider_task():
             t1 = now()
             for _type in ("sh", "sz", "hk"):
                 logger.info("{} 爬虫开始运行.".format(_type))
-                for _offset in range(1, 10):
+                for _offset in range(1, 5):
                     _check_day = datetime.date.today() - datetime.timedelta(days=_offset)
                     logger.info("数据时间是{}".format(_check_day))
                     h = HoldShares(_type, _offset)
