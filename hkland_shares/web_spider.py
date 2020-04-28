@@ -19,7 +19,7 @@ sys.path.append("./../")
 from hkland_shares.configs import (SPIDER_MYSQL_HOST, SPIDER_MYSQL_PORT, SPIDER_MYSQL_USER, SPIDER_MYSQL_PASSWORD,
                                    SPIDER_MYSQL_DB, PRODUCT_MYSQL_HOST, PRODUCT_MYSQL_PORT, PRODUCT_MYSQL_USER,
                                    PRODUCT_MYSQL_PASSWORD, PRODUCT_MYSQL_DB, JUY_HOST, JUY_PORT, JUY_USER, JUY_PASSWD,
-                                   JUY_DB, DC_HOST, DC_PORT, DC_USER, DC_PASSWD, DC_DB, LOCAL, SECRET, TOKEN)
+                                   JUY_DB, DC_HOST, DC_PORT, DC_USER, DC_PASSWD, DC_DB, SECRET, TOKEN)
 from hkland_shares.sql_pool import PyMysqlPoolBase
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -395,7 +395,7 @@ def spider_task():
             t1 = now()
             for _type in ("sh", "sz", "hk"):
                 logger.info("{} 爬虫开始运行.".format(_type))
-                for _offset in range(1, 2):
+                for _offset in range(1, 10):
                     _check_day = datetime.date.today() - datetime.timedelta(days=_offset)
                     logger.info("数据时间是{}".format(_check_day))
                     h = HoldShares(_type, _offset)
@@ -448,3 +448,20 @@ if __name__ == '__main__':
 # select * from holding_shares_hk where SecuCode = '00001' order by Date;
 
 # 注: 如果需要的不是目前的数据 请修改 offset
+
+# 部署
+'''
+docker build -f Dockerfile_webspider -t registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/shares_webspider:v1 .
+docker push registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/shares_webspider:v1 
+sudo docker pull registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/shares_webspider:v1 
+# remote 
+sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name shares_spider \
+--env LOCAL=0 \
+registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/shares_webspider:v1  
+
+# local
+sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name shares_spider \
+--env LOCAL=1 \
+registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/shares_webspider:v1   
+
+'''
