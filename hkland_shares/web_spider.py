@@ -5,21 +5,17 @@ import hmac
 import json
 import logging
 import os
-import pprint
 import re
 import sys
 import time
 import traceback
 import urllib.parse
-
-import pandas as pd
 import requests
 import opencc
-import schedule
+from apscheduler.schedulers.blocking import BlockingScheduler
 from lxml import html
 
 sys.path.append("./../")
-
 from hkland_shares.configs import (SPIDER_MYSQL_HOST, SPIDER_MYSQL_PORT, SPIDER_MYSQL_USER, SPIDER_MYSQL_PASSWORD,
                                    SPIDER_MYSQL_DB, PRODUCT_MYSQL_HOST, PRODUCT_MYSQL_PORT, PRODUCT_MYSQL_USER,
                                    PRODUCT_MYSQL_PASSWORD, PRODUCT_MYSQL_DB, JUY_HOST, JUY_PORT, JUY_USER, JUY_PASSWD,
@@ -29,14 +25,12 @@ from hkland_shares.sql_pool import PyMysqlPoolBase
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-
-SPIDER = int(os.environ.get("SPIDER", 1))
-SYNC = int(os.environ.get("SYNC", 1))
+now = lambda: time.time()
 
 
 class HoldShares(object):
     """滬股通及深股通持股紀錄按日查詢"""
-    spider_cfg = {   # 爬虫库
+    spider_cfg = {    # 爬虫库
         "host": SPIDER_MYSQL_HOST,
         "port": SPIDER_MYSQL_PORT,
         "user": SPIDER_MYSQL_USER,
@@ -52,7 +46,7 @@ class HoldShares(object):
         "db": PRODUCT_MYSQL_DB,
     }
 
-    juyuan_cfg = {
+    juyuan_cfg = {    # 聚源数据库
         "host": JUY_HOST,
         "port": JUY_PORT,
         "user": JUY_USER,
@@ -60,8 +54,7 @@ class HoldShares(object):
         "db": JUY_DB,
     }
 
-    # 数据中心库
-    dc_cfg = {
+    dc_cfg = {        # 数据中心库
         "host": DC_HOST,
         "port": DC_PORT,
         "user": DC_USER,
@@ -70,6 +63,9 @@ class HoldShares(object):
     }
 
     def __init__(self, type, offset=1):
+        """
+        默认只更新之前一天的记录
+        """
         self.type = type
         self.url = 'https://www.hkexnews.hk/sdw/search/mutualmarket_c.aspx?t={}'.format(type)
         self.headers = {
@@ -77,7 +73,7 @@ class HoldShares(object):
         }
         self.today = datetime.datetime.combine(datetime.date.today(), datetime.time.min)
         self.offset = offset
-        # 当前只能查询之前一天的记录
+        # FIXME 注意: offset 决定的是查询哪一天的记录 且站在当前时间点只能查询之前一天以及之前的记录
         self.check_day = (datetime.date.today() - datetime.timedelta(days=self.offset)).strftime("%Y/%m/%d")
         self.converter = opencc.OpenCC('t2s')  # 中文繁体转简体
         _type_map = {
@@ -112,12 +108,11 @@ class HoldShares(object):
             self.table_name = 'hkland_hkshares'
         else:
             raise
-
-        #  FIXME 运行内存
         self.inner_code_map = self.get_inner_code_map()
 
     @property
     def post_params(self):
+        """构建请求参数"""
         data = {
             '__VIEWSTATE': '/wEPDwUJNjIxMTYzMDAwZGQ79IjpLOM+JXdffc28A8BMMA9+yg==',
             '__VIEWSTATEGENERATOR': 'EC4ACD6F',
@@ -136,7 +131,7 @@ class HoldShares(object):
         return pool
 
     def _create_table(self):
-        # ['SecuCode', 'InnerCode', 'SecuAbbr', 'Date', 'Percent', 'ShareNum']
+        """创建爬虫数据库"""
         sql = '''
          CREATE TABLE IF NOT EXISTS `{}` (
           `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
@@ -183,10 +178,17 @@ class HoldShares(object):
             traceback.print_exc()
             logger.warning("失败")
         else:
-            if count == 1:
-                logger.info("更入新数据 {}".format(to_insert))
-            else:
-                logger.info("已有数据 {} ".format(to_insert))
+            if count == 1:    # 插入新数据的时候结果为 1
+                logger.info("插入新数据 {}".format(to_insert))
+
+            elif count == 2:
+                logger.info("刷新数据 {}".format(to_insert))
+
+            else:   # 数据已经存在的时候结果为 0
+                # logger.info(count)
+                # logger.info("已有数据 {} ".format(to_insert))
+                pass
+
             sql_pool.end()
             return count
 
@@ -308,28 +310,37 @@ class HoldShares(object):
         juyuan.dispose()
         return ret
 
+    def start(self):
+        for i in range(5):
+            try:
+                self._start()
+            except Exception:
+                logger.info("{} >> crawl error..".format(i))
+                time.sleep(20)
+            else:
+                logger.info("{} >> crawl ok.. ".format(i))
+                break
+
     def _start(self):
+        # (1) 创建爬虫数据库
         self._create_table()
+        # (2) 请求网站获取数据
         resp = requests.post(self.url, data=self.post_params)
         if resp.status_code == 200:
             body = resp.text
-            # print("持股日期" in body)
-            # print(body)
             doc = html.fromstring(body)
-            # 查询较早数据可能长时间加载不出来
             date = doc.xpath('//*[@id="pnlResult"]/h2/span/text()')[0]
             date = re.findall(r"持股日期: (\d{4}/\d{2}/\d{2})", date)[0]
-            print(date)
+            # 与当前参数时间对应的数据时间
+            # 举例: 参数时间是 4.26 但是 4.26 无数据更新 之前最近的有数据的日期是 4.25 这里的时间就是 4.25
+            logger.info("{}与之对应的之前最近的有时间的一天是 {}".format(self.check_day, date))
             trs = doc.xpath('//*[@id="mutualmarket-result"]/tbody/tr')
-
-            jishu = []
             update_fields = ['SecuCode', 'InnerCode', 'SecuAbbr', 'Date', 'Percent', 'ShareNum']
             spider = self._init_pool(self.spider_cfg)
             for tr in trs:
                 item = {}
                 # 股份代码
                 secu_code = tr.xpath('./td[1]/div[2]/text()')[0].strip()
-                # item['SecuCode'] = secu_code
                 # 聚源内部编码
                 _secu_code = self._trans_secucode(secu_code)
                 item['InnerCode'] = self.get_inner_code(_secu_code)
@@ -340,11 +351,8 @@ class HoldShares(object):
                     simple_secu_name = self.get_secu_name(_secu_code)
                 item['SecuAbbr'] = simple_secu_name
 
-                # 时间 在数据处理的时候进行控制 这里统一用网页上的时间
+                # 时间 即距离当前时间最近的之前有数据的那一天
                 item['Date'] = date.replace("/", "-")
-                # item['Date'] = self.check_day
-                # 判断是否是港交所交易日 在数据处理的时间进行判断
-                # item['HKTradeDay'] =
 
                 # 於中央結算系統的持股量
                 holding = tr.xpath('./td[3]/div[2]/text()')[0]
@@ -369,264 +377,74 @@ class HoldShares(object):
                 else:
                     raise
 
-                ret = self._save(spider, item, self.spider_table, update_fields)
-                if ret == 1:
-                    jishu.append(ret)
+                self._save(spider, item, self.spider_table, update_fields)
 
             try:
                 spider.dispose()
             except:
                 pass
-
-            if len(jishu) != 0:
-                self.ding("当前的时间是{}, 爬虫数据库 {} 更入了 {} 条新数据".format(datetime.datetime.now(), self.spider_table, len(jishu)))
-            else:
-                print(len(jishu))
-
-    # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>> 数据加工处理分界线 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-    def _create_product_table(self):
-        sql1 = '''
-        CREATE TABLE IF NOT EXISTS `hkland_shares` (
-          `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-          `SecuCode` varchar(16) COLLATE utf8_bin NOT NULL COMMENT '股票交易代码',
-          `InnerCode` int(11) NOT NULL COMMENT '内部编码',
-          `SecuAbbr` varchar(50) COLLATE utf8_bin DEFAULT NULL COMMENT '股票简称',
-          `Date` datetime NOT NULL COMMENT '自然日',
-          `HKTradeDay` datetime NOT NULL COMMENT '港交所交易日',
-          `Percent` decimal(20,4) DEFAULT NULL COMMENT '占A股总股本的比例（%）',
-          `ShareNum` decimal(20,0) DEFAULT NULL COMMENT '股票数量(股)',
-          `HashID` varchar(50) COLLATE utf8_bin DEFAULT NULL COMMENT 'HashID',
-          `CMFTime` datetime NOT NULL COMMENT '日期',
-          `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
-          `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-          PRIMARY KEY (`id`),
-          UNIQUE KEY `un` (`Date`,`HKTradeDay`,`SecuCode`),
-          UNIQUE KEY `un2` (`InnerCode`,`Date`) USING BTREE
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='沪/深股通持股记录'; 
-        '''
-
-        sql2 = '''
-        CREATE TABLE IF NOT EXISTS `hkland_hkshares` (
-          `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-          `SecuCode` varchar(16) COLLATE utf8_bin NOT NULL COMMENT '股票交易代码',
-          `InnerCode` int(11) NOT NULL COMMENT '内部编码',
-          `SecuAbbr` varchar(50) COLLATE utf8_bin DEFAULT NULL COMMENT '股票简称',
-          `Date` datetime NOT NULL COMMENT '日期',
-          `Percent` decimal(20,4) DEFAULT NULL COMMENT '占已发行港股的比例（%）',
-          `ShareNum` decimal(20,0) DEFAULT NULL COMMENT '股票数量（股）',
-          `HashID` varchar(50) COLLATE utf8_bin DEFAULT NULL COMMENT 'HashID',
-          `CMFTime` datetime NOT NULL COMMENT '日期',
-          `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
-          `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-          PRIMARY KEY (`id`),
-          UNIQUE KEY `un` (`Date`,`SecuCode`)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='港股通持股记录-港股'; 
-        '''
-        product = self._init_pool(self.product_cfg)
-        product.insert(sql1)
-        product.insert(sql2)
-        product.dispose()
-
-    def start(self):
-        count = 3
-        while True:
-            try:
-                self._start()
-            except Exception as e:
-                count -= 1
-                if count < 0:
-                    traceback.print_exc()
-                    self.ding("当前时间{}, 爬虫程序{}出错了, 错误原因是{}".format(datetime.datetime.now(), self.spider_table, e))
-                    time.sleep(3)   # 4 次重试后出错就一直 ding
-                else:
-                    print("爬虫程序失败, 重启.")
-            else:
-                break
-
-    def sync(self):
-        count = 3
-        while True:
-            try:
-                self._sync()
-            except Exception as e:
-                count -= 1
-                if count < 0:
-                    traceback.print_exc()
-                    self.ding("当前时间{}, 同步程序{}出错了, 错误原因是{}".format(datetime.datetime.now(), self.table_name, e))
-                    time.sleep(3)   # 出错一直 ding
-                else:
-                    print("同步程序失败, 重启.")
-            else:
-                break
-
-    def _sync(self):
-        if LOCAL:
-            self._create_product_table()
-
-        spider = self._init_pool(self.spider_cfg)
-
-        start_dt = self.today - datetime.timedelta(days=1)
-        # FIXME 在每天的凌晨启动 只能重刷前一天的数据
-        end_dt = self.today - datetime.timedelta(days=1)
-
-        dt = start_dt
-        _map = {}
-        while dt <= end_dt:
-            sql = '''select max(Date) as before_max_dt from {} where Date <= '{}'; '''.format(self.spider_table, dt)
-            _dt = spider.select_one(sql).get("before_max_dt")
-            _map[str(dt)] = _dt
-            dt += datetime.timedelta(days=1)
-
-        logger.info(_map)
-
-        if self.type == "sh":
-            trading_type = 1
-        elif self.type == "sz":
-            trading_type = 3
         else:
-            trading_type = None
-        if trading_type:
-            dc = self._init_pool(self.dc_cfg)
-            shhk_calendar_map = {}
-            dt = start_dt
-            while dt <= end_dt:
-                # 沪港通 或者是 深港通 当前日期之间最邻近的一个交易日
-                sql = '''select max(EndDate) as before_max_dt from  hkland_shszhktradingday where EndDate <= '{}' and TradingType={} and IfTradingDay=1;'''.format(dt, trading_type)
-                _dt = dc.select_one(sql).get("before_max_dt")
-                shhk_calendar_map[str(dt)] = _dt
-                dt += datetime.timedelta(days=1)
-
-            # print(pprint.pformat(shhk_calendar_map))
-        # print(pprint.pformat(_map))
-
-        product = self._init_pool(self.product_cfg)
-        select_fields = ['SecuCode', 'InnerCode', 'SecuAbbr', 'Percent', 'ShareNum', 'UPDATETIMEJZ']
-        # FIXME 加入了 CMFTime 即使用的数据源也要计入在内
-        update_fields = ['Date', 'SecuCode', 'InnerCode', 'SecuAbbr', 'Percent', 'ShareNum',
-                         # 'CMFTime',
-                         ]
-        select_str = ",".join(select_fields).rstrip(",")
-
-        jishu = []
-        for dt in _map:
-            sql = '''select {} from {} where Date = '{}'; '''.format(select_str, self.spider_table, _map.get(dt))
-            datas = spider.select_all(sql)
-            for data in datas:
-                data.update({"Date": dt})
-                data.update({"CMFTime": data.get("UPDATETIMEJZ")})
-                data.pop("UPDATETIMEJZ")
-                if self.type in ("sh", "sz"):
-                    data.update({"HKTradeDay": shhk_calendar_map.get(dt)})
-                    update_fields.append("HKTradeDay")
-                print(data)
-                ret = self._save(product, data, self.table_name, update_fields)
-                if ret == 1:
-                    jishu.append(ret)
-
-        try:
-            product.dispose()
-            spider.dispose()
-        except:
-            pass
-
-        if len(jishu) != 0:
-            self.ding("【datacenter】当前的时间是{}, dc 数据库 {} 更入了 {} 条新数据".format(datetime.datetime.now(), self.table_name, len(jishu)))
-        else:
-            print(len(jishu))
-
-
-now = lambda: time.time()
+            raise
 
 
 def spider_task():
-    # 凌晨更新前一天的数据
-    t1 = now()
-    for _type in (
-            # "sh",
-                  "sz",
-                  "hk"):
-        print("{} SPIDER START.".format(_type))
-        h = HoldShares(_type)
-        h.start()
-        print("Time: {} s".format(now() - t1))
-
-
-def sync_task():
-    # 获取最近 4 天的数据进行天填充以及同步
-    t1 = now()
-    for _type in (
-            # "sh",
-                  "sz",
-            "hk"):
-        print("{} SYNC START.".format(_type))
-        h = HoldShares(_type)
-        h.sync()
-        print("Time: {} s".format(now() - t1))
-
-
-def main():
-    if SPIDER:
-        spider_task()
-        schedule.every().hour.do(spider_task)
-    if SYNC:
-        sync_task()
-        schedule.every().day.at("01:30").do(sync_task)
-        schedule.every().day.at("04:00").do(sync_task)
-        schedule.every().day.at("08:00").do(sync_task)
-
+    retry = 1
     while True:
-        print("当前调度系统中的任务列表是{}".format(schedule.jobs))
-        schedule.run_pending()
-        time.sleep(180)
+        try:
+            logger.info('第{}次尝试运行'.format(retry))
+            t1 = now()
+            for _type in ("sh", "sz", "hk"):
+                logger.info("{} 爬虫开始运行.".format(_type))
+                for _offset in range(1, 2):
+                    _check_day = datetime.date.today() - datetime.timedelta(days=_offset)
+                    logger.info("数据时间是{}".format(_check_day))
+                    h = HoldShares(_type, _offset)
+                    h.start()
+                    logger.info("当前耗时{} s".format(now() - t1))
+        except Exception as e:
+            traceback.print_exc()
+            logger.warning('第 {} 次运行失败, 原因是 {}'.format(retry, e))
+            retry += 1
+            while retry > 3:
+                raise
+            time.sleep(20)
+        else:
+            logger.info("spider task ok.")
+            return
 
 
-if __name__ == "__main__":
-    main()
+# def spider_task():
+#     logger.info('我是被测试执行的任务')
+#     raise Exception("我在执行的过程中出错了 ")
 
 
-'''
-爬虫程序和同步程序部署在同一个进程中
-爬虫程序每日凌晨 3 点启动 
-同步程序每日凌晨 4 点启动 
-同步程序拿最近 4 天的数据进行填充
-
-docker build -f Dockerfile_share -t registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_shares:v1 .
-docker push registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_shares:v1 
-sudo docker pull registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_shares:v1 
-
-
-# remote 
-## spider 
-sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name flow_shares_spider \
---env LOCAL=0 \
---env SYNC=0 \
---env SPIDER=1 \
-registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_shares:v1 
-## sync 
-sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name flow_shares_sync5sz \
---env LOCAL=0 \
---env SYNC=1 \
---env SPIDER=0 \
-registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_shares:v1 
+if __name__ == '__main__':
+    scheduler = BlockingScheduler()
+    # 确保重启时可以执行一次
+    spider_task()
+    scheduler.add_job(spider_task, 'cron', hour='1-3, 3-6, 14-15', minute='0, 20, 40')
+    logger.info('Press Ctrl+{0} to exit'.format('Break' if os.name == 'nt' else 'C'))
+    try:
+        scheduler.start()
+    except (KeyboardInterrupt, SystemExit):
+        pass
+    except Exception as e:
+        logger.info(f"本次任务执行出错{e}")
+        sys.exit(0)
 
 
-# local 
-## spider 
-sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name flow_shares_spider \
---env LOCAL=1 \
---env SYNC=0 \
---env SPIDER=1 \
-registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_shares:v1 
-## sync 
-sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name flow_shares_sync \
---env LOCAL=1 \
---env SYNC=1 \
---env SPIDER=0 \
-registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_shares:v1 
+# if __name__ == "__main__":
+#
+#     spider_task()
 
 
+# 检查沪股中的浦发银行
+# select * from holding_shares_sh where SecuCode = '600000.XSHG' order by Date;
 
-# sql 检查语句 
-select * from hkland_shares where InnerCode = 3 order by Date desc limit 5; 
+# 检查深股中的平安银行
+# select * from holding_shares_sz where SecuCode = '000001.XSHE' order by Date;
 
-'''
+# 检查港股中的长和
+# select * from holding_shares_hk where SecuCode = '00001' order by Date;
+
+# 注: 如果需要的不是目前的数据 请修改 offset
