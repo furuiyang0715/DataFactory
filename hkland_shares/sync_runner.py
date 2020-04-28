@@ -4,12 +4,14 @@ import hashlib
 import hmac
 import json
 import logging
+import os
 import pprint
 import sys
 import time
 import traceback
 import urllib.parse
 import requests
+from apscheduler.schedulers.blocking import BlockingScheduler
 
 sys.path.append("./../")
 from hkland_shares.configs import (SPIDER_MYSQL_HOST, SPIDER_MYSQL_PORT, SPIDER_MYSQL_USER, SPIDER_MYSQL_PASSWORD,
@@ -191,6 +193,23 @@ class HoldSharesSync(object):
         product.insert(sql2)
         product.dispose()
 
+    def sync(self):
+        is_error = False
+        for i in range(3):
+            try:
+                self._sync()
+            except Exception as e:
+                logger.info("{} {} 次 sync 失败, 原因{}".format(self.type, i, e))
+                time.sleep(10)
+                if i == 2:
+                    traceback.print_exc()
+                    is_error = True
+            else:
+                break
+
+        if is_error:
+            raise Exception("{} 同步失败请检查".format(self.type))
+
     def _sync(self):
         if LOCAL:
             self._create_product_table()
@@ -248,7 +267,6 @@ class HoldSharesSync(object):
                 if self.type in ("sh", "sz"):
                     data.update({"HKTradeDay": shhk_calendar_map.get(dt)})
                     update_fields.append("HKTradeDay")
-                # print(data)
                 ret = self._save(product, data, self.table_name, update_fields)
 
         try:
@@ -262,13 +280,40 @@ now = lambda: time.time()
 
 
 def sync_task():
-    t1 = now()
-    for _type in ("sh", "sz", "hk"):
-        logger.info("{} SYNC START.".format(_type))
-        h = HoldSharesSync(_type)
-        h._sync()
-        logger.info("Time: {} s".format(now() - t1))
+    retry = 1
+    while True:
+        try:
+            t1 = now()
+            for _type in ("sh", "sz", "hk"):
+                logger.info("{} SYNC START.".format(_type))
+                h = HoldSharesSync(_type)
+                h.sync()
+                logger.info("Time: {} s".format(now() - t1))
+        except Exception as e:
+            logger.info("第 {} 次执行任务失败 原因是 {}".format(retry, e))
+            # traceback.print_exc()
+            retry += 1
+            if retry > 3:
+                raise
+            time.sleep(10)
+        else:
+            break
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
+    scheduler = BlockingScheduler()
+    # 确保重启时可以执行一次
     sync_task()
+    scheduler.add_job(sync_task, 'cron', hour='1-6', minute='30, 50')
+    logger.info('Press Ctrl+{0} to exit'.format('Break' if os.name == 'nt' else 'C'))
+    try:
+        scheduler.start()
+    except (KeyboardInterrupt, SystemExit):
+        pass
+    except Exception as e:
+        logger.info(f"本次任务执行出错{e}")
+        sys.exit(0)
+
+
+# if __name__ == "__main__":
+#     sync_task()
