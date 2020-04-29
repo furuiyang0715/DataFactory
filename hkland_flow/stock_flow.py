@@ -85,8 +85,7 @@ class HkexlugutongshishispiderSpider(object):
         while True:
             try:
                 # self._create_table()
-                # self._start()
-                1/0
+                self._start()
             except Exception as e:
                 retry += 1
                 if retry > 30:
