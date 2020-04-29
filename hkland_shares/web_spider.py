@@ -73,7 +73,7 @@ class HoldShares(object):
         }
         self.today = datetime.datetime.combine(datetime.date.today(), datetime.time.min)
         self.offset = offset
-        # FIXME 注意: offset 决定的是查询哪一天的记录 且站在当前时间点只能查询之前一天以及之前的记录
+        # FIXME 注意: offset 决定的是查询哪一天的记录 且站在当前时间点只能查询之前一天往前的记录
         self.check_day = (datetime.date.today() - datetime.timedelta(days=self.offset)).strftime("%Y/%m/%d")
         self.converter = opencc.OpenCC('t2s')  # 中文繁体转简体
         _type_map = {
@@ -310,6 +310,31 @@ class HoldShares(object):
         juyuan.dispose()
         return ret
 
+    def get_date(self):
+        resp = requests.post(self.url, data=self.post_params)
+        if resp.status_code == 200:
+            body = resp.text
+            doc = html.fromstring(body)
+            date = doc.xpath('//*[@id="pnlResult"]/h2/span/text()')[0]
+            date = re.findall(r"持股日期: (\d{4}/\d{2}/\d{2})", date)[0]
+            return date
+
+    def select_spider_in_dt(self, dt):
+        cli = self._init_pool(self.spider_cfg)
+        sql = 'select count(*) as count from {} where Date = "{}";'.format(self.spider_table, dt)
+        # print(sql)
+        ret = cli.select_one(sql).get("count")
+        return ret
+
+    def check_update(self):
+        date = self.get_date()
+        count = self.select_spider_in_dt(date)
+        # print(count)
+        if count == 0:
+            self.ding("{} 网站最近更新时间 {} 的爬虫持股数据未更入库".format(self.spider_table, date))
+        else:
+            self.ding("{} 网站最近更新时间 {} 的爬虫持股数据已更新, 更新数量是 {}".format(self.spider_table, date, count))
+
     def start(self):
         for i in range(5):
             try:
@@ -333,7 +358,7 @@ class HoldShares(object):
             date = re.findall(r"持股日期: (\d{4}/\d{2}/\d{2})", date)[0]
             # 与当前参数时间对应的数据时间
             # 举例: 参数时间是 4.26 但是 4.26 无数据更新 之前最近的有数据的日期是 4.25 这里的时间就是 4.25
-            logger.info("{}与之对应的之前最近的有时间的一天是 {}".format(self.check_day, date))
+            logger.info("{}与之对应的之前最近的有数据的一天是 {}".format(self.check_day, date))
             trs = doc.xpath('//*[@id="mutualmarket-result"]/tbody/tr')
             update_fields = ['SecuCode', 'InnerCode', 'SecuAbbr', 'Date', 'Percent', 'ShareNum']
             spider = self._init_pool(self.spider_cfg)
@@ -387,6 +412,16 @@ class HoldShares(object):
             raise
 
 
+def mysql_task():
+    try:
+        for _type in ("sh", "sz", "hk"):
+            h = HoldShares(_type)
+            # 默认 offset 为 1 的情况下
+            h.check_update()
+    except:
+        pass
+
+
 def spider_task():
     retry = 1
     while True:
@@ -395,7 +430,7 @@ def spider_task():
             t1 = now()
             for _type in ("sh", "sz", "hk"):
                 logger.info("{} 爬虫开始运行.".format(_type))
-                for _offset in range(1, 5):
+                for _offset in range(1, 3):
                     _check_day = datetime.date.today() - datetime.timedelta(days=_offset)
                     logger.info("数据时间是{}".format(_check_day))
                     h = HoldShares(_type, _offset)
@@ -422,7 +457,9 @@ if __name__ == '__main__':
     scheduler = BlockingScheduler()
     # 确保重启时可以执行一次
     spider_task()
-    scheduler.add_job(spider_task, 'cron', hour='1-3, 3-6, 14-15', minute='0, 20, 40')
+    mysql_task()
+    scheduler.add_job(spider_task, 'cron', hour='0-3, 3-6', minute='0, 20, 40')
+    scheduler.add_job(mysql_task, 'cron', hour='3')
     logger.info('Press Ctrl+{0} to exit'.format('Break' if os.name == 'nt' else 'C'))
     try:
         scheduler.start()
@@ -436,6 +473,8 @@ if __name__ == '__main__':
 # if __name__ == "__main__":
 #
 #     spider_task()
+#
+#     mysql_task()
 
 
 # 检查沪股中的浦发银行
