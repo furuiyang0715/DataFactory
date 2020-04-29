@@ -81,16 +81,22 @@ class HkexlugutongshishispiderSpider(object):
         return True
 
     def start(self):
-        try:
-            self._create_table()
-            self._start()
-            # 1 / 0
-        except Exception as e:
-            # 只是发送钉邮 但是并不终止程序
-            tools.ding_msg("交易所实时数据爬取失败了 失败的原因是{}".format(e))
-            # traceback.print_exc()
-            logger.info("因{}触发重试 ".format(e))
-            time.sleep(1)
+        retry = 1
+        while True:
+            try:
+                # self._create_table()
+                # self._start()
+                1/0
+            except Exception as e:
+                retry += 1
+                if retry > 30:
+                    tools.ding_msg("交易所实时数据爬取多次尝试后最终失败了 失败的原因是{}".format(e))
+                    raise
+
+                logger.info("因{}触发第{}次重试 ".format(e, retry))
+                time.sleep(retry)
+            else:
+                break
 
     def contract_sql(self, to_insert: dict, table: str, update_fields: list):
         ks = []
