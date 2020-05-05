@@ -256,7 +256,9 @@ class HistoryCalSpider(object):
     def select_last_total(self, market_type):
         """查找距给出时间最近的一个时间点的累计值"""
         dc = self._init_pool(self.dc_cfg)
-        sql = '''select Date, MoneyInHistoryTotal from hkland_historytradestat where Date = (select max(Date) from hkland_historytradestat) and MarketTypeCode = {};'''.format(market_type)
+        sql = '''select Date, MoneyInHistoryTotal from hkland_historytradestat where Date = (select max(Date) \
+        from hkland_historytradestat where MarketTypeCode = {}) and MarketTypeCode = {};'''.format(market_type, market_type)
+        # print(">>> ", sql)
         ret = dc.select_one(sql)
         return ret
 
@@ -537,26 +539,70 @@ class HistoryCalSpider(object):
         self._save(item, self.table_name, self.fields)
         return item
 
+    def _check_if_trading_today(self, category):
+        '''
+        self.category_map = {
+            'hgtb': ('沪股通', 1),
+            'ggtb': ('港股通(沪)', 2),
+            'sgtb': ('深股通', 3),
+            'ggtbs': ('港股通(深)', 4),
+        }
+        一般来说 1 3 与 2 4 是一致的
+        '''
+        dc = self._init_pool(self.dc_cfg)
+        _map = {
+            1: (2, 4),
+            2: (1, 3),
+        }
+
+        sql = 'select IfTradingDay from hkland_shszhktradingday where TradingType in {} and EndDate = "{}";'.format(
+        _map.get(category), self.today.strftime("%Y-%m-%d"))
+        ret = dc.select_all(sql)
+        ret = [r.get("IfTradingDay") for r in ret]
+        if ret == [2, 2]:
+            return False
+        else:
+            return True
+
+    def _check_if_trading_period(self):
+        """判断是否是该天的交易时段"""
+        _now = datetime.datetime.now()
+        if (_now <= datetime.datetime(_now.year, _now.month, _now.day, 8, 0, 0) or
+                _now >= datetime.datetime(_now.year, _now.month, _now.day, 16, 30, 0)):
+            logger.warning("非当天交易时段")
+            return False
+        return True
+
+    def _start(self):
+        is_trading = self._check_if_trading_period()
+        if not is_trading:
+            return
+
+        south_bool = self._check_if_trading_today(1)
+        if south_bool:
+            item_sh_hk = self.sh_hk()
+            item_sh_sz = self.sh_sz()
+        else:
+            logger.warning("今日无南向交易 ")
+
+        north_bool = self._check_if_trading_today(2)
+        if north_bool:
+            item_hk_sh = self.hk_sh()
+            item_hk_sz = self.hk_sz()
+        else:
+            logger.warning("今日无北向交易 ")
+
     def start(self):
         try:
             self._create_stock_table()
 
-            item_hk_sh = self.hk_sh()
-            print()
-            print()
-
-            item_hk_sz = self.hk_sz()
-            print()
-            print()
-
-            item_sh_hk = self.sh_hk()
-            print()
-            print()
-
-            item_sh_sz = self.sh_sz()
-            print()
-            print()
+            # item_hk_sh = self.hk_sh()
+            # item_hk_sz = self.hk_sz()
+            # item_sh_hk = self.sh_hk()
+            # item_sh_sz = self.sh_sz()
             # self.ding("沪股通: {}\n深股通: {}\n港股通(沪): {}\n港股通(深):{}\n".format(item_hk_sh, item_hk_sz, item_sh_hk, item_sh_sz))
+
+            self._start()
         except Exception as e:
             traceback.print_exc()
             self.ding("cal history error: {}".format(e))
