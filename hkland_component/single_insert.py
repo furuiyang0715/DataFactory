@@ -1,12 +1,3 @@
-# 解决需要单独进行处理的情况
-# (1) 沪港通: 经核对无误
-
-# （1） 深港通: 经核对无误
-'''
-[I 2020-03-20 10:00:37|merge_lc_zhsccomponent|process_zh_changes|129] 新增一条恢复记录{'CompType': 3, 'SecuCode': '000043', 'InDate': datetime.datetime(2019, 12, 16, 0, 0)}
-请检查: 000022 0
-[I 2020-03-20 10:02:04|merge_lc_zhsccomponent|process_zh_changes|123] 新增一条记录: {'CompType': 3, 'SecuCode': '000022', 'InDate': datetime.datetime(2018, 1, 2, 0, 0), 'InnerCode': None, 'Flag': 1}
-'''
 import datetime
 import traceback
 
@@ -170,8 +161,12 @@ def save(to_insert, table: str, update_fields: list):
         logger.warning("失败")
         count = None
     else:
-        if count:
-            logger.info("更入新数据 {}".format(to_insert))
+        if count == 1:
+            logger.info("插入新数据 {}".format(to_insert))
+        elif count == 2:
+            logger.info("刷新数据 {}".format(to_insert))
+        else:
+            logger.info("数据已存在 {}".format(to_insert))
     finally:
         product.dispose()
     return count
@@ -188,23 +183,23 @@ def human_insert(table: str, data: dict):
     save(data, table, fields)
 
 
-human_insert("hkland_sgcomponent", {'CompType': 4, 'SecuCode': '00697', 'InDate': datetime.datetime(2020, 4, 15, 0, 0), 'InnerCode': 1000543, 'Flag': 1})
+def run_20200420():
+    human_insert("hkland_sgcomponent", {'CompType': 4, 'SecuCode': '00697', 'InDate': datetime.datetime(2020, 4, 15, 0, 0), 'InnerCode': 1000543, 'Flag': 1})
+    human_insert("hkland_hgcomponent", {'CompType': 1, 'SecuCode': '00187', 'OutDate': datetime.datetime(2020, 4, 20, 0, 0), 'InnerCode': 1000176, 'Flag': 2, "InDate": datetime.datetime(2018, 4, 23, 0, 0),})
 
 
-# 港股(深)成分变更: 需要新增一条调出记录{'CompType': 1, 'SecuCode': '00187', 'OutDate': datetime.datetime(2020, 4, 20, 0, 0), 'InnerCode': 1000176, 'Flag': 2}
-# mysql> select * from hkland_hgcomponent where  SecuCode = '00187';
-# +------+----------+-----------+----------+---------------------+---------------------+------+---------------------+---------------------+-------+---------+
-# | ID   | CompType | InnerCode | SecuCode | InDate              | OutDate             | Flag | CREATETIMEJZ        | UPDATETIMEJZ        | CMFID | CMFTime |
-# +------+----------+-----------+----------+---------------------+---------------------+------+---------------------+---------------------+-------+---------+
-# | 2953 |        1 |   1000176 | 00187    | 2015-04-13 00:00:00 | 2017-04-24 00:00:00 |    2 | 2020-03-21 17:17:15 | 2020-03-21 17:17:15 |  NULL | NULL    |
-# | 2954 |        1 |   1000176 | 00187    | 2018-04-23 00:00:00 | NULL                |    1 | 2020-03-21 17:17:15 | 2020-03-21 17:17:15 |  NULL | NULL    |
-# +------+----------+-----------+----------+---------------------+---------------------+------+---------------------+---------------------+-------+---------+
-# 2 rows in set (0.01 sec)
-human_insert("hkland_hgcomponent", {'CompType': 1, 'SecuCode': '00187', 'OutDate': datetime.datetime(2020, 4, 20, 0, 0), 'InnerCode': 1000176,
-              'Flag': 2, "InDate": datetime.datetime(2018, 4, 23, 0, 0),
-              })
+def run_20200506():
+    item = {'CompType': 2, "InnerCode": "2051", 'SecuCode': '600816', 'OutDate': datetime.datetime(2020, 5, 6, 0, 0), "InDate": datetime.datetime(2014, 11, 17), "Flag": 2}
+    human_insert("hkland_hgcomponent", item)
+
+    item2 = {'CompType': 3, 'InnerCode': "14037", 'SecuCode': '002681', 'OutDate': datetime.datetime(2020, 5, 6, 0, 0), "InDate": datetime.datetime(2016, 12, 5), "Flag": 2}
+    human_insert('hkland_sgcomponent', item2)
+
+    item3 = {'CompType': 3, 'InnerCode': '6139', 'SecuCode': '002176', 'OutDate': datetime.datetime(2020, 5, 6, 0, 0), 'InDate': datetime.datetime(2016, 12, 25), "Flag": 2}
+    human_insert('hkland_sgcomponent', item3)
 
 
+run_20200506()
 sh = SHSCComponent()
 zh = ZHSCComponent()
 sh.refresh_update_time()
