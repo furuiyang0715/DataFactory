@@ -552,6 +552,8 @@ class ZHSCComponent(object):
         spider_zh_list = set(get_spider_zh_list())
         target_zh_list = set(get_target_zh_list())
         logger.info(spider_zh_list == target_zh_list)
+        print(spider_zh_list - target_zh_list)
+        print(target_zh_list - spider_zh_list)
         return spider_zh_list == target_zh_list
 
     def process_zh_changes(self, zh_changes):

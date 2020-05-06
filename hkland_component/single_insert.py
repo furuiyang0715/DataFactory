@@ -192,10 +192,10 @@ def run_20200506():
     item = {'CompType': 2, "InnerCode": "2051", 'SecuCode': '600816', 'OutDate': datetime.datetime(2020, 5, 6, 0, 0), "InDate": datetime.datetime(2014, 11, 17), "Flag": 2}
     human_insert("hkland_hgcomponent", item)
 
-    item2 = {'CompType': 3, 'InnerCode': "14037", 'SecuCode': '002681', 'OutDate': datetime.datetime(2020, 5, 6, 0, 0), "InDate": datetime.datetime(2016, 12, 5), "Flag": 2}
+    item2 = {'CompType': 3, 'InnerCode': "16668", 'SecuCode': '002681', 'OutDate': datetime.datetime(2020, 5, 6, 0, 0), "InDate": datetime.datetime(2016, 12, 5), "Flag": 2}
     human_insert('hkland_sgcomponent', item2)
 
-    item3 = {'CompType': 3, 'InnerCode': '6139', 'SecuCode': '002176', 'OutDate': datetime.datetime(2020, 5, 6, 0, 0), 'InDate': datetime.datetime(2016, 12, 25), "Flag": 2}
+    item3 = {'CompType': 3, 'InnerCode': '6139', 'SecuCode': '002176', 'OutDate': datetime.datetime(2020, 5, 6, 0, 0), 'InDate': datetime.datetime(2016, 12, 5), "Flag": 2}
     human_insert('hkland_sgcomponent', item3)
 
 
