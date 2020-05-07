@@ -134,8 +134,10 @@ def task_2():
         ret = ins.get_distinct_spider_udpate_time()
         dt_list = sorted([r.get("Time") for r in ret])
         print("{} 至今全部的更新时间列表是{}".format(ins.table_name, dt_list))
+        # 注意: 最后的两次的差异 以及最后一次与第一次之间的差异 按需
         latest_records = ins.select_latest_records()
-        first_records = ins.select_onetime_records(dt_list[0])
+        # first_records = ins.select_onetime_records(dt_list[0])
+        first_records = ins.select_onetime_records(dt_list[-2])
 
         # 去掉一些无关字段
         for r in latest_records:
