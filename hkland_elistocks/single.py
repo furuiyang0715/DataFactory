@@ -32,6 +32,8 @@ import sys
 import traceback
 
 sys.path.append("./../")
+from hkland_elistocks.sh_human_gene import SHHumanTools
+from hkland_elistocks.zh_human_gene import ZHHumanTools
 from hkland_elistocks.configs import TARGET_HOST, TARGET_PORT, TARGET_USER, TARGET_PASSWD, TARGET_DB
 from hkland_elistocks.my_log import logger
 from hkland_elistocks.sql_pool import PyMysqlPoolBase
@@ -166,8 +168,16 @@ def run_0507():
     human_insert("hkland_sgelistocks", item4)
 
 
+def refresh_time():
+    sh = SHHumanTools()
+    zh = ZHHumanTools()
+    sh.refresh_update_time()
+    zh.refresh_update_time()
+
+
 if __name__ == "__main__":
 
     run_0507()
 
-    pass
+
+    refresh_time()
