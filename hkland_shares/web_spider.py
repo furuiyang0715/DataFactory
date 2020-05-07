@@ -414,13 +414,19 @@ class HoldShares(object):
 
 
 def mysql_task():
-    try:
-        for _type in ("sh", "sz", "hk"):
-            h = HoldShares(_type)
-            # 默认 offset 为 1 的情况下
-            h.check_update()
-    except:
-        pass
+    retry = 1
+    while True:
+        try:
+            for _type in ("sh", "sz", "hk"):
+                h = HoldShares(_type)
+                # 默认 offset 为 1 的情况下
+                h.check_update()
+        except:
+            retry += 1
+            while retry > 3:
+                break
+        else:
+            break
 
 
 def spider_task():
