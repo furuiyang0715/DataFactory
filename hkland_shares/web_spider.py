@@ -350,7 +350,8 @@ class HoldShares(object):
         # (1) 创建爬虫数据库
         self._create_table()
         # (2) 请求网站获取数据
-        resp = requests.post(self.url, data=self.post_params)
+        # TODO 为网站请求添加超时时间
+        resp = requests.post(self.url, data=self.post_params, timeout=20)
         if resp.status_code == 200:
             body = resp.text
             doc = html.fromstring(body)
@@ -458,8 +459,12 @@ if __name__ == '__main__':
     # 确保重启时可以执行一次
     spider_task()
     mysql_task()
-    scheduler.add_job(spider_task, 'cron', hour='0-3, 3-6', minute='0, 20, 40')
-    scheduler.add_job(mysql_task, 'cron', hour='3')
+
+    # TODO 解决 id 相同的任务实例数的最大默认值是 1 的问题
+    scheduler.add_job(spider_task, 'cron', hour='0-3, 3-6', minute='0, 20, 40', max_instances=10, id="spider_task")
+    # scheduler.add_job(spider_task, 'cron', hour='0-3, 3-6', minute='0, 20, 40')
+
+    scheduler.add_job(mysql_task, 'cron', hour='3,6')
     logger.info('Press Ctrl+{0} to exit'.format('Break' if os.name == 'nt' else 'C'))
     try:
         scheduler.start()
