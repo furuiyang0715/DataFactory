@@ -470,7 +470,7 @@ class HoldShares(object):
 
         spider = self._init_pool(self.spider_cfg)
 
-        start_dt = self.today - datetime.timedelta(days=6)
+        start_dt = self.today - datetime.timedelta(days=1)
         # FIXME 在每天的凌晨启动 只能重刷前一天的数据
         end_dt = self.today - datetime.timedelta(days=1)
 
@@ -610,7 +610,7 @@ sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name flow_sha
 --env SPIDER=1 \
 registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_shares:v1 
 ## sync 
-sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name flow_shares_sync0428 \
+sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name flow_shares_sync0507 \
 --env LOCAL=0 \
 --env SYNC=1 \
 --env SPIDER=0 \

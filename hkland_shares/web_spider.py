@@ -479,9 +479,11 @@ if __name__ == '__main__':
 
 # 检查沪股中的浦发银行
 # select * from holding_shares_sh where SecuCode = '600000.XSHG' order by Date;
+# select * from hkland_shares where SecuCode = '600000.XSHG' order by Date desc limit 10;
 
 # 检查深股中的平安银行
 # select * from holding_shares_sz where SecuCode = '000001.XSHE' order by Date;
+# select * from hkland_shares where SecuCode = '000001.XSHE' order by Date desc limit 10;
 
 # 检查港股中的长和
 # select * from holding_shares_hk where SecuCode = '00001' order by Date;
