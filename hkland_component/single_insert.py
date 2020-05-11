@@ -199,8 +199,31 @@ def run_20200506():
     human_insert('hkland_sgcomponent', item3)
 
 
-run_20200506()
-sh = SHSCComponent()
-zh = ZHSCComponent()
-sh.refresh_update_time()
-zh.refresh_update_time()
+def run_20200511():
+    '''
+    钉钉:
+    深股成分股变更: 需要新增一条恢复记录{'CompType': 3, 'SecuCode': '000043', 'InDate': datetime.datetime(2019, 12, 16, 0, 0)}
+    深股成分股变更: 需要新增一条记录{'CompType': 3, 'SecuCode': '000022', 'InDate': datetime.datetime(2018, 1, 2, 0, 0), 'InnerCode': None, 'Flag': 1}
+    深股的核对结果: True
+    港股(深)成分变更: 需要新增一条调出记录{'CompType': 4, 'SecuCode': '02989', 'OutDate': datetime.datetime(2020, 5, 8, 0, 0)}
+    港股(深)的核对结果: False
+
+    mysql> select * from hkland_sgcomponent where SecuCode = '02989';
+    +------+----------+-----------+----------+---------------------+---------+------+---------------------+---------------------+-------+---------+
+    | ID   | CompType | InnerCode | SecuCode | InDate              | OutDate | Flag | CREATETIMEJZ        | UPDATETIMEJZ        | CMFID | CMFTime |
+    +------+----------+-----------+----------+---------------------+---------+------+---------------------+---------------------+-------+---------+
+    | 9921 |        4 |   1253782 | 02989    | 2020-03-30 00:00:00 | NULL    |    1 | 2020-03-31 06:10:26 | 2020-03-31 06:10:26 |  NULL | NULL    |
+    +------+----------+-----------+----------+---------------------+---------+------+---------------------+---------------------+-------+---------+
+    1 row in set (0.02 sec)
+
+    '''
+    item = {'CompType': 4, 'InnerCode': '1253782', 'SecuCode': '02989', 'OutDate': datetime.datetime(2020, 5, 8, 0, 0), 'InDate': datetime.datetime(2020, 3, 30), "Flag": 2}
+    human_insert('hkland_sgcomponent', item)
+
+
+if __name__ == "__main__":
+    run_20200511()
+    sh = SHSCComponent()
+    zh = ZHSCComponent()
+    sh.refresh_update_time()
+    zh.refresh_update_time()

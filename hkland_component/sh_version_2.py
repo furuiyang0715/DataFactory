@@ -680,6 +680,7 @@ class ZHSCComponent(object):
         self.ding_info += info
 
         tools.ding_msg(self.ding_info)
+        logger.info(self.ding_info)
 
 
 def task():
