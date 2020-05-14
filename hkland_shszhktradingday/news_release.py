@@ -1,114 +1,102 @@
 # coding=utf8
 import datetime
-import pymongo
-
 import requests as req
 from lxml import html
 
 
-month_map = {
-    "一月": 1,
-    "二月": 2,
-    "三月": 3,
-    "四月": 4,
-    "五月": 5,
-    "六月": 6,
-    "七月": 7,
-    "八月": 8,
-    "九月": 9,
-    "十月": 10,
-    "十一月": 11,
-    "十二月": 12,
-}
+class CalendarNews(object):
+    month_map = {
+        "一月": 1,
+        "二月": 2,
+        "三月": 3,
+        "四月": 4,
+        "五月": 5,
+        "六月": 6,
+        "七月": 7,
+        "八月": 8,
+        "九月": 9,
+        "十月": 10,
+        "十一月": 11,
+        "十二月": 12,
+    }
 
-client = pymongo.MongoClient("127.0.0.1:27017").news.stock_news
+    key_words = [
+        '国庆节',
+        '八号台风信号(天鸽)',
+        '圣诞节',
+        '元旦',
+        '春节',
+        '耶稣受难节',
+        '复活节',
+        '清明节',
+        '劳动节',
+    ]
 
+    def __init__(self):
+        self.url = 'https://sc.hkex.com.hk/TuniS/www.hkex.com.hk/News/News-Release?sc_lang=zh-HK&Year=ALL&NewsCategory=&currentCount={}'.format(2000)
+        self.table_name = 'calendar_news'
+        self.fields = ['PubDate', 'NewsTag', 'NewsUrl', 'NewsTitle']
 
-def get_items():
-    """将网站数据存入 mongo"""
-    url = 'https://sc.hkex.com.hk/TuniS/www.hkex.com.hk/News/News-Release?sc_lang=zh-HK&Year=ALL&NewsCategory=&currentCount={}'.format(2000)
-    page = req.get(url).text
-    # print(page)
-    doc = html.fromstring(page)
-    news = doc.xpath("//div[@class='news-releases']/div[@class='news-releases__section']")
-    # print(news)
-    for one in news:
-        item = {}
-        # print(one)
-        # print(one.text_content())
-        # 日
-        _date = one.xpath("./div[@class='news-releases__section--date']/div[@class='news-releases__section--date-day']")[0].text_content()
-        # 月
-        _month = one.xpath("./div[@class='news-releases__section--date']/div[@class='news-releases__section--date-month']")[0].text_content()
-        # 年
-        _year = one.xpath("./div[@class='news-releases__section--date']/div[@class='news-releases__section--date-year']")[0].text_content()
+    def _create_table(self):
+        sql = '''
+        CREATE TABLE `{}` (
+          `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+          `PubDate` datetime NOT NULL COMMENT '资讯时间',
+          `NewsTag` varchar(20) COLLATE utf8_bin DEFAULT NULL COMMENT '资讯分类标签',
+          `NewsUrl` varchar(100) COLLATE utf8_bin DEFAULT NULL COMMENT '资讯链接',
+          
+          
+          
+          
+          `MoneyIn` decimal(20,4) NOT NULL COMMENT '当日资金流入(百万）',
+          `MoneyBalance` decimal(20,4) NOT NULL COMMENT '当日余额（百万）',
+          `MoneyInHistoryTotal` decimal(20,4) NOT NULL COMMENT '历史资金累计流入(其实是净买额累计流入)(百万元）',
+          `NetBuyAmount` decimal(20,4) NOT NULL COMMENT '当日成交净买额(百万元）',
+          `BuyAmount` decimal(20,4) NOT NULL COMMENT '买入成交额(百万元）',
+          `SellAmount` decimal(20,4) NOT NULL COMMENT '卖出成交额(百万元）',
+          `MarketTypeCode` int(11) NOT NULL COMMENT '市场类型代码',
+          `MarketType` varchar(20) COLLATE utf8_bin DEFAULT NULL COMMENT '市场类型',
+          `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
+          `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          PRIMARY KEY (`id`),
+          UNIQUE KEY `un` (`Date`,`MarketTypeCode`)
+        ) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='交易所计算陆股通资金流向汇总(港股通币种为港元，陆股通币种为人民币)'
+        '''
 
-        _month = month_map.get(_month)
-        _date = int(_date)
-        _year = int(_year)
-        # print(_month)
-        # print(_date)
-        # print(_year)
-        news_dt = datetime.datetime(_year, _month, _date)
-        # print(news_dt)
-        try:
-            news_tag = one.xpath(".//span[@class='tag-yellow  tag-yellow-triangle tag-first']")[0].text_content()
-        except:
-            news_tag = None
-        try:
-            news_url = one.xpath(".//a[@class='news-releases__section--content-title']/@href")[0]
-            news_title = one.xpath(".//a[@class='news-releases__section--content-title']")[0].text_content()
-        except:
-            news_url = one.xpath(".//a[@class='news-releases__section--content-title ']/@href")[0]
-            news_title = one.xpath(".//a[@class='news-releases__section--content-title ']")[0].text_content()
-        # print(news_url)
-        # print(news_tag)
-        # print(news_title)
-        # print()
-        item['PubDate'] = news_dt
-        item['NewsTag'] = news_tag
-        item['NewsUrl'] = news_url
-        item['NewsTitle'] = news_title
-        print(item)
-        try:
-            client.insert_one(item)
-        except:
-            # traceback.print_exc()
-            print(">>>>>>>> ", item)
+        pass
 
+    def get_items(self):
+        page = req.get(self.url).text
+        doc = html.fromstring(page)
+        news = doc.xpath("//div[@class='news-releases']/div[@class='news-releases__section']")
+        for one in news:
+            item = dict()
+            _date = one.xpath("./div[@class='news-releases__section--date']/div[@class='news-releases__section--date-day']")[0].text_content()
+            _month = one.xpath("./div[@class='news-releases__section--date']/div[@class='news-releases__section--date-month']")[0].text_content()
+            _year = one.xpath("./div[@class='news-releases__section--date']/div[@class='news-releases__section--date-year']")[0].text_content()
 
-def get_untrade_days():
-    """获取非周末的非交易日"""
-
-    pass
-
-
-def get_already_remarks():
-    """获取已知的暂停交易备注信息"""
-    sql = 'select EndDate, Reason from qt_shszhsctradingday where Reason is not NULL and TradingType = 1;'
-
-    pass
-
-
-key_words = [
-    '国庆节',
-    '八号台风信号(天鸽)',
-    '圣诞节',
-    '元旦',
-    '春节',
-    '耶稣受难节',
-    '复活节',
-    '清明节',
-    '劳动节',
-
-]
+            _month = self.month_map.get(_month)
+            _date = int(_date)
+            _year = int(_year)
+            news_dt = datetime.datetime(_year, _month, _date)
+            try:
+                news_tag = one.xpath(".//span[@class='tag-yellow  tag-yellow-triangle tag-first']")[0].text_content()
+            except:
+                news_tag = None
+            try:
+                news_url = one.xpath(".//a[@class='news-releases__section--content-title']/@href")[0]
+                news_title = one.xpath(".//a[@class='news-releases__section--content-title']")[0].text_content()
+            except:
+                news_url = one.xpath(".//a[@class='news-releases__section--content-title ']/@href")[0]
+                news_title = one.xpath(".//a[@class='news-releases__section--content-title ']")[0].text_content()
+            item['PubDate'] = news_dt
+            item['NewsTag'] = news_tag
+            item['NewsUrl'] = news_url
+            item['NewsTitle'] = news_title
 
 
 if __name__ == "__main__":
-    # get_items()
-
-    pass
-
+    CalendarNews().get_items()
 
 '''
 为陆港通中的非交易日增加说明信息 
