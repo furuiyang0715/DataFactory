@@ -604,8 +604,9 @@ class HistoryCalSpider(object):
 
             self._start()
         except Exception as e:
-            traceback.print_exc()
-            self.ding("cal history error: {}".format(e))
+            # traceback.print_exc()
+            logger.info("cal history error: {}".format(e))
+            # self.ding("cal history error: {}".format(e))
 
     def _create_stock_table(self):
         # 历史资金累计流入 其实是净买额累计流入
@@ -640,7 +641,7 @@ def task():
 if __name__ == '__main__':
     scheduler = BlockingScheduler()
     task()
-    # TODO 在每天的 8-12 点 13-17 点 每隔 10 s 运行一次
+    # TODO 在每天的 9-12 点 13-17 点 每隔 10 s 运行一次 晚点有空再细化时间
     scheduler.add_job(task, 'cron', hour='8-12, 13-17', minute="*", second='0, 10, 20, 30, 40, 50')
     # scheduler.add_job(task, 'interval', seconds=10)
     logger.info('Press Ctrl+{0} to exit'.format('Break' if os.name == 'nt' else 'C'))
