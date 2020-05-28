@@ -5,10 +5,6 @@ import pymysql
 import pymysql.cursors
 
 
-version = "0.7"
-version_info = (0, 7, 0, 0)
-
-
 class Connection(object):
     """A lightweight wrapper around PyMySQL.
     """
@@ -119,7 +115,7 @@ class Connection(object):
             return cursor.lastrowid
         except Exception as e:
             if e.args[0] == 1062:
-                pass
+                print("重复插入")
             else:
                 traceback.print_exc()
                 raise e
@@ -151,6 +147,25 @@ class Connection(object):
             value)
         d = self.get(sql)
         return d
+
+    def tables_insert(self, table_name, items):
+        '''items is a list of dict.for one in items, key is mysql table field'''
+        item = items[0]
+        fields = list(item.keys())
+        fieldstr = ','.join(fields)
+        valstr = ','.join(['%s'] * len(item))
+        sql = 'INSERT INTO %s (%s) VALUES(%s)' % (table_name, fieldstr, valstr)
+
+        values_list = [list(item.values()) for item in items]
+        for values in values_list:
+            for i in range(len(values)):
+                if isinstance(values[i], str):
+                    values[i] = values[i].encode('utf8')
+        try:
+            count = self.insert_many(sql, values_list)
+            return count
+        except:
+            traceback.print_exc()
 
     def table_insert(self, table_name, item):
         '''item is a dict : key is mysql table field'''
@@ -224,7 +239,8 @@ if __name__ == '__main__':
     #    `runoob_title` VARCHAR(100) NOT NULL,
     #    `runoob_author` VARCHAR(40) NOT NULL,
     #    `submission_date` DATE,
-    #    PRIMARY KEY ( `runoob_id` )
+    #    PRIMARY KEY ( `runoob_id` ),
+    #    UNIQUE KEY `title` (`runoob_title`)
     # )ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='测试数据库';
     # '''
     # ret = db.execute(create_sql)
@@ -232,7 +248,7 @@ if __name__ == '__main__':
 
     # # 插入一条数据
     # sql = 'insert into runoob_tbl(runoob_title, runoob_author, submission_date) values(%s, %s, %s)'
-    # last_id = db.execute(sql, 'test01', 'au1', '2020-05-01')
+    # last_id = db.execute(sql, 'test01', 'au11', '2020-05-01')
     # print(last_id)
 
     # # 使用字典插入一条数据
@@ -247,4 +263,13 @@ if __name__ == '__main__':
     # # 测试插入多条数据
     # sql = 'insert into runoob_tbl(runoob_title, runoob_author, submission_date) values (%s, %s, %s);'
     # count = db.insert_many(sql, [('test03', 'au3', '2020-05-03'), ('test04', 'au4', '2020-05-04')])
+    # print(count)
+
+    # # 使用字典列表插入数据
+    # items = [
+    #     {'runoob_title': 'test05', 'runoob_author': 'au5', 'submission_date': "2020-05-05"},
+    #     {'runoob_title': 'test06', 'runoob_author': 'au6', 'submission_date': "2020-05-06"},
+    #     {'runoob_title': 'test07', 'runoob_author': 'au7', 'submission_date': "2020-05-07"},
+    # ]
+    # count = db.tables_insert('runoob_tbl', items)
     # print(count)
