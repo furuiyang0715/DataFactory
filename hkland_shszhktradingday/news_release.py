@@ -1,7 +1,40 @@
 # coding=utf8
+import json
+import os
+import csv
 import datetime
 import requests as req
 from lxml import html
+
+
+class SaveCSV(object):
+
+    def save(self, keyword_list, path, item):
+        """
+        保存csv方法
+        :param keyword_list: 保存文件的字段或者说是表头
+        :param path: 保存文件路径和名字
+        :param item: 要保存的字典对象
+        :return:
+        """
+        try:
+            # 第一次打开文件时，第一行写入表头
+            if not os.path.exists(path):
+                with open(path, "w", newline='', encoding='utf-8') as csvfile:  # newline='' 去除空白行
+                    writer = csv.DictWriter(csvfile, fieldnames=keyword_list)  # 写字典的方法
+                    writer.writeheader()  # 写表头的方法
+
+            # 接下来追加写入内容
+            with open(path, "a", newline='', encoding='utf-8') as csvfile:  # newline='' 一定要写，否则写入数据有空白行
+                writer = csv.DictWriter(csvfile, fieldnames=keyword_list)
+                writer.writerow(item)  # 按行写入数据
+                print("Write success")
+
+        except Exception as e:
+            print("Write error:", e)
+            # 记录错误数据
+            with open("error.txt", "w") as f:
+                f.write(json.dumps(item) + ",\n")
 
 
 class CalendarNews(object):
@@ -37,38 +70,13 @@ class CalendarNews(object):
         self.table_name = 'calendar_news'
         self.fields = ['PubDate', 'NewsTag', 'NewsUrl', 'NewsTitle']
 
-    def _create_table(self):
-        sql = '''
-        CREATE TABLE `{}` (
-          `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-          `PubDate` datetime NOT NULL COMMENT '资讯时间',
-          `NewsTag` varchar(20) COLLATE utf8_bin DEFAULT NULL COMMENT '资讯分类标签',
-          `NewsUrl` varchar(100) COLLATE utf8_bin DEFAULT NULL COMMENT '资讯链接',
-          
-          
-          
-          
-          `MoneyIn` decimal(20,4) NOT NULL COMMENT '当日资金流入(百万）',
-          `MoneyBalance` decimal(20,4) NOT NULL COMMENT '当日余额（百万）',
-          `MoneyInHistoryTotal` decimal(20,4) NOT NULL COMMENT '历史资金累计流入(其实是净买额累计流入)(百万元）',
-          `NetBuyAmount` decimal(20,4) NOT NULL COMMENT '当日成交净买额(百万元）',
-          `BuyAmount` decimal(20,4) NOT NULL COMMENT '买入成交额(百万元）',
-          `SellAmount` decimal(20,4) NOT NULL COMMENT '卖出成交额(百万元）',
-          `MarketTypeCode` int(11) NOT NULL COMMENT '市场类型代码',
-          `MarketType` varchar(20) COLLATE utf8_bin DEFAULT NULL COMMENT '市场类型',
-          `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
-          `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-          PRIMARY KEY (`id`),
-          UNIQUE KEY `un` (`Date`,`MarketTypeCode`)
-        ) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='交易所计算陆股通资金流向汇总(港股通币种为港元，陆股通币种为人民币)'
-        '''
-
-        pass
-
     def get_items(self):
         page = req.get(self.url).text
         doc = html.fromstring(page)
         news = doc.xpath("//div[@class='news-releases']/div[@class='news-releases__section']")
+        all_file_path = "news_release.csv"
+        file_path = "taifeng.csv"
+        s = SaveCSV()
         for one in news:
             item = dict()
             _date = one.xpath("./div[@class='news-releases__section--date']/div[@class='news-releases__section--date-day']")[0].text_content()
@@ -92,66 +100,13 @@ class CalendarNews(object):
             item['PubDate'] = news_dt
             item['NewsTag'] = news_tag
             item['NewsUrl'] = news_url
-            item['NewsTitle'] = news_title
+            item['NewsTitle'] = news_title.strip()
+            # if "台风" in news_title:
+            #     print(item)
+            #     s.save(self.fields, file_path, item)
+            print(item)
+            s.save(self.fields, all_file_path, item)
 
 
 if __name__ == "__main__":
     CalendarNews().get_items()
-
-'''
-为陆港通中的非交易日增加说明信息 
-
-在制作陆港通交易日历的过程中, 发现聚源的表会部分给出当天为非交易日的原因。 
-涉及到 3 个交易所: 72-香港联交所，83-上海证券交易所，90-深圳证券交易所 
-共有 4 个方向: 1-沪股通，2-港股通（沪），3-深股通，4-港股通（深） 
-
-查看每个方向不交易的时间以及原因： 
-select EndDate, Reason from qt_shszhsctradingday where Reason is not NULL and TradingType = 1; 
-
-可以大致知道这些备注是针对香港的一些法定节假日以及特殊台风天气。 
-
-如果我们需要制作出含有这些信息的 sql 表, 就可以从这两方面入手。 
-
-首先, 需要了解香港的法定家假日有哪些: 
-参考:  https://www.goobnn.cn/tags/1395.html 
-
-1. 元旦 1.1
-2. 农历的大年初一到大年初三, 公历时间每年不一致。 
-3. 清明节, 根据 https://baike.baidu.com/item/%E6%B8%85%E6%98%8E%E8%8A%82%E4%B9%A0%E4%BF%97/4155712 清明节一般在每年的公历 4.5 前后
-4. 耶稣受难节, 根据 https://baike.baidu.com/item/%E8%80%B6%E7%A8%A3%E5%8F%97%E9%9A%BE%E6%97%A5 为复活节的前一个星期五, 公历时间每年不一致
-5. 耶稣受难节翌日
-6. 复活节 根据: https://www.diyifanwen.com/fanwen/fuhuojie/3476303.html 
-复活节是西方传统的节日, 公元 325 年尼西亚宗教会议规定, 每年过春分月圆后的第一个星期天为复活节。
-其日期是不固定的，通常是要查看日历才能知道。 
-一般是在旧历的 3.22 至 4.23 之间, 确切日子要根据春分或其后出现的满月决定。 
-7. 劳动节 5.1 
-8. 佛诞 根据: https://www.baike.com/wiki/%E4%BD%9B%E8%AF%9E?view_id=ua4dagabnls00, 又称沐佛节，为每年的农历四月初八，是佛祖释迦牟尼的诞辰。  
-9. 端午节: 根据: https://baike.baidu.com/item/%E7%AB%AF%E5%8D%88%E8%8A%82/1054 时间在农历 五月初五
-10. 香港特别行政区成立纪念日 7.1 
-11. 中秋节 农历八月十五
-12. 国庆节 10.1 
-13. 重阳节 农历九月初九
-14. 圣诞节 公历 12.25
-
-
-交易日历的最早开始时间: 
-将沪港通的交易日历扩展到 其开始时间： 2014年11月17日，将深港通日历扩展到其开始时间： 2016年12月5日
- 
-发现其实可以根据新浪的节日安排来: 
-# 2014 年
-
-# 2015 年
-
-# 2016 年 
-
-
-# 2017 年 
-http://finance.sina.com.cn/stock/hkstock/hkstocknews/2017-01-04/doc-ifxzczff3804335.shtml 
-# 2018 年
-http://finance.sina.com.cn/stock/hkstock/hkstocknews/2017-12-30/doc-ifyqcwaq6021399.shtml 
-# 2019 年 
-https://new.qq.com/omn/20181230/20181230A0H4W0.html 
-# 2020 年 
-https://finance.sina.com.cn/roll/2020-01-01/doc-iihnzahk1315924.shtml 
-
-'''
