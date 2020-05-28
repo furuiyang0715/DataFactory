@@ -126,6 +126,17 @@ class Connection(object):
         finally:
             cursor.close()
 
+    def insert_many(self, query, values):
+        """
+        @summary: 向数据表插入多条记录
+        @param query:要插入的 SQL 格式
+        @param values:要插入的记录数据tuple(tuple)/list[list]
+        @return: count 受影响的行数
+        """
+        cursor = self._cursor()
+        count = cursor.executemany(query, values)
+        return count
+
     insert = execute
 
     # =============== high level method for table ===================
@@ -232,3 +243,8 @@ if __name__ == '__main__':
     # }
     # last_id = db.table_insert('runoob_tbl', item)
     # print(last_id)
+
+    # # 测试插入多条数据
+    # sql = 'insert into runoob_tbl(runoob_title, runoob_author, submission_date) values (%s, %s, %s);'
+    # count = db.insert_many(sql, [('test03', 'au3', '2020-05-03'), ('test04', 'au4', '2020-05-04')])
+    # print(count)
