@@ -28,7 +28,7 @@ class SaveCSV(object):
             with open(path, "a", newline='', encoding='utf-8') as csvfile:  # newline='' 一定要写，否则写入数据有空白行
                 writer = csv.DictWriter(csvfile, fieldnames=keyword_list)
                 writer.writerow(item)  # 按行写入数据
-                print("Write success")
+                print("{} Write success".format(item))
 
         except Exception as e:
             print("Write error:", e)
@@ -65,18 +65,17 @@ class CalendarNews(object):
         '劳动节',
     ]
 
-    def __init__(self):
+    def __init__(self, save_type='csv'):
         self.url = 'https://sc.hkex.com.hk/TuniS/www.hkex.com.hk/News/News-Release?sc_lang=zh-HK&Year=ALL&NewsCategory=&currentCount={}'.format(2000)
         self.table_name = 'calendar_news'
         self.fields = ['PubDate', 'NewsTag', 'NewsUrl', 'NewsTitle']
+        self.save_type = save_type
 
     def get_items(self):
         page = req.get(self.url).text
         doc = html.fromstring(page)
         news = doc.xpath("//div[@class='news-releases']/div[@class='news-releases__section']")
-        all_file_path = "news_release.csv"
-        file_path = "taifeng.csv"
-        s = SaveCSV()
+        items = []
         for one in news:
             item = dict()
             _date = one.xpath("./div[@class='news-releases__section--date']/div[@class='news-releases__section--date-day']")[0].text_content()
@@ -101,11 +100,28 @@ class CalendarNews(object):
             item['NewsTag'] = news_tag
             item['NewsUrl'] = news_url
             item['NewsTitle'] = news_title.strip()
-            # if "台风" in news_title:
-            #     print(item)
-            #     s.save(self.fields, file_path, item)
-            print(item)
+            items.append(item)
+        return items
+
+    def save_csv(self, items):
+        s = SaveCSV()
+        file_path = 'taifeng.csv'
+        all_file_path = 'news_release.csv'
+        for item in items:
+            news_title = item.get("NewsTitle")
+            if "台风" in news_title:
+                s.save(self.fields, file_path, item)
             s.save(self.fields, all_file_path, item)
+
+    def start(self):
+        items = self.get_items()
+        if self.save_type == "csv":
+            self.save_csv(items)
+        elif self.save_type == "sql":
+            pass
+
+        else:
+            print("未知的存储方式")
 
 
 if __name__ == "__main__":
