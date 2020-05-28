@@ -190,28 +190,45 @@ class Connection(object):
 
 if __name__ == '__main__':
     db = Connection(
-        'localhost',
-        'db_name',
-        'user',
-        'password'
+        '127.0.0.1',
+        'test_furuiyang',
+        'root',
+        'ruiyang'
     )
     # 获取一条记录
-    sql = 'select * from test_table where id=%s'
-    data = db.get(sql, 2)
+    # sql = 'select * from sz_margin_history where id=%s'
+    # data = db.get(sql, 2)
+    # print(data)
 
     # # 获取多天记录
-    # sql = 'select * from test_table where id>%s'
-    # data = db.query(sql, 2)
-    #
+    # sql = 'select * from sz_margin_history where id>%s limit 10'
+    # datas = db.query(sql, 100)
+    # print(datas)
+    # print(len(datas))
+
+    # # 创建一个只有两个数据的测试数据库
+    # create_sql = '''
+    # CREATE TABLE IF NOT EXISTS `runoob_tbl`(
+    #    `runoob_id` INT UNSIGNED AUTO_INCREMENT,
+    #    `runoob_title` VARCHAR(100) NOT NULL,
+    #    `runoob_author` VARCHAR(40) NOT NULL,
+    #    `submission_date` DATE,
+    #    PRIMARY KEY ( `runoob_id` )
+    # )ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='测试数据库';
+    # '''
+    # ret = db.execute(create_sql)
+    # print(ret)
+
     # # 插入一条数据
-    # sql = 'insert into test_table(title, url) values(%s, %s)'
-    # last_id = db.execute(sql, 'test', 'http://a.com/')
-    # # 或者
-    # last_id = db.insert(sql, 'test', 'http://a.com/')
-    #
-    # # 使用更高级的方法插入一条数据
+    # sql = 'insert into runoob_tbl(runoob_title, runoob_author, submission_date) values(%s, %s, %s)'
+    # last_id = db.execute(sql, 'test01', 'au1', '2020-05-01')
+    # print(last_id)
+
+    # # 使用字典插入一条数据
     # item = {
-    #     'title': 'test',
-    #     'url': 'http://a.com/',
+    #     'runoob_title': 'test02',
+    #     'runoob_author': 'au2',
+    #     'submission_date': "2020-05-02",
     # }
-    # last_id = db.table_insert('test_table', item)
+    # last_id = db.table_insert('runoob_tbl', item)
+    # print(last_id)
