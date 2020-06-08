@@ -6,8 +6,8 @@ import time
 import traceback
 
 import pandas as pd
-sys.path.append("./../")
 
+sys.path.append("./../")
 from hkland_flow.configs import (SPIDER_MYSQL_HOST, SPIDER_MYSQL_PORT, SPIDER_MYSQL_USER,
                                  SPIDER_MYSQL_PASSWORD, SPIDER_MYSQL_DB, PRODUCT_MYSQL_HOST, PRODUCT_MYSQL_PORT,
                                  PRODUCT_MYSQL_USER, PRODUCT_MYSQL_PASSWORD, PRODUCT_MYSQL_DB, DC_HOST, DC_PORT,
@@ -57,9 +57,34 @@ class FlowMerge(object):
         self.product_table_name = 'hkland_flow'
         self.tool_table_name = 'base_table_updatetime'
 
+        self.dc_client = None
+        self.spider_client = None
+        self.product_client = None
+
     def _init_pool(self, cfg: dict):
         pool = PyMysqlPoolBase(**cfg)
         return pool
+
+    def dc_init(self):
+        if not self.dc_client:
+            self.dc_client = self._init_pool(self.dc_cfg)
+
+    def spider_init(self):
+        if not self.spider_client:
+            self.spider_client = self._init_pool(self.spider_cfg)
+
+    def product_init(self):
+        if not self.product_client:
+            self.product_client = self._init_pool(self.product_cfg)
+
+    def __del__(self):
+        logger.info("* "*10)
+        if self.dc_client:
+            self.dc_client.dispose()
+        if self.spider_client:
+            self.spider_client.dispose()
+        if self.product_client:
+            self.product_client.dispose()
 
     def contract_sql(self, datas, table: str, update_fields: list):
         if not isinstance(datas, list):
@@ -113,20 +138,16 @@ class FlowMerge(object):
             return count
 
     def fetch(self, table_name, start, end, category):
-        spider = self._init_pool(self.spider_cfg)
         sql = '''select * from {} where  Category = {} and DateTime >= '{}' and DateTime <= '{}';'''.format(
             table_name, category, start, end)
-        ret = spider.select_all(sql)
-        spider.dispose()
+        ret = self.spider_client.select_all(sql)
         return ret
 
     def select_already_datas(self, category, start_dt, end_dt):
         """获取已有的南北向数据"""
-        product = self._init_pool(self.product_cfg)
         sql = '''select * from {} where Category = {} and DateTime >= '{}' and DateTime <= '{}';'''.format(
             self.product_table_name, category, start_dt, end_dt)
-        _datas = product.select_all(sql)
-        product.dispose()
+        _datas = self.product_client.select_all(sql)
         for data in _datas:
             data.pop("CREATETIMEJZ")
             data.pop("UPDATETIMEJZ")
@@ -183,10 +204,9 @@ class FlowMerge(object):
         ) ENGINE=InnoDB AUTO_INCREMENT=18063 DEFAULT CHARSET=utf8 COMMENT='每个表的最后更新时间';
         '''.format(self.tool_table_name)
 
-        product = self._init_pool(self.product_cfg)
-        product.insert(sql)
-        product.insert(tool_sql)  # 一般只执行一次
-        product.dispose()
+        self.product_client.insert(sql)
+        self.product_client.insert(tool_sql)  # 一般只执行一次
+        self.product_client.end()
 
     def gen_all_minutes(self, start: datetime.datetime, end: datetime.datetime):
         """
@@ -198,22 +218,6 @@ class FlowMerge(object):
         # res = [dt.strftime("%Y-%m-%d %H:%M:%S") for dt in idx]
         dt_list = [dt.to_pydatetime() for dt in idx]
         return dt_list
-
-    # def save(self, to_insert, table, update_fields: list):
-    #     product = self._init_pool(self.product_cfg)
-    #     try:
-    #         insert_sql, values = self.contract_sql(to_insert, table, update_fields)
-    #         count = product.insert(insert_sql, values)
-    #     except:
-    #         traceback.print_exc()
-    #         logger.warning("失败")
-    #         count = None
-    #     else:
-    #         if count:
-    #             logger.info("更入新数据 {}".format(to_insert))
-    #     finally:
-    #         product.dispose()
-    #     return count
 
     def north(self):
         """9:30-11:30; 13:00-15:00  (11:30-9:30)*60+1 + (15-13)*60+1 = 242"""
@@ -298,7 +302,7 @@ class FlowMerge(object):
         print(len(to_insert))
         update_fields = ['DateTime', 'ShHkFlow', 'ShHkBalance', 'SzHkFlow', 'SzHkBalance', 'Netinflow', 'Category']
         for data in to_insert:
-            self.save(data, self.product_table_name, update_fields)
+            self.save(self.product_client, data, self.product_table_name, update_fields)
 
     def south(self):
         """9:00-12:00; 13:00-16:10     (12-9)*60 + (16-13) *60 + 10 + 2 = 372"""
@@ -386,7 +390,7 @@ class FlowMerge(object):
         print(len(to_insert))
         update_fields = ['DateTime', 'ShHkFlow', 'ShHkBalance', 'SzHkFlow', 'SzHkBalance', 'Netinflow', 'Category']
         for data in to_insert:
-            self.save(data, self.product_table_name, update_fields)
+            self.save(self.product_client, data, self.product_table_name, update_fields)
 
     def _check_if_trading_today(self, category):
         '''
@@ -398,7 +402,6 @@ class FlowMerge(object):
         }
         一般来说 1 3 与 2 4 是一致的
         '''
-        dc = self._init_pool(self.dc_cfg)
         _map = {
             1: (2, 4),
             2: (1, 3),
@@ -406,7 +409,7 @@ class FlowMerge(object):
 
         sql = 'select IfTradingDay from hkland_shszhktradingday where TradingType in {} and EndDate = "{}";'.format(
         _map.get(category), self.today.strftime("%Y-%m-%d"))
-        ret = dc.select_all(sql)
+        ret = self.dc_client.select_all(sql)
         ret = [r.get("IfTradingDay") for r in ret]
         if ret == [2, 2]:
             return False
@@ -417,6 +420,10 @@ class FlowMerge(object):
         is_trading = self._check_if_trading_period()
         if not is_trading:
             return
+
+        self.dc_init()
+        self.spider_init()
+        self.product_init()
 
         # 加判断是因为在正式库无建表权限
         if LOCAL:
@@ -435,20 +442,17 @@ class FlowMerge(object):
         else:
             self.north()
 
-        # 刷新更新时间戳
         self.refresh_update_time()
 
     def refresh_update_time(self):
-        product = self._init_pool(self.product_cfg)
+        """刷新更新时间戳"""
         sql = '''select max(UPDATETIMEJZ) as max_dt from {}; '''.format(self.product_table_name)
-        max_dt = product.select_one(sql).get("max_dt")
-        logger.info("最新的更新时间是{}".format(max_dt))
-
+        max_dt = self.product_client.select_one(sql).get("max_dt")
         refresh_sql = '''replace into {} (id,TableName, LastUpdateTime,IsValid) values (1, "hkland_flow", '{}', 1); 
         '''.format(self.tool_table_name, max_dt)
-        count = product.update(refresh_sql)
-        logger.info(count)   # 1 首次插入 2 替换插入
-        product.dispose()
+        count = self.product_client.update(refresh_sql)
+        logger.info("最新的更新时间是{}, 是否刷新:{}".format(max_dt, count))
+        self.product_client.end()
 
     def _check_if_trading_period(self):
         """判断是否是该天的交易时段"""
@@ -467,18 +471,14 @@ class FlowMerge(object):
 
 
 if __name__ == "__main__":
-    flow = FlowMerge()
-    flow._start()
+    # FlowMerge()._start()
 
-    # now = lambda: time.time()
-    # while True:
-    #     t1 = now()
-    #     flow = FlowMerge()
-    #     flow.start()
-    #     logger.info("Time:{}s".format(now() - t1))
-    #     time.sleep(5)
-    #     print()
-    #     print()
+    while True:
+        flow = FlowMerge()
+        flow.start()
+        time.sleep(5)
+        print()
+        print()
 
 
 '''
