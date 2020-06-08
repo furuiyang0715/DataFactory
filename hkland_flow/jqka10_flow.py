@@ -195,6 +195,7 @@ class SFLgthisdataspiderSpider(object):
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='陆港通-实时资金流向-同花顺数据源';
         '''.format(self.table_name)
         self.spider_client.insert(sql)
+        self.spider_client.end()
 
     def _check_if_trading_period(self, direction):
         """判断是否是该天的交易时段
