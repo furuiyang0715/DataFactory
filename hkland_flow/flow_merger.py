@@ -227,9 +227,13 @@ class FlowMerge(object):
         #     print(k, ">>> ", eastmoney_north_win[k])
 
         # 按照优先级别进行更新
-        north_win = copy.deepcopy(exchange_north_win)
-        north_win.update(jqka_north_win)
+        north_win = copy.deepcopy(jqka_north_win)
+        north_win.update(exchange_north_win)
         north_win.update(eastmoney_north_win)
+
+        # north_win = copy.deepcopy(exchange_north_win)
+        # north_win.update(jqka_north_win)
+        # north_win.update(eastmoney_north_win)
 
         north_df = pd.DataFrame(list(north_win.values()))
         north_df = north_df.set_index("DateTime",
@@ -308,10 +312,15 @@ class FlowMerge(object):
         eastmoney_south = self.fetch(self.eastmoney_table_name, morning_start, this_moment_min, 1)
         eastmoney_south_win = self.process_sql_datas(eastmoney_south)
 
-        # 按照优先级别进行更新
-        south_win = copy.deepcopy(exchange_south_win)
-        south_win.update(jqka_south_win)
+        # 按照优先级别进行更新 有限级别高的最后更入
+        # 2020.06.08 优先级顺序由 东财>同花顺>交易所 变为 东财>交易所>同花顺 另外一个方向同理
+        south_win = copy.deepcopy(jqka_south_win)
+        south_win.update(exchange_south_win)
         south_win.update(eastmoney_south_win)
+
+        # south_win = copy.deepcopy(exchange_south_win)
+        # south_win.update(jqka_south_win)
+        # south_win.update(eastmoney_south_win)
 
         south_df = pd.DataFrame(list(south_win.values()))
         south_df = south_df.set_index("DateTime",
@@ -377,18 +386,20 @@ class FlowMerge(object):
         if not is_trading:
             return
 
+        # 加判断是因为在正式库无建表权限
         if LOCAL:
             self._create_table()
+
         # 首先判断今天南北向是否交易
         south_trade_bool = self._check_if_trading_today(1)
         if not south_trade_bool:
-            logger.warning("今天{}南向无交易".format(self.today))
+            logger.warning("[合并程序]今天{}南向无交易".format(self.today))
         else:
             self.south()
 
         north_trade_bool = self._check_if_trading_today(2)
         if not north_trade_bool:
-            logger.warning("今天{}北向无交易".format(self.today))
+            logger.warning("[合并程序]今天{}北向无交易".format(self.today))
         else:
             self.north()
 
@@ -410,8 +421,8 @@ class FlowMerge(object):
     def _check_if_trading_period(self):
         """判断是否是该天的交易时段"""
         _now = datetime.datetime.now()
-        if (_now <= datetime.datetime(_now.year, _now.month, _now.day, 8, 0, 0) or
-                _now >= datetime.datetime(_now.year, _now.month, _now.day, 17, 00, 0)):
+        if (_now <= datetime.datetime(_now.year, _now.month, _now.day, 9, 0, 0) or
+                _now >= datetime.datetime(_now.year, _now.month, _now.day, 16, 20, 0)):
             logger.warning("非当天交易时段")
             return False
         return True
@@ -424,18 +435,18 @@ class FlowMerge(object):
 
 
 if __name__ == "__main__":
-    # flow = FlowMerge()
-    # flow._start()
+    flow = FlowMerge()
+    flow._start()
 
-    now = lambda: time.time()
-    while True:
-        t1 = now()
-        flow = FlowMerge()
-        flow.start()
-        logger.info("Time:{}s".format(now() - t1))
-        time.sleep(5)
-        print()
-        print()
+    # now = lambda: time.time()
+    # while True:
+    #     t1 = now()
+    #     flow = FlowMerge()
+    #     flow.start()
+    #     logger.info("Time:{}s".format(now() - t1))
+    #     time.sleep(5)
+    #     print()
+    #     print()
 
 
 '''
