@@ -271,7 +271,7 @@ def schedule_task():
     t_day = datetime.datetime.today()
 
     start_time = datetime.datetime(t_day.year, t_day.month, t_day.day, 17, 10, 0)
-    end_time = datetime.datetime(t_day.year, t_day.month, t_day.day, 18, 10, 0)
+    end_time = datetime.datetime(t_day.year, t_day.month, t_day.day, 20, 10, 0)
 
     if not (t_day >= start_time and t_day <= end_time):
         logger.warning("不在 17:10 到 18:10 的更新时段内")
@@ -313,7 +313,7 @@ sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name toptrade
 registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_toptrade:v1 
 
 # local
-sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name toptrade \
---env LOCAL=1 \
+sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name toptrade2 \
+--env LOCAL=0 \
 registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_toptrade:v1 
 '''
