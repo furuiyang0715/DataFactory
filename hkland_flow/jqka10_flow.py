@@ -206,9 +206,10 @@ class SFLgthisdataspiderSpider(object):
             return
 
         self._create_table()
-        logger.info("开始更新北向数据")
+        logger.info("开始更新北向数据（类型 2）,北向数据的时间是 9:30-11:30; 13:00-15:00 ")
         self._north()
-        logger.info("开始更新南向数据")
+
+        logger.info("开始更新南向数据（类型 1）, 南向数据的时间是 9:00-12:00; 13:00-16:10 ")
         self._south()
 
     def start(self):
@@ -318,6 +319,7 @@ class SFLgthisdataspiderSpider(object):
         '''
         sh_items = []
         sz_items = []
+
         # 北向 沪
         category = 'hgtb'
         is_trading = self._check_if_trading_today(category)
@@ -397,15 +399,15 @@ class SFLgthisdataspiderSpider(object):
 
 
 if __name__ == "__main__":
-    # sf = SFLgthisdataspiderSpider()
-    # sf._start()
+    sf = SFLgthisdataspiderSpider()
+    sf._start()
 
-    while True:
-        sf = SFLgthisdataspiderSpider()
-        sf.start()
-        time.sleep(3)
-        print()
-        print()
+    # while True:
+    #     sf = SFLgthisdataspiderSpider()
+    #     sf.start()
+    #     time.sleep(3)
+    #     print()
+    #     print()
 
 
 '''
