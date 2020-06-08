@@ -119,14 +119,33 @@ class SFLgthisdataspiderSpider(object):
         spider.insert(sql)
         spider.dispose()
 
-    def _check_if_trading_period(self):
-        """判断是否是该天的交易时段"""
+    def _check_if_trading_period(self, direction):
+        """判断是否是该天的交易时段
+        北向数据的时间是 9:30-11:30; 13:00-15:00
+        南向数据的时间是 9:00-12:00; 13:00-16:10
+        """
         _now = datetime.datetime.now()
-        if (_now <= datetime.datetime(_now.year, _now.month, _now.day, 8, 0, 0) or
-                _now >= datetime.datetime(_now.year, _now.month, _now.day, 16, 30, 0)):
-            logger.warning("非当天交易时段")
+        if direction == "north":
+            morning_start = datetime.datetime(_now.year, _now.month, _now.day, 9, 30, 0)
+            morning_end = datetime.datetime(_now.year, _now.month, _now.day, 11, 30, 0)
+            afternoon_start = datetime.datetime(_now.year, _now.month, _now.day, 13, 0, 0)
+            # 兼容同花顺的数据延迟问题
+            # afternoon_end = datetime.datetime(_now.year, _now.month, _now.day, 15, 0, 0)
+            afternoon_end = datetime.datetime(_now.year, _now.month, _now.day, 15, 10, 0)
+
+        elif direction == "sourth":
+            morning_start = datetime.datetime(_now.year, _now.month, _now.day, 9, 0, 0)
+            morning_end = datetime.datetime(_now.year, _now.month, _now.day, 12, 0, 0)
+            afternoon_start = datetime.datetime(_now.year, _now.month, _now.day, 13, 0, 0)
+            # afternoon_end = datetime.datetime(_now.year, _now.month, _now.day, 16, 10, 0)
+            afternoon_end = datetime.datetime(_now.year, _now.month, _now.day, 16, 20, 0)
+        else:
+            raise ValueError("direction is in (north, sourth)")
+
+        if (_now >= morning_start and _now <= morning_end) or (_now >= afternoon_start and _now <= afternoon_end):
+            return True
+        else:
             return False
-        return True
 
     def _check_if_trading_today(self, category):
         """检查下当前方向是否交易"""
@@ -201,16 +220,21 @@ class SFLgthisdataspiderSpider(object):
         return north_datas
 
     def _start(self):
-        is_trading = self._check_if_trading_period()
-        if not is_trading:
-            return
-
         self._create_table()
-        logger.info("开始更新北向数据（类型 2）,北向数据的时间是 9:30-11:30; 13:00-15:00 ")
-        self._north()
 
-        logger.info("开始更新南向数据（类型 1）, 南向数据的时间是 9:00-12:00; 13:00-16:10 ")
-        self._south()
+        north_is_trading = self._check_if_trading_period("north")
+        if north_is_trading:
+            logger.info("同花顺 开始更新北向数据（类型 2）,北向数据的时间是 9:30-11:30; 13:00-15:00 ")
+            self._north()
+        else:
+            logger.info("同花顺 非北向数据更新时间")
+
+        sourth_is_trading = self._check_if_trading_period("sourth")
+        if sourth_is_trading:
+            logger.info("开始更新南向数据（类型 1）, 南向数据的时间是 9:00-12:00; 13:00-16:10 ")
+            self._south()
+        else:
+            logger.info("同花顺 非南向数据更新时间")
 
     def start(self):
         try:
