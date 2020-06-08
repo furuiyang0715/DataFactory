@@ -64,6 +64,8 @@ class SFLgthisdataspiderSpider(object):
         }
         self.today = datetime.datetime.today().strftime("%Y-%m-%d")
         self.table_name = 'hkland_flow_jqka10'
+        self.dc_client = None
+        self.spider_client = None
 
     def _init_pool(self, cfg: dict):
         """
@@ -80,6 +82,20 @@ class SFLgthisdataspiderSpider(object):
         """
         pool = PyMysqlPoolBase(**cfg)
         return pool
+
+    def dc_init(self):
+        if not self.dc_client:
+            self.dc_client = self._init_pool(self.dc_cfg)
+
+    def spider_init(self):
+        if not self.spider_client:
+            self.spider_client = self._init_pool(self.spider_cfg)
+
+    def __del__(self):
+        if self.dc_client:
+            self.dc_client.dispose()
+        if self.spider_client:
+            self.spider_client.dispose()
 
     def contract_sql(self, datas, table: str, update_fields: list):
         if not isinstance(datas, list):
@@ -161,7 +177,6 @@ class SFLgthisdataspiderSpider(object):
             return resp.text
 
     def _create_table(self):
-        spider = self._init_pool(self.spider_cfg)
         sql = '''
         CREATE TABLE IF NOT EXISTS `{}` (
           `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
@@ -179,8 +194,7 @@ class SFLgthisdataspiderSpider(object):
           KEY `DateTime` (`DateTime`) USING BTREE
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='陆港通-实时资金流向-同花顺数据源';
         '''.format(self.table_name)
-        spider.insert(sql)
-        spider.dispose()
+        self.spider_client.insert(sql)
 
     def _check_if_trading_period(self, direction):
         """判断是否是该天的交易时段
@@ -212,58 +226,19 @@ class SFLgthisdataspiderSpider(object):
 
     def _check_if_trading_today(self, category):
         """检查下当前方向是否交易"""
-        dc = self._init_pool(self.dc_cfg)
         tradingtype = self.category_map.get(category)[1]
         sql = 'select IfTradingDay from hkland_shszhktradingday where TradingType={} and EndDate = "{}";'.format(
             tradingtype, self.today)
-        ret = True if dc.select_one(sql).get('IfTradingDay') == 1 else False
-        dc.dispose()
+        ret = True if self.dc_client.select_one(sql).get('IfTradingDay') == 1 else False
         return ret
-
-    # def contract_sql(self, to_insert: dict, table: str, update_fields: list):
-    #     ks = []
-    #     vs = []
-    #     for k in to_insert:
-    #         ks.append(k)
-    #         vs.append(to_insert.get(k))
-    #     fields_str = "(" + ",".join(ks) + ")"
-    #     values_str = "(" + "%s," * (len(vs) - 1) + "%s" + ")"
-    #     base_sql = '''INSERT INTO `{}` '''.format(table) + fields_str + ''' values ''' + values_str
-    #     on_update_sql = ''' ON DUPLICATE KEY UPDATE '''
-    #     update_vs = []
-    #     for update_field in update_fields:
-    #         on_update_sql += '{}=%s,'.format(update_field)
-    #         update_vs.append(to_insert.get(update_field))
-    #     on_update_sql = on_update_sql.rstrip(",")
-    #     sql = base_sql + on_update_sql + """;"""
-    #     vs.extend(update_vs)
-    #     return sql, tuple(vs)
-
-    # def _save(self, to_insert, table, update_fields: list):
-    #     spider = self._init_pool(self.spider_cfg)
-    #     try:
-    #         insert_sql, values = self.contract_sql(to_insert, table, update_fields)
-    #         count = spider.insert(insert_sql, values)
-    #     except:
-    #         traceback.print_exc()
-    #         logger.warning("失败")
-    #         count = None
-    #     else:
-    #         if count:
-    #             logger.info("更入新数据 {}".format(to_insert))
-    #     finally:
-    #         spider.dispose()
-    #     return count
 
     def select_south_datas(self):
         """获取已有的南向数据"""
-        spider = self._init_pool(self.spider_cfg)
         start_dt = datetime.datetime.combine(datetime.datetime.now(), datetime.time.min)
         end_dt = datetime.datetime.combine(datetime.datetime.now(), datetime.time.max)
         sql = '''select * from {} where Category = 1 and DateTime >= '{}' and DateTime <= '{}';'''.format(
             self.table_name, start_dt, end_dt)
-        south_datas = spider.select_all(sql)
-        spider.dispose()
+        south_datas = self.spider_client.select_all(sql)
         for data in south_datas:
             data.pop("CREATETIMEJZ")
             data.pop("UPDATETIMEJZ")
@@ -271,19 +246,20 @@ class SFLgthisdataspiderSpider(object):
 
     def select_north_datas(self):
         """获取已有的北向数据"""
-        spider = self._init_pool(self.spider_cfg)
         start_dt = datetime.datetime.combine(datetime.datetime.now(), datetime.time.min)
         end_dt = datetime.datetime.combine(datetime.datetime.now(), datetime.time.max)
         sql = '''select * from {} where Category = 2 and DateTime >= '{}' and DateTime <= '{}';'''.format(
             self.table_name, start_dt, end_dt)
-        north_datas = spider.select_all(sql)
-        spider.dispose()
+        north_datas = self.spider_client.select_all(sql)
         for data in north_datas:
             data.pop("CREATETIMEJZ")
             data.pop("UPDATETIMEJZ")
         return north_datas
 
     def _start(self):
+        self.dc_init()
+        self.spider_init()
+
         self._create_table()
 
         north_is_trading_period = self._check_if_trading_period("north")
@@ -393,13 +369,9 @@ class SFLgthisdataspiderSpider(object):
                     to_insert.append(r)
 
             update_fields = ['DateTime', 'ShHkFlow', 'ShHkBalance', 'SzHkFlow', 'SzHkBalance', 'Netinflow', 'Category']
-            # print(items[-1])
-            # print(already_sourth_datas[-1])
             print(len(to_insert))
-            client = self._init_pool(self.spider_cfg)
             for item in to_insert:
-                self._save(client, item, self.table_name, update_fields)
-            client.dispose()
+                self._save(self.spider_client, item, self.table_name, update_fields)
 
     def _north(self):
         '''
@@ -486,22 +458,20 @@ class SFLgthisdataspiderSpider(object):
 
             update_fields = ['DateTime', 'ShHkFlow', 'ShHkBalance', 'SzHkFlow', 'SzHkBalance', 'Netinflow', 'Category']
             print(len(to_insert))
-            client = self._init_pool(self.spider_cfg)
             for item in to_insert:
-                self._save(client, item, self.table_name, update_fields)
-            client.dispose()
+                self._save(self.spider_client, item, self.table_name, update_fields)
 
 
 if __name__ == "__main__":
-    sf = SFLgthisdataspiderSpider()
-    sf._start()
+    # sf = SFLgthisdataspiderSpider()
+    # sf._start()
 
-    # while True:
-    #     sf = SFLgthisdataspiderSpider()
-    #     sf.start()
-    #     time.sleep(3)
-    #     print()
-    #     print()
+    while True:
+        sf = SFLgthisdataspiderSpider()
+        sf.start()
+        time.sleep(3)
+        print()
+        print()
 
 
 '''
