@@ -277,6 +277,9 @@ class SFLgthisdataspiderSpider(object):
             logger.info("同花顺 非南向数据更新时间")
 
     def start(self):
+        # TODO 同花顺的存在一个问题：就是延迟。 例如在 9：00 去请求南向数据的时候，接口拿到的可能还是昨天的数据
+        # TODO 这个问题可暂时不处理的原因： merge 程序的保证; 数据重复插入时进行更新。
+        # TODO 而且有十几根一起刷新出来的情况
         try:
             self._start()
         except:
