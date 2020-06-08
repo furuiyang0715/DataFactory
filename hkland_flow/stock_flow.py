@@ -23,7 +23,8 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(level
 logger = logging.getLogger(__name__)
 
 
-class HkexlugutongshishispiderSpider(object):
+class FlowExchangeSpider(object):
+    """陆股通实时数据 交易所爬虫"""
     dc_cfg = {
         "host": DC_HOST,
         "port": DC_PORT,
@@ -71,14 +72,41 @@ class HkexlugutongshishispiderSpider(object):
             data = data.replace(",", '')
             return int(data) * 100
 
-    def _check_if_trading_period(self):
-        """判断是否是该天的交易时段"""
+    # def _check_if_trading_period(self):
+    #     """判断是否是该天的交易时段"""
+    #     _now = datetime.datetime.now()
+    #     if (_now <= datetime.datetime(_now.year, _now.month, _now.day, 9, 0, 0) or
+    #             _now >= datetime.datetime(_now.year, _now.month, _now.day, 16, 30, 0)):
+    #         logger.warning("非当天交易时段")
+    #         return False
+    #     return True
+
+    def _check_if_trading_period(self, direction):
+        """判断是否是该天的交易时段
+        北向数据的时间是 9:30-11:30; 13:00-15:00
+        南向数据的时间是 9:00-12:00; 13:00-16:10
+        """
         _now = datetime.datetime.now()
-        if (_now <= datetime.datetime(_now.year, _now.month, _now.day, 8, 0, 0) or
-                _now >= datetime.datetime(_now.year, _now.month, _now.day, 16, 30, 0)):
-            logger.warning("非当天交易时段")
+        if direction == "north":
+            morning_start = datetime.datetime(_now.year, _now.month, _now.day, 9, 30, 0)
+            morning_end = datetime.datetime(_now.year, _now.month, _now.day, 11, 30, 0)
+            afternoon_start = datetime.datetime(_now.year, _now.month, _now.day, 13, 0, 0)
+            # afternoon_end = datetime.datetime(_now.year, _now.month, _now.day, 15, 0, 0)
+            afternoon_end = datetime.datetime(_now.year, _now.month, _now.day, 15, 10, 0)
+
+        elif direction == "sourth":
+            morning_start = datetime.datetime(_now.year, _now.month, _now.day, 9, 0, 0)
+            morning_end = datetime.datetime(_now.year, _now.month, _now.day, 12, 0, 0)
+            afternoon_start = datetime.datetime(_now.year, _now.month, _now.day, 13, 0, 0)
+            # afternoon_end = datetime.datetime(_now.year, _now.month, _now.day, 16, 10, 0)
+            afternoon_end = datetime.datetime(_now.year, _now.month, _now.day, 16, 20, 0)
+        else:
+            raise ValueError("direction is in (north, sourth)")
+
+        if (_now >= morning_start and _now <= morning_end) or (_now >= afternoon_start and _now <= afternoon_end):
+            return True
+        else:
             return False
-        return True
 
     def start(self):
         retry = 1
@@ -346,6 +374,7 @@ class HkexlugutongshishispiderSpider(object):
         sql = 'select IfTradingDay from hkland_shszhktradingday where TradingType in {} and EndDate = "{}";'.format(
         _map.get(category), self.today.strftime("%Y-%m-%d"))
         ret = dc.select_all(sql)
+        dc.dispose()
         ret = [r.get("IfTradingDay") for r in ret]
         if ret == [2, 2]:
             return False
@@ -353,33 +382,29 @@ class HkexlugutongshishispiderSpider(object):
             return True
 
     def _start(self):
-        is_trading = self._check_if_trading_period()
-        if not is_trading:
-            return
-
+        sourth_is_trading_period = self._check_if_trading_period("sourth")
         south_bool = self._check_if_trading_today(1)
-        if south_bool:
+        if south_bool and sourth_is_trading_period:
             t1 = threading.Thread(target=self._south,)
             t1.start()
         else:
-            logger.warning("今日无南向交易 ")
+            logger.warning("[交易所]今日无南向交易或不在交易时间段内")
 
+        north_is_trading_period = self._check_if_trading_period("north")
         north_bool = self._check_if_trading_today(2)
-        if north_bool:
+        if north_bool and north_is_trading_period:
             t2 = threading.Thread(target=self._north,)
             t2.start()
         else:
-            logger.warning("今日无北向交易 ")
+            logger.warning("[交易所]今日无北向交易或不在交易时间段内")
 
 
 if __name__ == "__main__":
-    # h = HkexlugutongshishispiderSpider()
-    # h._create_table()
-    # h._north()
-    # h._south()
+    # h = FlowExchangeSpider()
+    # h._start()
 
     while True:
-        h = HkexlugutongshishispiderSpider()
+        h = FlowExchangeSpider()
         h.start()
         time.sleep(3)
         print()
