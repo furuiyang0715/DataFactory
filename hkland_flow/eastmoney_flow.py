@@ -70,18 +70,6 @@ class EMLGTNanBeiXiangZiJin(object):
             sql = base_sql + ";"
         return sql, params
 
-    def _batch_save(self, sql_pool, to_inserts, table, update_fields):
-        try:
-            sql, values = self.contract_sql(to_inserts, table, update_fields)
-            count = sql_pool.insert_many(sql, values)
-        except:
-            traceback.print_exc()
-            logger.warning("失败")
-        else:
-            logger.info("批量插入的数量是{}".format(count))
-            sql_pool.end()
-            return count
-
     def _save(self, sql_pool, to_insert, table, update_fields):
         try:
             insert_sql, values = self.contract_sql(to_insert, table, update_fields)

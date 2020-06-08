@@ -61,6 +61,57 @@ class FlowMerge(object):
         pool = PyMysqlPoolBase(**cfg)
         return pool
 
+    def contract_sql(self, datas, table: str, update_fields: list):
+        if not isinstance(datas, list):
+            datas = [datas, ]
+
+        to_insert = datas[0]
+        ks = []
+        vs = []
+        for k in to_insert:
+            ks.append(k)
+            vs.append(to_insert.get(k))
+        fields_str = "(" + ",".join(ks) + ")"
+        values_str = "(" + "%s," * (len(vs) - 1) + "%s" + ")"
+        base_sql = '''INSERT INTO `{}` '''.format(table) + fields_str + ''' values ''' + values_str
+
+        params = []
+        for data in datas:
+            vs = []
+            for k in ks:
+                vs.append(data.get(k))
+            params.append(vs)
+
+        if update_fields:
+            # https://stackoverflow.com/questions/12825232/python-execute-many-with-on-duplicate-key-update/12825529#12825529
+            # sql = 'insert into A (id, last_date, count) values(%s, %s, %s) on duplicate key update last_date=values(last_date),count=count+values(count)'
+            on_update_sql = ''' ON DUPLICATE KEY UPDATE '''
+            for update_field in update_fields:
+                on_update_sql += '{}=values({}),'.format(update_field, update_field)
+            on_update_sql = on_update_sql.rstrip(",")
+            sql = base_sql + on_update_sql + """;"""
+        else:
+            sql = base_sql + ";"
+        return sql, params
+
+    def save(self, sql_pool, to_insert, table, update_fields):
+        try:
+            insert_sql, values = self.contract_sql(to_insert, table, update_fields)
+            value = values[0]
+            count = sql_pool.insert(insert_sql, value)
+        except:
+            traceback.print_exc()
+            logger.warning("失败")
+        else:
+            if count == 1:
+                logger.info("插入新数据 {}".format(to_insert))
+            elif count == 2:
+                logger.info("刷新数据 {}".format(to_insert))
+            else:
+                logger.info("已有数据 {} ".format(to_insert))
+            sql_pool.end()
+            return count
+
     def fetch(self, table_name, start, end, category):
         spider = self._init_pool(self.spider_cfg)
         sql = '''select * from {} where  Category = {} and DateTime >= '{}' and DateTime <= '{}';'''.format(
@@ -148,40 +199,21 @@ class FlowMerge(object):
         dt_list = [dt.to_pydatetime() for dt in idx]
         return dt_list
 
-    def contract_sql(self, to_insert: dict, table: str, update_fields: list):
-        ks = []
-        vs = []
-        for k in to_insert:
-            ks.append(k)
-            vs.append(to_insert.get(k))
-        fields_str = "(" + ",".join(ks) + ")"
-        values_str = "(" + "%s," * (len(vs) - 1) + "%s" + ")"
-        base_sql = '''INSERT INTO `{}` '''.format(table) + fields_str + ''' values ''' + values_str
-        on_update_sql = ''' ON DUPLICATE KEY UPDATE '''
-        update_vs = []
-        for update_field in update_fields:
-            on_update_sql += '{}=%s,'.format(update_field)
-            update_vs.append(to_insert.get(update_field))
-        on_update_sql = on_update_sql.rstrip(",")
-        sql = base_sql + on_update_sql + """;"""
-        vs.extend(update_vs)
-        return sql, tuple(vs)
-
-    def save(self, to_insert, table, update_fields: list):
-        product = self._init_pool(self.product_cfg)
-        try:
-            insert_sql, values = self.contract_sql(to_insert, table, update_fields)
-            count = product.insert(insert_sql, values)
-        except:
-            traceback.print_exc()
-            logger.warning("失败")
-            count = None
-        else:
-            if count:
-                logger.info("更入新数据 {}".format(to_insert))
-        finally:
-            product.dispose()
-        return count
+    # def save(self, to_insert, table, update_fields: list):
+    #     product = self._init_pool(self.product_cfg)
+    #     try:
+    #         insert_sql, values = self.contract_sql(to_insert, table, update_fields)
+    #         count = product.insert(insert_sql, values)
+    #     except:
+    #         traceback.print_exc()
+    #         logger.warning("失败")
+    #         count = None
+    #     else:
+    #         if count:
+    #             logger.info("更入新数据 {}".format(to_insert))
+    #     finally:
+    #         product.dispose()
+    #     return count
 
     def north(self):
         """9:30-11:30; 13:00-15:00  (11:30-9:30)*60+1 + (15-13)*60+1 = 242"""
