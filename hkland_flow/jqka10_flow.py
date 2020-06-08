@@ -154,6 +154,7 @@ class SFLgthisdataspiderSpider(object):
         sql = 'select IfTradingDay from hkland_shszhktradingday where TradingType={} and EndDate = "{}";'.format(
             tradingtype, self.today)
         ret = True if dc.select_one(sql).get('IfTradingDay') == 1 else False
+        dc.dispose()
         return ret
 
     def contract_sql(self, to_insert: dict, table: str, update_fields: list):
@@ -222,15 +223,15 @@ class SFLgthisdataspiderSpider(object):
     def _start(self):
         self._create_table()
 
-        north_is_trading = self._check_if_trading_period("north")
-        if north_is_trading:
+        north_is_trading_period = self._check_if_trading_period("north")
+        if north_is_trading_period:
             logger.info("同花顺 开始更新北向数据（类型 2）,北向数据的时间是 9:30-11:30; 13:00-15:00 ")
             self._north()
         else:
             logger.info("同花顺 非北向数据更新时间")
 
-        sourth_is_trading = self._check_if_trading_period("sourth")
-        if sourth_is_trading:
+        sourth_is_trading_period = self._check_if_trading_period("sourth")
+        if sourth_is_trading_period:
             logger.info("开始更新南向数据（类型 1）, 南向数据的时间是 9:00-12:00; 13:00-16:10 ")
             self._south()
         else:
@@ -261,8 +262,9 @@ class SFLgthisdataspiderSpider(object):
         category = 'ggtb'
         is_trading = self._check_if_trading_today(category)
         if not is_trading:
-            logger.info("{} 该方向数据今日关闭".format(self.south_map.get(category)[0]))
+            logger.info("{} {} 该方向数据今日关闭".format(self.today, self.south_map.get(category)[0]))
         else:
+            logger.info("{} 是正常的交易日".format(self.today))
             url = self.base_url.format(category)
             page = self.get(url)
             ret = re.findall(r"var dataDay = (.*);", page)
@@ -348,8 +350,9 @@ class SFLgthisdataspiderSpider(object):
         category = 'hgtb'
         is_trading = self._check_if_trading_today(category)
         if not is_trading:
-            logger.info("{} 该方向数据今日关闭".format(self.north_map.get(category)[0]))
+            logger.info("{} {} 该方向数据今日关闭".format(self.today, self.north_map.get(category)[0]))
         else:
+            logger.info("{} 是正常的交易日".format(self.today))
             url = self.base_url.format(category)
             page = self.get(url)
             ret = re.findall(r"var dataDay = (.*);", page)
