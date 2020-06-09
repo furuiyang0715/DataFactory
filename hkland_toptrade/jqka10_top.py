@@ -50,7 +50,20 @@ class JqkaTop10(object):
         return data
 
     def start(self):
-        body = self.get(self.url)
+        # 类别代码:GGh: 港股通(沪), GGs: 港股通(深), HG: 沪股通, SG: 深股通'
+        category_map = {
+            "HG": "http://data.10jqka.com.cn/hgt/hgtb/",
+            "GGh": "http://data.10jqka.com.cn/hgt/ggtb/",
+            "SG": "http://data.10jqka.com.cn/hgt/sgtb/",
+            "GGs": "http://data.10jqka.com.cn/hgt/ggtbs/",
+        }
+        for category, url in category_map.items():
+            print()
+            print(category, url)
+            items = self.get_top(category, url)
+
+    def get_top(self, category, url):
+        body = self.get(url)
         # 十大成交股的时间
         '''
         <div class="table-tit">
@@ -109,12 +122,16 @@ class JqkaTop10(object):
                 for field in moneyfields:
                     item[field] = self.re_str_data(item.get(field))
                 item['ChangePercent'] = item['ChangePercent'].replace("%", "")
+                item['CategoryCode'] = category
                 items.append(item)
 
         for item in items:
             print(item)
 
+        return items
+
 
 if __name__ == "__main__":
     jqka = JqkaTop10()
+    # jqka.get_top()
     jqka.start()
