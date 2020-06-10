@@ -39,43 +39,26 @@ class JqkaHistory(BaseSpider):
         }
         return cookies
 
-    def get_juyuan_codeinfo(self, secu_code, market):
-        """获取聚源内部编码"""
-        sql1 = 'SELECT SecuCode,InnerCode from SecuMain WHERE SecuCategory in (1, 2, 8) \
-and SecuMarket in (83, 90) \
-and ListedSector in (1, 2, 6, 7) and SecuCode = "{}";'.format(secu_code)
-
-        sql2 = 'SELECT SecuCode,InnerCode from hk_secumain WHERE SecuCategory in (51, 3, 53, 78) \
-        and SecuMarket in (72) and ListedSector in (1, 2, 6, 7) and SecuCode = "{}";'.format(secu_code)
-
-        if market in ("HG", "SG"):
-            ret = self.juyuan_client.select_one(sql1)
-        elif market in ("GGh", "GGs"):
-            ret = self.juyuan_client.select_one(sql2)
-        else:
-            raise
-        return ret.get('InnerCode')
-
     def get(self, url):
         resp = requests.get(url, headers=self.headers, cookies=self.cookies)
         if resp.status_code == 200:
             return resp.text
 
-    # @staticmethod
-    # def re_decimal_data(data):
-    #     if isinstance(data, str):
-    #         data = float(data)
-    #     ret = float("%.4f" % data)
-    #     return ret
-    #
-    # def re_str_data(self, data_str: str):
-    #     if data_str.endswith("万"):
-    #         data = self.re_decimal_data(data_str.replace("万", '')) * 10**4
-    #     elif data_str.endswith("亿"):
-    #         data = self.re_decimal_data(data_str.replace("亿", '')) * 10**8
-    #     else:
-    #         raise
-    #     return data
+    @staticmethod
+    def re_decimal_data(data):
+        if isinstance(data, str):
+            data = float(data)
+        ret = float("%.4f" % data)
+        return ret
+
+    def re_str_data(self, data_str: str):
+        if data_str.endswith("万"):
+            data = self.re_decimal_data(data_str.replace("万", '')) / 10**2
+        elif data_str.endswith("亿"):
+            data = self.re_decimal_data(data_str.replace("亿", '')) * 10**2
+        else:
+            raise
+        return data
 
     def start(self):
         self._juyuan_init()
@@ -90,10 +73,17 @@ and ListedSector in (1, 2, 6, 7) and SecuCode = "{}";'.format(secu_code)
             "SG": "http://data.10jqka.com.cn/hgt/sgtb/",
             "GGs": "http://data.10jqka.com.cn/hgt/ggtbs/",    # 无历史数据
         }
-        # allitems = []
+        self.market_map = {
+            # 1 | 沪股通
+            # 2 | 港股通(沪市)
+            # 3 | 深股通
+            # 4 | 港股通(深市)
+
+        }
+        allitems = []
         for category, url in category_map.items():
             items = self.get_history(category, url)
-            # allitems.extend(items)
+            allitems.extend(items)
 
         # self._batch_save(self.product_client, allitems, self.table_name, self.fields)
         # self.refresh_update_time()
@@ -258,10 +248,10 @@ and ListedSector in (1, 2, 6, 7) and SecuCode = "{}";'.format(secu_code)
 
         history_table = doc.xpath(".//table[@class='m-table J-ajax-table']")[0]
 
-        table_heads = history_table.xpath("./thead/tr/th")
-        if table_heads:
-            table_heads = [table_head.text for table_head in table_heads]
-            print(table_heads)    # ['日期', '当日资金流入', '当日余额', '当日成交净买额', '买入成交额', '卖出成交额', '领涨股', '领涨股涨跌幅', '上证指数', '涨跌幅']
+        # table_heads = history_table.xpath("./thead/tr/th")
+        # if table_heads:
+        #     table_heads = [table_head.text for table_head in table_heads]
+        #     print(table_heads)    # ['日期', '当日资金流入', '当日余额', '当日成交净买额', '买入成交额', '卖出成交额', '领涨股', '领涨股涨跌幅', '上证指数', '涨跌幅']
         '''
         `Date` datetime NOT NULL COMMENT '日期',
         `MoneyIn` decimal(20,4) NOT NULL COMMENT '当日资金流入(百万）',
@@ -298,20 +288,17 @@ and ListedSector in (1, 2, 6, 7) and SecuCode = "{}";'.format(secu_code)
                 item = dict(zip(table_heads, top_info))
                 for field in unfields:
                     item.pop(field)
+                for field in moneyfields:
+                    item[field] = self.re_str_data(item.get(field))
                 print(item)
-
-                # for field in moneyfields:
-                #     item[field] = self.re_str_data(item.get(field))
-        #         item['ChangePercent'] = item['ChangePercent'].replace("%", "")
-        #         item['CategoryCode'] = category
-        #         inner_code = self.get_juyuan_codeinfo(item['SecuCode'], category)
-        #         item['InnerCode'] = inner_code
-        #         # item["Date"] = datetime.datetime.combine(datetime.datetime.today(), datetime.time.min)
-        #         item["Date"] = top_dt
-        #         item['CMFID'] = 1  # 兼容之前的程序 写死
-        #         item['CMFTime'] = datetime.datetime.now()  # 兼容和之前的程序 用当前的时间代替
-        #         items.append(item)
-        # return items
+                item["Date"] = top_dt
+                item['MoneyInHistoryTotal'] = ''
+                item['MarketTypeCode'] = ''
+                item['MarketType'] = ''
+                item['CMFID'] = 1  # 兼容之前的程序 写死
+                item['CMFTime'] = datetime.datetime.now()  # 兼容和之前的程序 用当前的时间代替
+                items.append(item)
+        return items
 
 
 if __name__ == "__main__":
