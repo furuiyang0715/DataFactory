@@ -88,7 +88,7 @@ and ListedSector in (1, 2, 6, 7) and SecuCode = "{}";'.format(secu_code)
             "HG": "http://data.10jqka.com.cn/hgt/hgtb/",
             "GGh": "http://data.10jqka.com.cn/hgt/ggtb/",
             "SG": "http://data.10jqka.com.cn/hgt/sgtb/",
-            # "GGs": "http://data.10jqka.com.cn/hgt/ggtbs/",    # 无历史数据
+            "GGs": "http://data.10jqka.com.cn/hgt/ggtbs/",    # 无历史数据
         }
         # allitems = []
         for category, url in category_map.items():
@@ -107,42 +107,201 @@ and ListedSector in (1, 2, 6, 7) and SecuCode = "{}";'.format(secu_code)
         for dt_info in dt_infos:
             if "历史数据" in dt_info:
                 top_str = dt_info
+
+        if not top_str:
+            return []
+
         print(top_str)
         top_dt_str = re.findall("\d{4}-\d{2}-\d{2}", top_str)[0]
         top_dt = datetime.datetime.strptime(top_dt_str, "%Y-%m-%d")
         print("{} 的最近更新时间是 {}".format(category, top_dt))
+        '''
+        <table class="m-table J-ajax-table">
+            <thead>
+                <tr>
+                    <th width="100">日期</th>
+                    <th width="100" colidx="1">当日资金流入<br>(元)</th>
+                    <th width="100">当日余额<br>(元)</th>
+                    <th width="120">当日成交净买额<br>(元)</th>
+                    <th width="100">买入成交额<br>(元)</th>
+                    <th width="100">卖出成交额<br>(元)</th>
+                    <th width="110">领涨股</th>
+                    <th width="110">领涨股涨跌幅</th>
+                    <th width="100">上证指数</th>
+                    <th>涨跌幅</th>
+                </tr>
+            </thead>
+            <tbody>
+            <tr class="">
+                    <td>2020-06-10</td>
+                    <td class="c-fall">-5.79亿</td>
+                    <td class="tc">525.79亿</td>
+                    <td class="c-fall">-12.33亿</td>
+                    <td class="">125.46亿</td>
+                    <td class="">137.79亿</td>
+                    <td><a href="http://stockpage.10jqka.com.cn/600859/" target="_blank">王府井</a></td>
+                    <td class="c-rise">10.01%</td>
+                    <td class="c-fall">2943.75</td>
+                    <td class="c-fall">-0.42%</td>
+            </tr>
+            <tr class="odd">
+                    <td>2020-06-09</td>
+                    <td class="c-rise">32.17亿</td>
+                    <td class="tc">487.83亿</td>
+                    <td class="c-rise">24.93亿</td>
+                    <td class="">149.53亿</td>
+                    <td class="">124.60亿</td>
+                    <td><a href="http://stockpage.10jqka.com.cn/600859/" target="_blank">王府井</a></td>
+                    <td class="c-rise">10.00%</td>
+                    <td class="c-rise">2956.11</td>
+                    <td class="c-rise">0.62%</td>
+            </tr>
+            <tr class="">
+                    <td>2020-06-08</td>
+                    <td class="c-rise">21.11亿</td>
+                    <td class="tc">498.89亿</td>
+                    <td class="c-rise">15.34亿</td>
+                    <td class="">163.50亿</td>
+                    <td class="">148.15亿</td>
+                    <td><a href="http://stockpage.10jqka.com.cn/600230/" target="_blank">沧州大化</a></td>
+                    <td class="c-rise">10.02%</td>
+                    <td class="c-rise">2937.77</td>
+                    <td class="c-rise">0.24%</td>
+            </tr>
+            <tr class="odd">
+                    <td>2020-06-05</td>
+                    <td class="c-rise">37.09亿</td>
+                    <td class="tc">482.91亿</td>
+                    <td class="c-rise">29.84亿</td>
+                    <td class="">141.37亿</td>
+                    <td class="">111.53亿</td>
+                    <td><a href="http://stockpage.10jqka.com.cn/600895/" target="_blank">张江高科</a></td>
+                    <td class="c-rise">10.02%</td>
+                    <td class="c-rise">2930.8</td>
+                    <td class="c-rise">0.40%</td>
+            </tr>
+            <tr class="">
+                    <td>2020-06-04</td>
+                    <td class="c-rise">10.84亿</td>
+                    <td class="tc">509.16亿</td>
+                    <td class="c-rise">4.86亿</td>
+                    <td class="">134.75亿</td>
+                    <td class="">129.88亿</td>
+                    <td><a href="http://stockpage.10jqka.com.cn/600565/" target="_blank">迪马股份</a></td>
+                    <td class="c-rise">10.13%</td>
+                    <td class="c-fall">2919.25</td>
+                    <td class="c-fall">-0.14%</td>
+            </tr>
+            <tr class="odd">
+                    <td>2020-06-03</td>
+                    <td class="c-rise">12.71亿</td>
+                    <td class="tc">507.29亿</td>
+                    <td class="c-rise">6.62亿</td>
+                    <td class="">162.59亿</td>
+                    <td class="">155.96亿</td>
+                    <td><a href="http://stockpage.10jqka.com.cn/600565/" target="_blank">迪马股份</a></td>
+                    <td class="c-rise">10.11%</td>
+                    <td class="c-rise">2923.37</td>
+                    <td class="c-rise">0.07%</td>
+            </tr>
+            <tr class="">
+                    <td>2020-06-02</td>
+                    <td class="c-rise">43.93亿</td>
+                    <td class="tc">476.07亿</td>
+                    <td class="c-rise">37.35亿</td>
+                    <td class="">179.92亿</td>
+                    <td class="">142.57亿</td>
+                    <td><a href="http://stockpage.10jqka.com.cn/600828/" target="_blank">茂业商业</a></td>
+                    <td class="c-rise">10.02%</td>
+                    <td class="c-rise">2921.4</td>
+                    <td class="c-rise">0.20%</td>
+            </tr>
+            <tr class="odd">
+                    <td>2020-06-01</td>
+                    <td class="c-rise">46.42亿</td>
+                    <td class="tc">473.58亿</td>
+                    <td class="c-rise">39.90亿</td>
+                    <td class="">188.95亿</td>
+                    <td class="">149.05亿</td>
+                    <td><a href="http://stockpage.10jqka.com.cn/600337/" target="_blank">美克家居</a></td>
+                    <td class="c-rise">10.11%</td>
+                    <td class="c-rise">2915.43</td>
+                    <td class="c-rise">2.21%</td>
+            </tr>
+            <tr class="">
+                    <td>2020-05-29</td>
+                    <td class="c-rise">20.80亿</td>
+                    <td class="tc">499.20亿</td>
+                    <td class="c-rise">10.82亿</td>
+                    <td class="">185.03亿</td>
+                    <td class="">174.22亿</td>
+                    <td><a href="http://stockpage.10jqka.com.cn/600185/" target="_blank">格力地产</a></td>
+                    <td class="c-rise">10.05%</td>
+                    <td class="c-rise">2852.35</td>
+                    <td class="c-rise">0.21%</td>
+            </tr>
+            <tr class="odd">
+                    <td>2020-05-28</td>
+                    <td class="c-rise">32.09亿</td>
+                    <td class="tc">487.91亿</td>
+                    <td class="c-rise">25.70亿</td>
+                    <td class="">158.43亿</td>
+                    <td class="">132.73亿</td>
+                    <td><a href="http://stockpage.10jqka.com.cn/600185/" target="_blank">格力地产</a></td>
+                    <td class="c-rise">10.07%</td>
+                    <td class="c-rise">2846.22</td>
+                    <td class="c-rise">0.33%</td>
+            </tr>
+            </tbody>
+            </table>
+        '''
 
-        # top10_table = doc.xpath(".//table[@class='m-table1']")[0]
-        #
-        # # table_heads = top10_table.xpath("./thead/tr/th")
-        # # if table_heads:
-        # #     table_heads = [table_head.text for table_head in table_heads]
-        # #     print(table_heads)    # ['排名', '股票代码', '股票简称', '收盘价', '涨跌幅', '涨跌额', '买入金额', '卖出金额', '净买额', '成交金额']
-        #
-        # table_heads = ["rank",       # 排名
-        #                "SecuCode",   # 股票代码
-        #                "SecuAbbr",   # 股票简称
-        #                "Close",      # 收盘价
-        #                "ChangePercent",   # 涨跌幅
-        #                "changeamount",    # 涨跌额
-        #                "TMRJE",        # 买入金额
-        #                "sellamount",   # 卖出金额
-        #                "TJME",   # 净买额
-        #                "TCJJE",  # 成交金额
-        #                ]
-        # unfields = ["rank", "changeamount", "sellamount"]
-        # moneyfields = ['TMRJE', "TJME", "TCJJE"]
-        # items = []
-        # top10 = top10_table.xpath(".//tbody/tr")
-        # for top in top10:
-        #     trs = top.xpath("./td")
-        #     if trs:
-        #         top_info = [tr.text_content() for tr in trs]
-        #         item = dict(zip(table_heads, top_info))
-        #         for field in unfields:
-        #             item.pop(field)
-        #         for field in moneyfields:
-        #             item[field] = self.re_str_data(item.get(field))
+        history_table = doc.xpath(".//table[@class='m-table J-ajax-table']")[0]
+
+        table_heads = history_table.xpath("./thead/tr/th")
+        if table_heads:
+            table_heads = [table_head.text for table_head in table_heads]
+            print(table_heads)    # ['日期', '当日资金流入', '当日余额', '当日成交净买额', '买入成交额', '卖出成交额', '领涨股', '领涨股涨跌幅', '上证指数', '涨跌幅']
+        '''
+        `Date` datetime NOT NULL COMMENT '日期',
+        `MoneyIn` decimal(20,4) NOT NULL COMMENT '当日资金流入(百万）',
+        `MoneyBalance` decimal(20,4) NOT NULL COMMENT '当日余额（百万）',
+        `MoneyInHistoryTotal` decimal(20,4) NOT NULL COMMENT '历史资金累计流入(百万元）',
+        `NetBuyAmount` decimal(20,4) NOT NULL COMMENT '当日成交净买额(百万元）',
+        `BuyAmount` decimal(20,4) NOT NULL COMMENT '买入成交额(百万元）',
+        `SellAmount` decimal(20,4) NOT NULL COMMENT '卖出成交额(百万元）',
+        `MarketTypeCode` int(11) NOT NULL COMMENT '市场类型代码',
+        `MarketType` varchar(20) COLLATE utf8_bin DEFAULT NULL COMMENT '市场类型',
+        `CMFID` bigint(20) NOT NULL COMMENT '来源ID',
+        `CMFTime` datetime NOT NULL COMMENT '来源日期',
+        '''
+
+        table_heads = ["Date",           # 日期
+                       "MoneyIn",        # 当日资金流入(百万）
+                       "MoneyBalance",   # 当日余额
+                       "NetBuyAmount",   # 当日成交净买额(百万元）
+                       "BuyAmount",      # 买入成交额(百万元）
+                       "SellAmount",     # 卖出成交额(百万元）
+                       "headstock",      # 领涨股
+                       "headstockrise",  # 领涨股涨跌幅
+                       "index",          # 上证或者恒生指数
+                       "rate",           # 涨跌幅
+                       ]
+        unfields = ["headstock", "headstockrise", "index", "rate"]
+        moneyfields = ['MoneyIn', "MoneyBalance", "NetBuyAmount", "BuyAmount", "SellAmount"]
+        items = []
+        allhistory = history_table.xpath(".//tbody/tr")
+        for history in allhistory:
+            trs = history.xpath("./td")
+            if trs:
+                top_info = [tr.text_content() for tr in trs]
+                item = dict(zip(table_heads, top_info))
+                for field in unfields:
+                    item.pop(field)
+                print(item)
+
+                # for field in moneyfields:
+                #     item[field] = self.re_str_data(item.get(field))
         #         item['ChangePercent'] = item['ChangePercent'].replace("%", "")
         #         item['CategoryCode'] = category
         #         inner_code = self.get_juyuan_codeinfo(item['SecuCode'], category)
