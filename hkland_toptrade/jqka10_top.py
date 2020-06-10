@@ -1,5 +1,4 @@
 import datetime
-import logging
 import os
 import re
 import sys
@@ -12,13 +11,6 @@ file_path = os.path.abspath(os.path.join(cur_path, ".."))
 sys.path.insert(0, file_path)
 
 from hkland_toptrade.base_spider import BaseSpider
-from hkland_toptrade.configs import LOCAL
-
-if LOCAL:
-    logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-else:
-    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
 
 
 class JqkaTop10(BaseSpider):
