@@ -1,51 +1,42 @@
 # -*- coding: utf-8 -*-
-import base64
 import datetime
-import hashlib
-import hmac
 import json
-import logging
+import os
 import re
 import sys
 import time
 import traceback
-import urllib.parse
 
 import requests
-import schedule
 
-sys.path.append("./../")
+cur_path = os.path.split(os.path.realpath(__file__))[0]
+file_path = os.path.abspath(os.path.join(cur_path, ".."))
+sys.path.insert(0, file_path)
 
 from hkland_toptrade.base_spider import BaseSpider
-from hkland_toptrade.configs import LOCAL, SECRET, TOKEN
-
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
+from hkland_toptrade.configs import LOCAL
 
 
-class EMLgttop10tradedsharesspiderSpider(BaseSpider):
+class EastMoneyTop10(BaseSpider):
     """十大成交股 东财数据源 """
     def __init__(self, day: str):
+        super(EastMoneyTop10, self).__init__()
         self.headers = {
             'Referer': 'http://data.eastmoney.com/hsgt/top10.html',
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36',
         }
         self.day = day    # datetime.datetime.strftime("%Y-%m-%d")
         self.url = 'http://data.eastmoney.com/hsgt/top10/{}.html'.format(day)
-        self.table_name = 'hkland_toptrade'
-        self.tool_table_name = 'base_table_updatetime'
 
     def _get_inner_code_map(self, market_type):
         """https://dd.gildata.com/#/tableShow/27/column///
            https://dd.gildata.com/#/tableShow/718/column///
         """
-        juyuan = self._init_pool(self.juyuan_cfg)
         if market_type in ("sh", "sz"):
             sql = 'SELECT SecuCode,InnerCode from SecuMain WHERE SecuCategory in (1, 2) and SecuMarket in (83, 90) and ListedSector in (1, 2, 6, 7);'
         else:
             sql = '''SELECT SecuCode,InnerCode from hk_secumain WHERE SecuCategory in (51, 3, 53, 78) and SecuMarket in (72) and ListedSector in (1, 2, 6, 7);'''
-        ret = juyuan.select_all(sql)
-        juyuan.dispose()
+        ret = self.juyuan_client.select_all(sql)
         info = {}
         for r in ret:
             key = r.get("SecuCode")
@@ -53,19 +44,10 @@ class EMLgttop10tradedsharesspiderSpider(BaseSpider):
             info[key] = value
         return info
 
-    def refresh_update_time(self):
-        product = self._init_pool(self.product_cfg)
-        sql = '''select max(UPDATETIMEJZ) as max_dt from {}; '''.format(self.table_name)
-        max_dt = product.select_one(sql).get("max_dt")
-        logger.info("最新的更新时间是{}".format(max_dt))
-
-        refresh_sql = '''replace into {} (id,TableName, LastUpdateTime,IsValid) values (10, "hkland_toptrade", '{}', 1); 
-        '''.format(self.tool_table_name, max_dt)
-        count = product.update(refresh_sql)
-        logger.info(count)   # 1 首次插入 2 替换插入
-        product.dispose()
-
     def _start(self):
+        self._juyuan_init()
+        self._product_init()
+
         if LOCAL:
             self._create_table()
 
@@ -88,7 +70,6 @@ class EMLgttop10tradedsharesspiderSpider(BaseSpider):
             jishu = []
             for data in [data1, data2, data3, data4]:
                 data = json.loads(data)
-                print(data)
                 top_datas = data.get("data")
                 print(top_datas)
                 for top_data in top_datas:
@@ -156,10 +137,7 @@ class EMLgttop10tradedsharesspiderSpider(BaseSpider):
 
                     else:
                         raise
-                    # print(item)
-                    update_fields = ['Date', 'SecuCode', 'InnerCode', 'SecuAbbr', 'Close', 'ChangePercent',
-                                     'TJME', 'TMRJE', 'TCJJE', 'CategoryCode']
-                    ret = self._save(item, self.table_name, update_fields)
+                    ret = self._save(self.product_client, item, self.table_name, self.fields)
                     if ret == 1:
                         jishu.append(ret)
             if len(jishu) != 0:
@@ -167,88 +145,6 @@ class EMLgttop10tradedsharesspiderSpider(BaseSpider):
                     datetime.datetime.now(), self.table_name, len(jishu)))
 
         self.refresh_update_time()
-
-    def _save(self, to_insert, table, update_fields: list):
-        product = self._init_pool(self.product_cfg)
-        try:
-            insert_sql, values = self.contract_sql(to_insert, table, update_fields)
-            count = product.insert(insert_sql, values)
-        except:
-            traceback.print_exc()
-            logger.warning("失败")
-            count = None
-        else:
-            if count:
-                logger.info("更入新数据 {}".format(to_insert))
-            else:
-                pass
-                # logger.info("{} 数据已插入 ".format(to_insert))
-        finally:
-            product.dispose()
-        return count
-
-    def _create_table(self):
-        sql = '''
-        CREATE TABLE IF NOT EXISTS `{}` (
-          `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-          `Date` date NOT NULL COMMENT '时间',
-          `SecuCode` varchar(10) COLLATE utf8_bin NOT NULL COMMENT '证券代码',
-          `InnerCode` int(11) NOT NULL COMMENT '内部编码',
-          `SecuAbbr` varchar(20) COLLATE utf8_bin NOT NULL COMMENT '股票简称',
-          `Close` decimal(19,3) NOT NULL COMMENT '收盘价',
-          `ChangePercent` decimal(19,5) NOT NULL COMMENT '涨跌幅',
-          `TJME` decimal(19,3) NOT NULL COMMENT '净买额（元/港元）',
-          `TMRJE` decimal(19,3) NOT NULL COMMENT '买入金额（元/港元）',
-          `TCJJE` decimal(19,3) NOT NULL COMMENT '成交金额（元/港元）',
-          `CategoryCode` varchar(10) COLLATE utf8_bin DEFAULT NULL COMMENT '类别代码:GGh: 港股通(沪), GGs: 港股通(深), HG: 沪股通, SG: 深股通',
-          `CMFID` bigint(20) NOT NULL COMMENT '来源ID',
-          `CMFTime` datetime NOT NULL COMMENT '来源日期',
-          `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
-          `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-          PRIMARY KEY (`id`),
-          UNIQUE KEY `un` (`SecuCode`,`Date`,`CategoryCode`) USING BTREE,
-          UNIQUE KEY `un2` (`InnerCode`,`Date`,`CategoryCode`) USING BTREE
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='陆港通十大成交股';
-        '''.format(self.table_name)
-        product = self._init_pool(self.product_cfg)
-        product.insert(sql)
-        product.dispose()
-
-    def ding(self, msg):
-        def get_url():
-            timestamp = str(round(time.time() * 1000))
-            secret_enc = SECRET.encode('utf-8')
-            string_to_sign = '{}\n{}'.format(timestamp, SECRET)
-            string_to_sign_enc = string_to_sign.encode('utf-8')
-            hmac_code = hmac.new(secret_enc, string_to_sign_enc, digestmod=hashlib.sha256).digest()
-            sign = urllib.parse.quote_plus(base64.b64encode(hmac_code))
-            url = 'https://oapi.dingtalk.com/robot/send?access_token={}&timestamp={}&sign={}'.format(
-                TOKEN, timestamp, sign)
-            return url
-
-        url = get_url()
-        header = {
-            "Content-Type": "application/json",
-            "Charset": "UTF-8"
-        }
-        message = {
-            "msgtype": "text",
-            "text": {
-                "content": "{}@15626046299".format(msg)
-            },
-            "at": {
-                "atMobiles": [
-                    "15626046299",
-                ],
-                "isAtAll": False
-            }
-        }
-        message_json = json.dumps(message)
-        resp = requests.post(url=url, data=message_json, headers=header)
-        if resp.status_code == 200:
-            pass
-        else:
-            logger.warning("钉钉消息发送失败")
 
     def start(self):
         count = 0
@@ -258,7 +154,8 @@ class EMLgttop10tradedsharesspiderSpider(BaseSpider):
             except Exception as e:
                 count += 1
                 if count > 5:
-                    self.ding("【datacenter】当前时间{}, 十大成交股程序 {} 第 {} 次尝试出错了, 错误原因是 {}".format(datetime.datetime.now(), self.table_name, count, e))
+                    self.ding("【datacenter】当前时间{}, 十大成交股程序 {} 第 {} 次尝试出错了, "
+                              "错误原因是 {}".format(datetime.datetime.now(), self.table_name, count, e))
                     traceback.print_exc()
                     time.sleep(30)
                 else:
@@ -268,37 +165,33 @@ class EMLgttop10tradedsharesspiderSpider(BaseSpider):
 
 
 def schedule_task():
+    # 设置时间段的目的是 在非更新时间内 不去无谓的请求
     t_day = datetime.datetime.today()
+    # start_time = datetime.datetime(t_day.year, t_day.month, t_day.day, 17, 10, 0)
+    # end_time = datetime.datetime(t_day.year, t_day.month, t_day.day, 20, 10, 0)
+    # if not (t_day >= start_time and t_day <= end_time):
+    #     logger.warning("不在 17:10 到 20:10 的更新时段内")
+    #     return
 
-    start_time = datetime.datetime(t_day.year, t_day.month, t_day.day, 17, 10, 0)
-    end_time = datetime.datetime(t_day.year, t_day.month, t_day.day, 20, 10, 0)
-
-    if not (t_day >= start_time and t_day <= end_time):
-        logger.warning("不在 17:10 到 18:10 的更新时段内")
-        return
-
-    for i in range(1):
-        # FIXME 十大成交股只能获取最近一天的数据
-        day = t_day - datetime.timedelta(days=i)
-        day_str = day.strftime("%Y-%m-%d")
-        print(day_str)  # 如果当前还未出 十大成交股数据 返回空列表
-        top10 = EMLgttop10tradedsharesspiderSpider(day_str)
-        top10.start()
+    day_str = t_day.strftime("%Y-%m-%d")
+    print("今天:", day_str)  # 今天的时间字符串 如果当前还未出 "十大成交股"数据 返回空列表
+    top10 = EastMoneyTop10(day_str)
+    top10.start()
 
 
-def main():
+def task():
     schedule_task()
 
-    schedule.every(1).minutes.do(schedule_task)
-
-    while True:
-        schedule.run_pending()
-        time.sleep(100)
+    # schedule.every(1).minutes.do(schedule_task)
+    #
+    # while True:
+    #     schedule.run_pending()
+    #     time.sleep(100)
 
 
 if __name__ == "__main__":
 
-    main()
+    task()
 
 
 '''
