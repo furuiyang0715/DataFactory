@@ -24,7 +24,6 @@ logger = logging.getLogger(__name__)
 class JqkaTop10(BaseSpider):
     def __init__(self):
         super(JqkaTop10, self).__init__()
-        self.url = 'http://data.10jqka.com.cn/hgt/hgtb/'
         self.headers = {
             'Accept-Encoding': 'gzip, deflate',
             'Accept-Language': 'zh-CN,zh;q=0.9',
