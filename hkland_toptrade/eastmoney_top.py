@@ -8,12 +8,13 @@ import time
 import traceback
 
 import requests
+import schedule
 
 cur_path = os.path.split(os.path.realpath(__file__))[0]
 file_path = os.path.abspath(os.path.join(cur_path, ".."))
 sys.path.insert(0, file_path)
 
-from hkland_toptrade.base_spider import BaseSpider
+from hkland_toptrade.base_spider import BaseSpider, logger
 from hkland_toptrade.configs import LOCAL
 
 
@@ -167,11 +168,11 @@ class EastMoneyTop10(BaseSpider):
 def schedule_task():
     # 设置时间段的目的是 在非更新时间内 不去无谓的请求
     t_day = datetime.datetime.today()
-    # start_time = datetime.datetime(t_day.year, t_day.month, t_day.day, 17, 10, 0)
-    # end_time = datetime.datetime(t_day.year, t_day.month, t_day.day, 20, 10, 0)
-    # if not (t_day >= start_time and t_day <= end_time):
-    #     logger.warning("不在 17:10 到 20:10 的更新时段内")
-    #     return
+    start_time = datetime.datetime(t_day.year, t_day.month, t_day.day, 17, 10, 0)
+    end_time = datetime.datetime(t_day.year, t_day.month, t_day.day, 20, 10, 0)
+    if not (t_day >= start_time and t_day <= end_time):
+        logger.warning("不在 17:10 到 20:10 的更新时段内")
+        return
 
     day_str = t_day.strftime("%Y-%m-%d")
     print("今天:", day_str)  # 今天的时间字符串 如果当前还未出 "十大成交股"数据 返回空列表
@@ -182,11 +183,11 @@ def schedule_task():
 def task():
     schedule_task()
 
-    # schedule.every(1).minutes.do(schedule_task)
-    #
-    # while True:
-    #     schedule.run_pending()
-    #     time.sleep(100)
+    schedule.every(2).minutes.do(schedule_task)
+
+    while True:
+        schedule.run_pending()
+        time.sleep(10)
 
 
 if __name__ == "__main__":
@@ -206,7 +207,7 @@ sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name toptrade
 registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_toptrade:v1 
 
 # local
-sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name toptrade2 \
---env LOCAL=0 \
+sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name toptrade \
+--env LOCAL=1 \
 registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_toptrade:v1 
 '''
