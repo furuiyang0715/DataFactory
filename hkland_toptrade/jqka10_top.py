@@ -2,8 +2,20 @@ import execjs
 import requests
 from lxml import html
 
+from hkland_toptrade.configs import JUY_HOST, JUY_PORT, JUY_USER, JUY_PASSWD, JUY_DB
+from hkland_toptrade.sql_pool import PyMysqlPoolBase
+
 
 class JqkaTop10(object):
+    # 聚源数据库
+    juyuan_cfg = {
+        "host": JUY_HOST,
+        "port": JUY_PORT,
+        "user": JUY_USER,
+        "password": JUY_PASSWD,
+        "db": JUY_DB,
+    }
+
     def __init__(self):
         self.url = 'http://data.10jqka.com.cn/hgt/hgtb/'
         self.headers = {
@@ -16,6 +28,31 @@ class JqkaTop10(object):
             'X-Requested-With': 'XMLHttpRequest',
             'Connection': 'keep-alive',
         }
+        self.juyuan_client = None
+
+    def _init_pool(self, cfg: dict):
+        """
+        eg.
+        conf = {
+                "host": LOCAL_MYSQL_HOST,
+                "port": LOCAL_MYSQL_PORT,
+                "user": LOCAL_MYSQL_USER,
+                "password": LOCAL_MYSQL_PASSWORD,
+                "db": LOCAL_MYSQL_DB,
+        }
+        :param cfg:
+        :return:
+        """
+        pool = PyMysqlPoolBase(**cfg)
+        return pool
+
+    def _juyuan_init(self):
+        if not self.juyuan_client:
+            self.juyuan_client = self._init_pool(self.juyuan_cfg)
+
+    def __del__(self):
+        if self.juyuan_client:
+            self.juyuan_client.dispose()
 
     @property
     def cookies(self):
@@ -27,6 +64,23 @@ class JqkaTop10(object):
             'v': cookie_v,
         }
         return cookies
+
+    def get_juyuan_codeinfo(self, secu_code, market):
+        """获取聚源内部编码"""
+        sql1 = 'SELECT SecuCode,InnerCode from SecuMain WHERE SecuCategory in (1, 2, 8) \
+and SecuMarket in (83, 90) \
+and ListedSector in (1, 2, 6, 7) and SecuCode = "{}";'.format(secu_code)
+
+        sql2 = 'SELECT SecuCode,InnerCode from hk_secumain WHERE SecuCategory in (51, 3, 53, 78) \
+        and SecuMarket in (72) and ListedSector in (1, 2, 6, 7) and SecuCode = "{}";'.format(secu_code)
+
+        if market in ("HG", "SG"):
+            ret = self.juyuan_client.select_one(sql1)
+        elif market in ("GGh", "GGs"):
+            ret = self.juyuan_client.select_one(sql2)
+        else:
+            raise
+        return ret.get('InnerCode')
 
     def get(self, url):
         resp = requests.get(url, headers=self.headers, cookies=self.cookies)
@@ -50,6 +104,8 @@ class JqkaTop10(object):
         return data
 
     def start(self):
+        self._juyuan_init()
+
         # 类别代码:GGh: 港股通(沪), GGs: 港股通(深), HG: 沪股通, SG: 深股通'
         category_map = {
             "HG": "http://data.10jqka.com.cn/hgt/hgtb/",
@@ -57,10 +113,15 @@ class JqkaTop10(object):
             "SG": "http://data.10jqka.com.cn/hgt/sgtb/",
             "GGs": "http://data.10jqka.com.cn/hgt/ggtbs/",
         }
+        allitems = []
         for category, url in category_map.items():
-            print()
-            print(category, url)
+            # print(category, url)
             items = self.get_top(category, url)
+            allitems.extend(items)
+
+        print(len(allitems))
+        for item in allitems:
+            print(item)
 
     def get_top(self, category, url):
         body = self.get(url)
@@ -123,10 +184,12 @@ class JqkaTop10(object):
                     item[field] = self.re_str_data(item.get(field))
                 item['ChangePercent'] = item['ChangePercent'].replace("%", "")
                 item['CategoryCode'] = category
+                inner_code = self.get_juyuan_codeinfo(item['SecuCode'], category)
+                item['InnerCode'] = inner_code
                 items.append(item)
 
-        for item in items:
-            print(item)
+        # for item in items:
+        #     print(item)
 
         return items
 
