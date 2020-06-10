@@ -2,7 +2,8 @@ import execjs
 import requests
 from lxml import html
 
-from hkland_toptrade.configs import JUY_HOST, JUY_PORT, JUY_USER, JUY_PASSWD, JUY_DB
+from hkland_toptrade.configs import JUY_HOST, JUY_PORT, JUY_USER, JUY_PASSWD, JUY_DB, PRODUCT_MYSQL_HOST, \
+    PRODUCT_MYSQL_PORT, PRODUCT_MYSQL_USER, PRODUCT_MYSQL_PASSWORD, PRODUCT_MYSQL_DB
 from hkland_toptrade.sql_pool import PyMysqlPoolBase
 
 
@@ -14,6 +15,15 @@ class JqkaTop10(object):
         "user": JUY_USER,
         "password": JUY_PASSWD,
         "db": JUY_DB,
+    }
+
+    # 正式库 在正式环境对标 datacenter
+    product_cfg = {
+        "host": PRODUCT_MYSQL_HOST,
+        "port": PRODUCT_MYSQL_PORT,
+        "user": PRODUCT_MYSQL_USER,
+        "password": PRODUCT_MYSQL_PASSWORD,
+        "db": PRODUCT_MYSQL_DB,
     }
 
     def __init__(self):
@@ -29,6 +39,8 @@ class JqkaTop10(object):
             'Connection': 'keep-alive',
         }
         self.juyuan_client = None
+        self.product_client = None
+        self.table_name = 'hkland_toptrade'
 
     def _init_pool(self, cfg: dict):
         """
@@ -50,9 +62,15 @@ class JqkaTop10(object):
         if not self.juyuan_client:
             self.juyuan_client = self._init_pool(self.juyuan_cfg)
 
+    def _product_init(self):
+        if not self.product_client:
+            self.product_client = self._init_pool(self.product_cfg)
+
     def __del__(self):
         if self.juyuan_client:
             self.juyuan_client.dispose()
+        if self.product_client:
+            self.product_client.dispose()
 
     @property
     def cookies(self):
@@ -103,8 +121,37 @@ and ListedSector in (1, 2, 6, 7) and SecuCode = "{}";'.format(secu_code)
             raise
         return data
 
+    def _create_table(self):
+        sql = '''
+        CREATE TABLE IF NOT EXISTS `{}` (
+          `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+          `Date` date NOT NULL COMMENT '时间',
+          `SecuCode` varchar(10) COLLATE utf8_bin NOT NULL COMMENT '证券代码',
+          `InnerCode` int(11) NOT NULL COMMENT '内部编码',
+          `SecuAbbr` varchar(20) COLLATE utf8_bin NOT NULL COMMENT '股票简称',
+          `Close` decimal(19,3) NOT NULL COMMENT '收盘价',
+          `ChangePercent` decimal(19,5) NOT NULL COMMENT '涨跌幅',
+          `TJME` decimal(19,3) NOT NULL COMMENT '净买额（元/港元）',
+          `TMRJE` decimal(19,3) NOT NULL COMMENT '买入金额（元/港元）',
+          `TCJJE` decimal(19,3) NOT NULL COMMENT '成交金额（元/港元）',
+          `CategoryCode` varchar(10) COLLATE utf8_bin DEFAULT NULL COMMENT '类别代码:GGh: 港股通(沪), GGs: 港股通(深), HG: 沪股通, SG: 深股通',
+          `CMFID` bigint(20) NOT NULL COMMENT '来源ID',
+          `CMFTime` datetime NOT NULL COMMENT '来源日期',
+          `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
+          `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          PRIMARY KEY (`id`),
+          UNIQUE KEY `un` (`SecuCode`,`Date`,`CategoryCode`) USING BTREE,
+          UNIQUE KEY `un2` (`InnerCode`,`Date`,`CategoryCode`) USING BTREE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='陆港通十大成交股';
+        '''.format(self.table_name)
+        self.product_client.insert(sql)
+        self.product_client.end()
+
     def start(self):
         self._juyuan_init()
+        self._product_init()
+
+        self._create_table()
 
         # 类别代码:GGh: 港股通(沪), GGs: 港股通(深), HG: 沪股通, SG: 深股通'
         category_map = {
