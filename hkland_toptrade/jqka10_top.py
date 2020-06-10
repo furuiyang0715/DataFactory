@@ -1,6 +1,7 @@
 import datetime
 import logging
 import os
+import re
 import sys
 import traceback
 
@@ -229,6 +230,18 @@ and ListedSector in (1, 2, 6, 7) and SecuCode = "{}";'.format(secu_code)
         self.product_client.insert(sql)
         self.product_client.end()
 
+    def get_date(self, doc):
+        '''
+        <div class="table-tit">
+            <h2 class="icon-table">沪股通十大成交股<span class="hgt-text"></span></h2>
+            <div class="curtime">
+                <span class="fr">2020-06-09（周二）</span>
+            </div>
+        </div>
+        '''
+        top10_dt = doc.xpath(".//div[@class='table-tit']")
+        pass
+
     def start(self):
         self._juyuan_init()
         self._product_init()
@@ -264,7 +277,18 @@ and ListedSector in (1, 2, 6, 7) and SecuCode = "{}";'.format(secu_code)
         </div>
         '''
         doc = html.fromstring(body)
-        # top10_dt = doc.xpath(".//div[@class='table-tit']")
+        # 判断十大成交股的时间
+        page_dts = doc.xpath(".//div[@class='table-tit']")
+        dt_infos = [page_dt.text_content().replace("\r\n", "") for page_dt in page_dts]
+        top_str = ''
+        for dt_info in dt_infos:
+            if "十大成交股" in dt_info:
+                top_str = dt_info
+        print(top_str)
+        top_dt_str = re.findall("\d{4}-\d{2}-\d{2}", top_str)[0]
+        top_dt = datetime.datetime.strptime(top_dt_str, "%Y-%m-%d")
+        print("{} 的最近更新时间是 {}".format(category, top_dt))
+
         top10_table = doc.xpath(".//table[@class='m-table1']")[0]
 
         # table_heads = top10_table.xpath("./thead/tr/th")
@@ -315,7 +339,8 @@ and ListedSector in (1, 2, 6, 7) and SecuCode = "{}";'.format(secu_code)
                 item['CategoryCode'] = category
                 inner_code = self.get_juyuan_codeinfo(item['SecuCode'], category)
                 item['InnerCode'] = inner_code
-                item["Date"] = datetime.datetime.combine(datetime.datetime.today(), datetime.time.min)
+                # item["Date"] = datetime.datetime.combine(datetime.datetime.today(), datetime.time.min)
+                item["Date"] = top_dt
                 item['CMFID'] = 1  # 兼容之前的程序 写死
                 item['CMFTime'] = datetime.datetime.now()  # 兼容和之前的程序 用当前的时间代替
                 items.append(item)
