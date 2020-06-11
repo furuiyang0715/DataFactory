@@ -27,6 +27,18 @@ class JqkaHistory(BaseSpider):
             'X-Requested-With': 'XMLHttpRequest',
             'Connection': 'keep-alive',
         }
+        self.market_map = {
+            "HG": (1, "沪股通"),
+            "SG": (3, "深股通"),
+            "GGh": (2, "港股通(沪市)"),
+            "GGs": (4, "港股通(深市)"),
+
+            # 1 | 沪股通
+            # 2 | 港股通(沪市)
+            # 3 | 深股通
+            # 4 | 港股通(深市)
+
+        }
 
     @property
     def cookies(self):
@@ -72,13 +84,6 @@ class JqkaHistory(BaseSpider):
             "GGh": "http://data.10jqka.com.cn/hgt/ggtb/",
             "SG": "http://data.10jqka.com.cn/hgt/sgtb/",
             "GGs": "http://data.10jqka.com.cn/hgt/ggtbs/",    # 无历史数据
-        }
-        self.market_map = {
-            # 1 | 沪股通
-            # 2 | 港股通(沪市)
-            # 3 | 深股通
-            # 4 | 港股通(深市)
-
         }
         allitems = []
         for category, url in category_map.items():
@@ -280,7 +285,8 @@ class JqkaHistory(BaseSpider):
         unfields = ["headstock", "headstockrise", "index", "rate"]
         moneyfields = ['MoneyIn', "MoneyBalance", "NetBuyAmount", "BuyAmount", "SellAmount"]
         items = []
-        allhistory = history_table.xpath(".//tbody/tr")
+        allhistory = history_table.xpath(".//tbody/tr")[:1]    # 只要最近一天的数据
+        # print(allhistory)
         for history in allhistory:
             trs = history.xpath("./td")
             if trs:
@@ -290,14 +296,15 @@ class JqkaHistory(BaseSpider):
                     item.pop(field)
                 for field in moneyfields:
                     item[field] = self.re_str_data(item.get(field))
-                print(item)
                 item["Date"] = top_dt
                 item['MoneyInHistoryTotal'] = ''
-                item['MarketTypeCode'] = ''
-                item['MarketType'] = ''
+                _type_code, _type = self.market_map.get(category)
+                item['MarketTypeCode'] = _type_code
+                item['MarketType'] = _type
                 item['CMFID'] = 1  # 兼容之前的程序 写死
                 item['CMFTime'] = datetime.datetime.now()  # 兼容和之前的程序 用当前的时间代替
                 items.append(item)
+                print(item)
         return items
 
 

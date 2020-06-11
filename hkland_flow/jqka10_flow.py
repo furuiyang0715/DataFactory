@@ -212,7 +212,8 @@ class SFLgthisdataspiderSpider(object):
             afternoon_end = datetime.datetime(_now.year, _now.month, _now.day, 15, 10, 0)
 
         elif direction == "sourth":
-            morning_start = datetime.datetime(_now.year, _now.month, _now.day, 9, 0, 0)
+            # morning_start = datetime.datetime(_now.year, _now.month, _now.day, 9, 0, 0)
+            morning_start = datetime.datetime(_now.year, _now.month, _now.day, 9, 10, 0)
             morning_end = datetime.datetime(_now.year, _now.month, _now.day, 12, 0, 0)
             afternoon_start = datetime.datetime(_now.year, _now.month, _now.day, 13, 0, 0)
             # afternoon_end = datetime.datetime(_now.year, _now.month, _now.day, 16, 10, 0)
