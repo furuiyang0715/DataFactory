@@ -12,11 +12,13 @@ import requests
 from hkland_historytradestat.configs import (PRODUCT_MYSQL_HOST, PRODUCT_MYSQL_PORT, PRODUCT_MYSQL_USER,
                                              PRODUCT_MYSQL_PASSWORD, PRODUCT_MYSQL_DB, JUY_HOST, JUY_PORT,
                                              JUY_USER, JUY_PASSWD, JUY_DB, SECRET, TOKEN, DC_HOST, DC_PORT, DC_USER,
-                                             DC_PASSWD, DC_DB, LOCAL)
+                                             DC_PASSWD, DC_DB, LOCAL, SPIDER_MYSQL_HOST, SPIDER_MYSQL_PORT,
+                                             SPIDER_MYSQL_USER, SPIDER_MYSQL_PASSWORD, SPIDER_MYSQL_DB)
 from hkland_historytradestat.sql_pool import PyMysqlPoolBase
 
 if LOCAL:
-    logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    # logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 else:
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -47,6 +49,14 @@ class BaseSpider(object):
         "db": JUY_DB,
     }
 
+    spider_cfg = {  # 爬虫库
+        "host": SPIDER_MYSQL_HOST,
+        "port": SPIDER_MYSQL_PORT,
+        "user": SPIDER_MYSQL_USER,
+        "password": SPIDER_MYSQL_PASSWORD,
+        "db": SPIDER_MYSQL_DB,
+    }
+
     def __init__(self):
         self.fields = ["Date", 'MoneyInHistoryTotal', 'MarketTypeCode', 'MarketType',
                        'MoneyIn', "MoneyBalance", "NetBuyAmount", "BuyAmount", "SellAmount"]
@@ -55,6 +65,7 @@ class BaseSpider(object):
         self.juyuan_client = None
         self.product_client = None
         self.dc_client = None
+        self.spider_client = None
 
     def _init_pool(self, cfg: dict):
         """
@@ -84,6 +95,10 @@ class BaseSpider(object):
         if not self.dc_client:
             self.dc_client = self._init_pool(self.dc_cfg)
 
+    def _spider_init(self):
+        if not self.spider_client:
+            self.spider_client = self._init_pool(self.spider_cfg)
+
     def __del__(self):
         if self.juyuan_client:
             self.juyuan_client.dispose()
@@ -91,6 +106,8 @@ class BaseSpider(object):
             self.product_client.dispose()
         if self.dc_client:
             self.dc_client.dispose()
+        if self.spider_client:
+            self.spider_client.dispose()
 
     def contract_sql(self, datas, table: str, update_fields: list):
         if not isinstance(datas, list):

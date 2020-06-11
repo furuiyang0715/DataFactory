@@ -97,6 +97,7 @@ class HistoryCalSpider(BaseSpider):
         self.sh_hk_his = self.select_last_total(2, self.today)
         self.sz_hk_his = self.select_last_total(4, self.today)
 
+        # TODO
         self.table_name = 'hkland_calhistory'
         self.fields = [
             'Date',
@@ -437,23 +438,49 @@ class HistoryCalSpider(BaseSpider):
 
     def _start(self):
         self._product_init()
+        self._spider_init()
+
+        # TODO
+        # self._create_table()
+        self._create_stock_table()
+
+        _now = datetime.datetime.now()
+        _year, _month, _day = _now.year, _now.month, _now.day
 
         south_bool = self._check_if_trading_today(1)
         north_bool = self._check_if_trading_today(2)
         if north_bool:
-            item_hk_sh = self.hk_sh()
-            item_hk_sz = self.hk_sz()
+            if _now < datetime.datetime(_year, _month, _day, 15, 0, 0):
+                logger.info("{} 北向交易未结束".format(_now))
+                item_hk_sh = None
+                item_hk_sz = None
+            else:
+                item_hk_sh = self.hk_sh()
+                item_hk_sz = self.hk_sz()
         else:
             logger.warning("今日无北向交易 ")
 
         if south_bool:
-            item_sh_hk = self.sh_hk()
-            item_sh_sz = self.sh_sz()
+            if _now < datetime.datetime(_year, _month, _day, 16, 10, 0):
+                logger.info("{} 南向交易未结束".format(_now))
+                item_sh_hk = None
+                item_sh_sz = None
+            else:
+                item_sh_hk = self.sh_hk()
+                item_sh_sz = self.sh_sz()
         else:
             logger.warning("今日无南向交易 ")
 
-        # self.ding("沪股通: {}\n深股通: {}\n港股通(沪): {}\n港股通(深):{}\n".format(item_hk_sh, item_hk_sz, item_sh_hk, item_sh_sz))
         print("沪股通: {}\n深股通: {}\n港股通(沪): {}\n港股通(深):{}\n".format(item_hk_sh, item_hk_sz, item_sh_hk, item_sh_sz))
+        items = [item for item in [item_hk_sh, item_hk_sz, item_sh_hk, item_sh_sz] if item is not None]
+        ret = self._batch_save(self.spider_client, items, self.table_name, self.fields)
+        self.ding("历史数据计算: ret: {}, 沪股通: {}\n深股通: {}\n港股通(沪): {}\n港股通(深):{}\n".format(ret, item_hk_sh, item_hk_sz, item_sh_hk, item_sh_sz))
+
+    def start(self):
+        try:
+            self._start()
+        except:
+            pass
 
     def _create_stock_table(self):
         # 历史资金累计流入 其实是净买额累计流入
@@ -476,10 +503,15 @@ class HistoryCalSpider(BaseSpider):
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='交易所计算陆股通资金流向汇总(港股通币种为港元，陆股通币种为人民币)';
         '''.format(self.table_name)
         self.spider_client.insert(sql)
+        self.spider_client.end()
+
+
+def task():
+    HistoryCalSpider().start()
 
 
 if __name__ == '__main__':
-    HistoryCalSpider()._start()
+    task()
 
 
 '''
