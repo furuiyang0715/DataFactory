@@ -39,18 +39,15 @@ class JqkaHistory(BaseSpider):
             # 4 | 港股通(深市)
 
         }
-        self.hk_sh_his = self.select_last_total(1).get("MoneyInHistoryTotal")
-        self.hk_sz_his = self.select_last_total(3).get("MoneyInHistoryTotal")
-        self.sh_hk_his = self.select_last_total(2).get("MoneyInHistoryTotal")
-        self.sz_hk_his = self.select_last_total(4).get("MoneyInHistoryTotal")
         self.fields = ["Date", 'MoneyInHistoryTotal', 'MarketTypeCode', 'MarketType',
                        'MoneyIn', "MoneyBalance", "NetBuyAmount", "BuyAmount", "SellAmount"]
 
-    def select_last_total(self, market_type):
+    def select_last_total(self, market_type, dt):
         """查找距给出时间最近的一个时间点的累计值"""
-        sql = '''select Date, MoneyInHistoryTotal from hkland_historytradestat where Date = (select max(Date) \
-        from hkland_historytradestat where MarketTypeCode = {}) and MarketTypeCode = {};'''.format(market_type, market_type)
-        ret = self.dc_client.select_one(sql)
+        # sql = '''select Date, MoneyInHistoryTotal from hkland_historytradestat where Date = (select max(Date) \
+        # from hkland_historytradestat where MarketTypeCode = {}) and MarketTypeCode = {};'''.format(market_type, market_type)
+        sql = '''select Date, MoneyInHistoryTotal from hkland_historytradestat where Date = '{}' and MarketTypeCode = {};'''.format(dt, market_type)
+        ret = float(self.dc_client.select_one(sql).get("MoneyInHistoryTotal"))
         return ret
 
     @property
@@ -77,6 +74,7 @@ class JqkaHistory(BaseSpider):
         return ret
 
     def re_str_data(self, data_str: str):
+        """将钱转为百万计"""
         if data_str.endswith("万"):
             data = self.re_decimal_data(data_str.replace("万", '')) / 10**2
         elif data_str.endswith("亿"):
@@ -85,9 +83,20 @@ class JqkaHistory(BaseSpider):
             raise
         return data
 
+    # def re_million_money(self, data_str):
+    #     """将钱转换为百万计"""
+    #     if data_str.endswith("万"):
+    #         data = self.re_decimal_data(data_str.replace("万", '')) / 10**2
+    #     elif data_str.endswith("亿"):
+    #         data = self.re_decimal_data(data_str.replace("亿", '')) * 10**2
+    #     else:
+    #         raise
+    #     return data
+
     def start(self):
         self._juyuan_init()
         self._product_init()
+        self._dc_init()
 
         # self._create_table()
 
@@ -122,6 +131,7 @@ class JqkaHistory(BaseSpider):
         print(top_str)
         top_dt_str = re.findall("\d{4}-\d{2}-\d{2}", top_str)[0]
         top_dt = datetime.datetime.strptime(top_dt_str, "%Y-%m-%d")
+        last_top_dt = top_dt - datetime.timedelta(days=1)
         print("{} 的最近更新时间是 {}".format(category, top_dt))
         '''
         <table class="m-table J-ajax-table">
@@ -307,11 +317,16 @@ class JqkaHistory(BaseSpider):
                 item = dict(zip(table_heads, top_info))
                 for field in unfields:
                     item.pop(field)
+
                 for field in moneyfields:
                     item[field] = self.re_str_data(item.get(field))
-                item["Date"] = top_dt
+
                 # 历史资金累计流入(百万) = 上一天的历史资金累计流入(百万) + 今天的当日成交净买额(百万元)
-                item['MoneyInHistoryTotal'] = ''
+                last_money_in_history_total = self.select_last_total(self.market_map.get(category)[0], last_top_dt)
+                print(">>>>>> ", last_money_in_history_total)
+                item['MoneyInHistoryTotal'] = last_money_in_history_total + item['NetBuyAmount']
+
+                item["Date"] = top_dt
                 _type_code, _type = self.market_map.get(category)
                 item['MarketTypeCode'] = _type_code
                 item['MarketType'] = _type

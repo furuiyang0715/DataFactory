@@ -83,6 +83,8 @@ class BaseSpider(object):
             self.juyuan_client.dispose()
         if self.product_client:
             self.product_client.dispose()
+        if self.dc_client:
+            self.dc_client.dispose()
 
     def contract_sql(self, datas, table: str, update_fields: list):
         if not isinstance(datas, list):
