@@ -36,9 +36,10 @@ class JqkaHistory(BaseSpider):
 
     def select_last_total(self, market_type, dt):
         """查找距给出时间前一天的时间点的累计值"""
-        # sql = '''select Date, MoneyInHistoryTotal from hkland_historytradestat where Date = (select max(Date) \
-        # from hkland_historytradestat where MarketTypeCode = {}) and MarketTypeCode = {};'''.format(market_type, market_type)
-        sql = '''select Date, MoneyInHistoryTotal from hkland_historytradestat where Date = '{}' and MarketTypeCode = {};'''.format(dt, market_type)
+        sql = '''select Date, MoneyInHistoryTotal from hkland_historytradestat where Date = (select max(Date) \
+        from hkland_historytradestat where MarketTypeCode = {} and Date < '{}') and MarketTypeCode = {};'''.format(market_type, dt, market_type)
+
+        # sql = '''select Date, MoneyInHistoryTotal from hkland_historytradestat where Date = '{}' and MarketTypeCode = {};'''.format(dt, market_type)
         ret = float(self.dc_client.select_one(sql).get("MoneyInHistoryTotal"))
         return ret
 
@@ -119,147 +120,6 @@ class JqkaHistory(BaseSpider):
         top_dt = datetime.datetime.strptime(top_dt_str, "%Y-%m-%d")
         last_top_dt = top_dt - datetime.timedelta(days=1)
         print("{} 的最近更新时间是 {}".format(category, top_dt))
-        '''
-        <table class="m-table J-ajax-table">
-            <thead>
-                <tr>
-                    <th width="100">日期</th>
-                    <th width="100" colidx="1">当日资金流入<br>(元)</th>
-                    <th width="100">当日余额<br>(元)</th>
-                    <th width="120">当日成交净买额<br>(元)</th>
-                    <th width="100">买入成交额<br>(元)</th>
-                    <th width="100">卖出成交额<br>(元)</th>
-                    <th width="110">领涨股</th>
-                    <th width="110">领涨股涨跌幅</th>
-                    <th width="100">上证指数</th>
-                    <th>涨跌幅</th>
-                </tr>
-            </thead>
-            <tbody>
-            <tr class="">
-                    <td>2020-06-10</td>
-                    <td class="c-fall">-5.79亿</td>
-                    <td class="tc">525.79亿</td>
-                    <td class="c-fall">-12.33亿</td>
-                    <td class="">125.46亿</td>
-                    <td class="">137.79亿</td>
-                    <td><a href="http://stockpage.10jqka.com.cn/600859/" target="_blank">王府井</a></td>
-                    <td class="c-rise">10.01%</td>
-                    <td class="c-fall">2943.75</td>
-                    <td class="c-fall">-0.42%</td>
-            </tr>
-            <tr class="odd">
-                    <td>2020-06-09</td>
-                    <td class="c-rise">32.17亿</td>
-                    <td class="tc">487.83亿</td>
-                    <td class="c-rise">24.93亿</td>
-                    <td class="">149.53亿</td>
-                    <td class="">124.60亿</td>
-                    <td><a href="http://stockpage.10jqka.com.cn/600859/" target="_blank">王府井</a></td>
-                    <td class="c-rise">10.00%</td>
-                    <td class="c-rise">2956.11</td>
-                    <td class="c-rise">0.62%</td>
-            </tr>
-            <tr class="">
-                    <td>2020-06-08</td>
-                    <td class="c-rise">21.11亿</td>
-                    <td class="tc">498.89亿</td>
-                    <td class="c-rise">15.34亿</td>
-                    <td class="">163.50亿</td>
-                    <td class="">148.15亿</td>
-                    <td><a href="http://stockpage.10jqka.com.cn/600230/" target="_blank">沧州大化</a></td>
-                    <td class="c-rise">10.02%</td>
-                    <td class="c-rise">2937.77</td>
-                    <td class="c-rise">0.24%</td>
-            </tr>
-            <tr class="odd">
-                    <td>2020-06-05</td>
-                    <td class="c-rise">37.09亿</td>
-                    <td class="tc">482.91亿</td>
-                    <td class="c-rise">29.84亿</td>
-                    <td class="">141.37亿</td>
-                    <td class="">111.53亿</td>
-                    <td><a href="http://stockpage.10jqka.com.cn/600895/" target="_blank">张江高科</a></td>
-                    <td class="c-rise">10.02%</td>
-                    <td class="c-rise">2930.8</td>
-                    <td class="c-rise">0.40%</td>
-            </tr>
-            <tr class="">
-                    <td>2020-06-04</td>
-                    <td class="c-rise">10.84亿</td>
-                    <td class="tc">509.16亿</td>
-                    <td class="c-rise">4.86亿</td>
-                    <td class="">134.75亿</td>
-                    <td class="">129.88亿</td>
-                    <td><a href="http://stockpage.10jqka.com.cn/600565/" target="_blank">迪马股份</a></td>
-                    <td class="c-rise">10.13%</td>
-                    <td class="c-fall">2919.25</td>
-                    <td class="c-fall">-0.14%</td>
-            </tr>
-            <tr class="odd">
-                    <td>2020-06-03</td>
-                    <td class="c-rise">12.71亿</td>
-                    <td class="tc">507.29亿</td>
-                    <td class="c-rise">6.62亿</td>
-                    <td class="">162.59亿</td>
-                    <td class="">155.96亿</td>
-                    <td><a href="http://stockpage.10jqka.com.cn/600565/" target="_blank">迪马股份</a></td>
-                    <td class="c-rise">10.11%</td>
-                    <td class="c-rise">2923.37</td>
-                    <td class="c-rise">0.07%</td>
-            </tr>
-            <tr class="">
-                    <td>2020-06-02</td>
-                    <td class="c-rise">43.93亿</td>
-                    <td class="tc">476.07亿</td>
-                    <td class="c-rise">37.35亿</td>
-                    <td class="">179.92亿</td>
-                    <td class="">142.57亿</td>
-                    <td><a href="http://stockpage.10jqka.com.cn/600828/" target="_blank">茂业商业</a></td>
-                    <td class="c-rise">10.02%</td>
-                    <td class="c-rise">2921.4</td>
-                    <td class="c-rise">0.20%</td>
-            </tr>
-            <tr class="odd">
-                    <td>2020-06-01</td>
-                    <td class="c-rise">46.42亿</td>
-                    <td class="tc">473.58亿</td>
-                    <td class="c-rise">39.90亿</td>
-                    <td class="">188.95亿</td>
-                    <td class="">149.05亿</td>
-                    <td><a href="http://stockpage.10jqka.com.cn/600337/" target="_blank">美克家居</a></td>
-                    <td class="c-rise">10.11%</td>
-                    <td class="c-rise">2915.43</td>
-                    <td class="c-rise">2.21%</td>
-            </tr>
-            <tr class="">
-                    <td>2020-05-29</td>
-                    <td class="c-rise">20.80亿</td>
-                    <td class="tc">499.20亿</td>
-                    <td class="c-rise">10.82亿</td>
-                    <td class="">185.03亿</td>
-                    <td class="">174.22亿</td>
-                    <td><a href="http://stockpage.10jqka.com.cn/600185/" target="_blank">格力地产</a></td>
-                    <td class="c-rise">10.05%</td>
-                    <td class="c-rise">2852.35</td>
-                    <td class="c-rise">0.21%</td>
-            </tr>
-            <tr class="odd">
-                    <td>2020-05-28</td>
-                    <td class="c-rise">32.09亿</td>
-                    <td class="tc">487.91亿</td>
-                    <td class="c-rise">25.70亿</td>
-                    <td class="">158.43亿</td>
-                    <td class="">132.73亿</td>
-                    <td><a href="http://stockpage.10jqka.com.cn/600185/" target="_blank">格力地产</a></td>
-                    <td class="c-rise">10.07%</td>
-                    <td class="c-rise">2846.22</td>
-                    <td class="c-rise">0.33%</td>
-            </tr>
-            </tbody>
-            </table>
-        '''
-
         history_table = doc.xpath(".//table[@class='m-table J-ajax-table']")[0]
 
         # table_heads = history_table.xpath("./thead/tr/th")

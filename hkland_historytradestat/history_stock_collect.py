@@ -1,32 +1,18 @@
 # -*- coding: utf-8 -*-
-import base64
 import datetime
-import hashlib
-import hmac
 import json
-import logging
 import os
 import pprint
 import re
-import time
-import traceback
-import urllib.parse
+import sys
 
 import requests
-import sys
 from apscheduler.schedulers.blocking import BlockingScheduler
 
-
-sys.path.append("./../")
-from hkland_historytradestat.configs import (PRODUCT_MYSQL_HOST, PRODUCT_MYSQL_USER, PRODUCT_MYSQL_PASSWORD,
-                                             PRODUCT_MYSQL_DB, DC_HOST, DC_PORT, DC_USER, DC_PASSWD,
-                                             DC_DB, SPIDER_MYSQL_HOST, SPIDER_MYSQL_PORT,
-                                             SPIDER_MYSQL_USER, SPIDER_MYSQL_PASSWORD, SPIDER_MYSQL_DB,
-                                             PRODUCT_MYSQL_PORT, SECRET, TOKEN)
-from hkland_historytradestat.sql_pool import PyMysqlPoolBase
-
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
+cur_path = os.path.split(os.path.realpath(__file__))[0]
+file_path = os.path.abspath(os.path.join(cur_path, ".."))
+sys.path.insert(0, file_path)
+from hkland_historytradestat.base_spider import BaseSpider, logger
 
 
 class SSEStatsOnTime(object):
@@ -97,44 +83,21 @@ class SZSEStatsOnTime(object):
             return item
 
 
-class HistoryCalSpider(object):
-    dc_cfg = {
-        "host": DC_HOST,
-        "port": DC_PORT,
-        "user": DC_USER,
-        "password": DC_PASSWD,
-        "db": DC_DB,
-    }
-
-    spider_cfg = {
-        "host": SPIDER_MYSQL_HOST,
-        "port": SPIDER_MYSQL_PORT,
-        "user": SPIDER_MYSQL_USER,
-        "password": SPIDER_MYSQL_PASSWORD,
-        "db": SPIDER_MYSQL_DB,
-    }
-
-    product_cfg = {
-        "host": PRODUCT_MYSQL_HOST,
-        "port": PRODUCT_MYSQL_PORT,
-        "user": PRODUCT_MYSQL_USER,
-        "password": PRODUCT_MYSQL_PASSWORD,
-        "db": PRODUCT_MYSQL_DB,
-    }
-
+class HistoryCalSpider(BaseSpider):
     def __init__(self):
+        super(HistoryCalSpider, self).__init__()
         self.headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.80 Safari/537.36',
         }
-        self.today = datetime.datetime.today()
-        # 1 沪股通
-        # 2 港股通（沪）
-        # 3 深股通
-        # 4 港股通（深）
-        self.hk_sh_his = self.select_last_total(1).get("MoneyInHistoryTotal")
-        self.hk_sz_his = self.select_last_total(3).get("MoneyInHistoryTotal")
-        self.sh_hk_his = self.select_last_total(2).get("MoneyInHistoryTotal")
-        self.sz_hk_his = self.select_last_total(4).get("MoneyInHistoryTotal")
+        self.today = datetime.datetime.combine(datetime.datetime.today(), datetime.time.min)
+
+        self._dc_init()
+        # 1 沪股通; 2 港股通（沪); 3 深股通; 4 港股通（深）
+        self.hk_sh_his = self.select_last_total(1, self.today)
+        self.hk_sz_his = self.select_last_total(3, self.today)
+        self.sh_hk_his = self.select_last_total(2, self.today)
+        self.sz_hk_his = self.select_last_total(4, self.today)
+
         self.table_name = 'hkland_calhistory'
         self.fields = [
             'Date',
@@ -147,58 +110,6 @@ class HistoryCalSpider(object):
             'MarketTypeCode',
             'MarketType',
         ]
-
-    def ding(self, msg):
-        def get_url():
-            timestamp = str(round(time.time() * 1000))
-            secret_enc = SECRET.encode('utf-8')
-            string_to_sign = '{}\n{}'.format(timestamp, SECRET)
-            string_to_sign_enc = string_to_sign.encode('utf-8')
-            hmac_code = hmac.new(secret_enc, string_to_sign_enc, digestmod=hashlib.sha256).digest()
-            sign = urllib.parse.quote_plus(base64.b64encode(hmac_code))
-            url = 'https://oapi.dingtalk.com/robot/send?access_token={}&timestamp={}&sign={}'.format(
-                TOKEN, timestamp, sign)
-            return url
-
-        url = get_url()
-        header = {
-            "Content-Type": "application/json",
-            "Charset": "UTF-8"
-        }
-        message = {
-            "msgtype": "text",
-            "text": {
-                "content": "{}@15626046299".format(msg)
-            },
-            "at": {
-                "atMobiles": [
-                    "15626046299",
-                ],
-                "isAtAll": False
-            }
-        }
-        message_json = json.dumps(message)
-        resp = requests.post(url=url, data=message_json, headers=header)
-        if resp.status_code == 200:
-            pass
-        else:
-            logger.warning("钉钉消息发送失败")
-
-    def _init_pool(self, cfg: dict):
-        """
-        eg.
-        conf = {
-                "host": LOCAL_MYSQL_HOST,
-                "port": LOCAL_MYSQL_PORT,
-                "user": LOCAL_MYSQL_USER,
-                "password": LOCAL_MYSQL_PASSWORD,
-                "db": LOCAL_MYSQL_DB,
-        }
-        :param cfg:
-        :return:
-        """
-        pool = PyMysqlPoolBase(**cfg)
-        return pool
 
     @staticmethod
     def re_data(data):
@@ -218,48 +129,19 @@ class HistoryCalSpider(object):
             data = data.replace(",", "")
             return int(data)
 
-    def contract_sql(self, to_insert: dict, table: str, update_fields: list):
-        ks = []
-        vs = []
-        for k in to_insert:
-            ks.append(k)
-            vs.append(to_insert.get(k))
-        fields_str = "(" + ",".join(ks) + ")"
-        values_str = "(" + "%s," * (len(vs) - 1) + "%s" + ")"
-        base_sql = '''INSERT INTO `{}` '''.format(table) + fields_str + ''' values ''' + values_str
-        on_update_sql = ''' ON DUPLICATE KEY UPDATE '''
-        update_vs = []
-        for update_field in update_fields:
-            on_update_sql += '{}=%s,'.format(update_field)
-            update_vs.append(to_insert.get(update_field))
-        on_update_sql = on_update_sql.rstrip(",")
-        sql = base_sql + on_update_sql + """;"""
-        vs.extend(update_vs)
-        return sql, tuple(vs)
+    # def select_last_total(self, market_type):
+    #     """查找距给出时间最近的一个时间点的累计值"""
+    #     dc = self._init_pool(self.dc_cfg)
+    #     sql = '''select Date, MoneyInHistoryTotal from hkland_historytradestat where Date = (select max(Date) \
+    #     from hkland_historytradestat where MarketTypeCode = {}) and MarketTypeCode = {};'''.format(market_type, market_type)
+    #     ret = dc.select_one(sql)
+    #     return ret
 
-    def _save(self, to_insert, table, update_fields: list):
-        spider = self._init_pool(self.spider_cfg)
-        try:
-            insert_sql, values = self.contract_sql(to_insert, table, update_fields)
-            count = spider.insert(insert_sql, values)
-        except:
-            traceback.print_exc()
-            logger.warning("失败")
-            count = None
-        else:
-            if count:
-                logger.info("更入新数据 {}".format(to_insert))
-        finally:
-            spider.dispose()
-        return count
-
-    def select_last_total(self, market_type):
-        """查找距给出时间最近的一个时间点的累计值"""
-        dc = self._init_pool(self.dc_cfg)
+    def select_last_total(self, market_type, dt):
+        """查找距给出时间前一天的时间点的累计值"""
         sql = '''select Date, MoneyInHistoryTotal from hkland_historytradestat where Date = (select max(Date) \
-        from hkland_historytradestat where MarketTypeCode = {}) and MarketTypeCode = {};'''.format(market_type, market_type)
-        # print(">>> ", sql)
-        ret = dc.select_one(sql)
+        from hkland_historytradestat where MarketTypeCode = {} and Date < '{}') and MarketTypeCode = {};'''.format(market_type, dt, market_type)
+        ret = float(self.dc_client.select_one(sql).get("MoneyInHistoryTotal"))
         return ret
 
     def sh_sz(self):
@@ -316,7 +198,6 @@ class HistoryCalSpider(object):
         }
 
         logger.info("生成一条港股通(深)数据: {}".format(item))
-        self._save(item, self.table_name, self.fields)
         return item
 
     def sh_hk(self):
@@ -372,7 +253,6 @@ class HistoryCalSpider(object):
         }
 
         logger.info("生成一条港股通(沪)数据: {}".format(item))
-        self._save(item, self.table_name, self.fields)
         return item
 
     def hk_sz(self):
@@ -455,13 +335,12 @@ class HistoryCalSpider(object):
         }
 
         logger.info("生成一条深股通数据: {}".format(item))
-        self._save(item, self.table_name, self.fields)
         return item
 
     def hk_sh(self):
         """沪股通"""
         url = 'http://sc.hkex.com.hk/TuniS/www.hkex.com.hk/chi/csm/script/data_NBSH_QuotaUsage_chi.js'  # 沪股通每日资金余额
-        url2 = 'http://sc.hkex.com.hk/TuniS/www.hkex.com.hk/chi/csm/script/data_NBSH_Turnover_chi.js'  # 沪股通成交额
+        url2 = 'http://sc.hkex.com.hk/TuniS/www.hkex.com.hk/chi/csm/script/data_NBSH_Turnover_chi.js'   # 沪股通成交额
 
         body = requests.get(url, headers=self.headers).text
         datas = json.loads(body.rstrip(";").lstrip("northbound11 =").lstrip("northbound12 =").lstrip("northbound21 =").lstrip("northbound22 ="))
@@ -479,7 +358,6 @@ class HistoryCalSpider(object):
         show_dt = datas[0].get("section")[0].get("subtitle")[1]
         show_dt = datetime.datetime.strptime(show_dt, "%d/%m/%Y").strftime("%Y-%m-%d")
         logger.info("当前的日期是{}".format(show_dt))
-
         flow_info = datas[0].get("section")[0].get("item")
 
         # 当前分钟时间
@@ -536,7 +414,6 @@ class HistoryCalSpider(object):
         }
 
         logger.info("生成一条沪股通数据: {}".format(item))
-        self._save(item, self.table_name, self.fields)
         return item
 
     def _check_if_trading_today(self, category):
@@ -549,7 +426,6 @@ class HistoryCalSpider(object):
         }
         一般来说 1 3 与 2 4 是一致的
         '''
-        dc = self._init_pool(self.dc_cfg)
         _map = {
             1: (2, 4),
             2: (1, 3),
@@ -557,34 +433,17 @@ class HistoryCalSpider(object):
 
         sql = 'select IfTradingDay from hkland_shszhktradingday where TradingType in {} and EndDate = "{}";'.format(
         _map.get(category), self.today.strftime("%Y-%m-%d"))
-        ret = dc.select_all(sql)
+        ret = self.dc_client.select_all(sql)
         ret = [r.get("IfTradingDay") for r in ret]
         if ret == [2, 2]:
             return False
         else:
             return True
 
-    def _check_if_trading_period(self):
-        """判断是否是该天的交易时段"""
-        _now = datetime.datetime.now()
-        if (_now <= datetime.datetime(_now.year, _now.month, _now.day, 8, 0, 0) or
-                _now >= datetime.datetime(_now.year, _now.month, _now.day, 16, 30, 0)):
-            logger.warning("非当天交易时段")
-            return False
-        return True
-
     def _start(self):
-        is_trading = self._check_if_trading_period()
-        if not is_trading:
-            return
+        self._product_init()
 
         south_bool = self._check_if_trading_today(1)
-        if south_bool:
-            item_sh_hk = self.sh_hk()
-            item_sh_sz = self.sh_sz()
-        else:
-            logger.warning("今日无南向交易 ")
-
         north_bool = self._check_if_trading_today(2)
         if north_bool:
             item_hk_sh = self.hk_sh()
@@ -592,21 +451,14 @@ class HistoryCalSpider(object):
         else:
             logger.warning("今日无北向交易 ")
 
-    def start(self):
-        try:
-            self._create_stock_table()
+        if south_bool:
+            item_sh_hk = self.sh_hk()
+            item_sh_sz = self.sh_sz()
+        else:
+            logger.warning("今日无南向交易 ")
 
-            # item_hk_sh = self.hk_sh()
-            # item_hk_sz = self.hk_sz()
-            # item_sh_hk = self.sh_hk()
-            # item_sh_sz = self.sh_sz()
-            # self.ding("沪股通: {}\n深股通: {}\n港股通(沪): {}\n港股通(深):{}\n".format(item_hk_sh, item_hk_sz, item_sh_hk, item_sh_sz))
-
-            self._start()
-        except Exception as e:
-            # traceback.print_exc()
-            logger.info("cal history error: {}".format(e))
-            # self.ding("cal history error: {}".format(e))
+        # self.ding("沪股通: {}\n深股通: {}\n港股通(沪): {}\n港股通(深):{}\n".format(item_hk_sh, item_hk_sz, item_sh_hk, item_sh_sz))
+        print("沪股通: {}\n深股通: {}\n港股通(沪): {}\n港股通(深):{}\n".format(item_hk_sh, item_hk_sz, item_sh_hk, item_sh_sz))
 
     def _create_stock_table(self):
         # 历史资金累计流入 其实是净买额累计流入
@@ -633,23 +485,9 @@ class HistoryCalSpider(object):
         client.dispose()
 
 
-def task():
-    h = HistoryCalSpider()
-    h.start()
-
-
 if __name__ == '__main__':
-    scheduler = BlockingScheduler()
-    task()
-    # TODO 在每天的 9-12 点 13-17 点 每隔 10 s 运行一次 晚点有空再细化时间
-    scheduler.add_job(task, 'cron', hour='8-12, 13-17', minute="*", second='0, 10, 20, 30, 40, 50')
-    # scheduler.add_job(task, 'interval', seconds=10)
-    logger.info('Press Ctrl+{0} to exit'.format('Break' if os.name == 'nt' else 'C'))
+    HistoryCalSpider()._start()
 
-    try:
-        scheduler.start()
-    except (KeyboardInterrupt, SystemExit):
-        pass
 
 '''
 docker build -f Dockerfile_calhistory -t registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_calhistory:v1 .
