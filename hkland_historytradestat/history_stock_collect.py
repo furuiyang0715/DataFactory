@@ -6,6 +6,7 @@ import pprint
 import re
 import sys
 import time
+import traceback
 
 import requests
 import schedule
@@ -428,8 +429,31 @@ class HistoryCalSpider(BaseSpider):
         else:
             return True
 
+    def _create_table(self):
+        sql = '''
+        CREATE TABLE IF NOT EXISTS `{}` (
+          `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+          `Date` datetime NOT NULL COMMENT '日期',
+          `MoneyIn` decimal(20,4) NOT NULL COMMENT '当日资金流入(百万）',
+          `MoneyBalance` decimal(20,4) NOT NULL COMMENT '当日余额（百万）',
+          `MoneyInHistoryTotal` decimal(20,4) NOT NULL COMMENT '历史资金累计流入(百万元）',
+          `NetBuyAmount` decimal(20,4) NOT NULL COMMENT '当日成交净买额(百万元）',
+          `BuyAmount` decimal(20,4) NOT NULL COMMENT '买入成交额(百万元）',
+          `SellAmount` decimal(20,4) NOT NULL COMMENT '卖出成交额(百万元）',
+          `MarketTypeCode` int(11) NOT NULL COMMENT '市场类型代码',
+          `MarketType` varchar(20) COLLATE utf8_bin DEFAULT NULL COMMENT '市场类型',
+          `CMFID` bigint(20) NOT NULL COMMENT '来源ID',
+          `CMFTime` datetime NOT NULL COMMENT '来源日期',
+          `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
+          `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          PRIMARY KEY (`id`),
+          UNIQUE KEY `un` (`Date`,`MarketTypeCode`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='陆股通资金流向汇总(港股通币种为港元，陆股通币种为人民币)'; 
+        '''.format(self.table_name)
+        self.spider_client.insert(sql)
+        self.spider_client.end()
+
     def _start(self):
-        self._product_init()
         self._spider_init()
 
         # TODO
@@ -474,7 +498,7 @@ class HistoryCalSpider(BaseSpider):
         try:
             self._start()
         except:
-            pass
+            traceback.print_exc()
 
 
 def task():
