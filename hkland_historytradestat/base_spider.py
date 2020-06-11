@@ -45,6 +45,9 @@ class BaseSpider(object):
     }
 
     def __init__(self):
+        self.fields = ["Date", 'MoneyInHistoryTotal', 'MarketTypeCode', 'MarketType',
+                       'MoneyIn', "MoneyBalance", "NetBuyAmount", "BuyAmount", "SellAmount"]
+        self.table_name = "hkland_historytradestat"
         self.tool_table_name = 'base_table_updatetime'
         self.juyuan_client = None
         self.product_client = None
@@ -184,3 +187,38 @@ class BaseSpider(object):
             pass
         else:
             logger.warning("钉钉消息发送失败")
+
+    def refresh_update_time(self):
+        sql = '''select max(UPDATETIMEJZ) as max_dt from {}; '''.format(self.table_name)
+        max_dt = self.product_client.select_one(sql).get("max_dt")
+        logger.info("最新的更新时间是{}".format(max_dt))
+
+        refresh_sql = '''replace into {} (id,TableName, LastUpdateTime,IsValid) values (4, "hkland_historytradestat", '{}', 1); 
+        '''.format(self.tool_table_name, max_dt)
+        count = self.product_client.update(refresh_sql)
+        logger.info("1 首次插入 2 替换插入: {}".format(count))
+        self.product_client.end()
+
+    def _create_table(self):
+        sql = '''
+        CREATE TABLE IF NOT EXISTS `{}` (
+          `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+          `Date` datetime NOT NULL COMMENT '日期',
+          `MoneyIn` decimal(20,4) NOT NULL COMMENT '当日资金流入(百万）',
+          `MoneyBalance` decimal(20,4) NOT NULL COMMENT '当日余额（百万）',
+          `MoneyInHistoryTotal` decimal(20,4) NOT NULL COMMENT '历史资金累计流入(百万元）',
+          `NetBuyAmount` decimal(20,4) NOT NULL COMMENT '当日成交净买额(百万元）',
+          `BuyAmount` decimal(20,4) NOT NULL COMMENT '买入成交额(百万元）',
+          `SellAmount` decimal(20,4) NOT NULL COMMENT '卖出成交额(百万元）',
+          `MarketTypeCode` int(11) NOT NULL COMMENT '市场类型代码',
+          `MarketType` varchar(20) COLLATE utf8_bin DEFAULT NULL COMMENT '市场类型',
+          `CMFID` bigint(20) NOT NULL COMMENT '来源ID',
+          `CMFTime` datetime NOT NULL COMMENT '来源日期',
+          `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
+          `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          PRIMARY KEY (`id`),
+          UNIQUE KEY `un` (`Date`,`MarketTypeCode`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='陆股通资金流向汇总(港股通币种为港元，陆股通币种为人民币)'; 
+        '''.format(self.table_name)
+        self.product_client.insert(sql)
+        self.product_client.end()

@@ -32,18 +32,10 @@ class JqkaHistory(BaseSpider):
             "SG": (3, "深股通"),
             "GGh": (2, "港股通(沪市)"),
             "GGs": (4, "港股通(深市)"),
-
-            # 1 | 沪股通
-            # 2 | 港股通(沪市)
-            # 3 | 深股通
-            # 4 | 港股通(深市)
-
         }
-        self.fields = ["Date", 'MoneyInHistoryTotal', 'MarketTypeCode', 'MarketType',
-                       'MoneyIn', "MoneyBalance", "NetBuyAmount", "BuyAmount", "SellAmount"]
 
     def select_last_total(self, market_type, dt):
-        """查找距给出时间最近的一个时间点的累计值"""
+        """查找距给出时间前一天的时间点的累计值"""
         # sql = '''select Date, MoneyInHistoryTotal from hkland_historytradestat where Date = (select max(Date) \
         # from hkland_historytradestat where MarketTypeCode = {}) and MarketTypeCode = {};'''.format(market_type, market_type)
         sql = '''select Date, MoneyInHistoryTotal from hkland_historytradestat where Date = '{}' and MarketTypeCode = {};'''.format(dt, market_type)
@@ -83,22 +75,12 @@ class JqkaHistory(BaseSpider):
             raise
         return data
 
-    # def re_million_money(self, data_str):
-    #     """将钱转换为百万计"""
-    #     if data_str.endswith("万"):
-    #         data = self.re_decimal_data(data_str.replace("万", '')) / 10**2
-    #     elif data_str.endswith("亿"):
-    #         data = self.re_decimal_data(data_str.replace("亿", '')) * 10**2
-    #     else:
-    #         raise
-    #     return data
-
     def start(self):
         self._juyuan_init()
         self._product_init()
         self._dc_init()
 
-        # self._create_table()
+        self._create_table()
 
         # 类别代码:GGh: 港股通(沪), GGs: 港股通(深), HG: 沪股通, SG: 深股通'
         category_map = {
@@ -112,8 +94,12 @@ class JqkaHistory(BaseSpider):
             items = self.get_history(category, url)
             allitems.extend(items)
 
-        # self._batch_save(self.product_client, allitems, self.table_name, self.fields)
-        # self.refresh_update_time()
+        print("* " * 20)
+        for his in allitems:
+            print(his)
+
+        self._batch_save(self.product_client, allitems, self.table_name, self.fields)
+        self.refresh_update_time()
 
     def get_history(self, category, url):
         body = self.get(url)
@@ -323,7 +309,7 @@ class JqkaHistory(BaseSpider):
 
                 # 历史资金累计流入(百万) = 上一天的历史资金累计流入(百万) + 今天的当日成交净买额(百万元)
                 last_money_in_history_total = self.select_last_total(self.market_map.get(category)[0], last_top_dt)
-                print(">>>>>> ", last_money_in_history_total)
+                # print(">>>>>> ", last_money_in_history_total)
                 item['MoneyInHistoryTotal'] = last_money_in_history_total + item['NetBuyAmount']
 
                 item["Date"] = top_dt
@@ -333,7 +319,6 @@ class JqkaHistory(BaseSpider):
                 item['CMFID'] = 1  # 兼容之前的程序 写死
                 item['CMFTime'] = datetime.datetime.now()  # 兼容和之前的程序 用当前的时间代替
                 items.append(item)
-                print(item)
         return items
 
 
