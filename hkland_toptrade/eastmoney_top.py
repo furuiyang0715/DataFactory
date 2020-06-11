@@ -180,7 +180,9 @@ def schedule_task():
     top10.start()
 
 
-def task():
+def main():
+    EastMoneyTop10(datetime.datetime.today().strftime("%Y-%m-%d")).start()
+
     schedule_task()
 
     schedule.every(2).minutes.do(schedule_task)
@@ -192,7 +194,7 @@ def task():
 
 if __name__ == "__main__":
 
-    task()
+    main()
 
 
 '''
