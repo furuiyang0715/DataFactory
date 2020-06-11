@@ -7,7 +7,6 @@ import re
 import sys
 
 import requests
-from apscheduler.schedulers.blocking import BlockingScheduler
 
 cur_path = os.path.split(os.path.realpath(__file__))[0]
 file_path = os.path.abspath(os.path.join(cur_path, ".."))
@@ -129,14 +128,6 @@ class HistoryCalSpider(BaseSpider):
             data = data.replace(",", "")
             return int(data)
 
-    # def select_last_total(self, market_type):
-    #     """查找距给出时间最近的一个时间点的累计值"""
-    #     dc = self._init_pool(self.dc_cfg)
-    #     sql = '''select Date, MoneyInHistoryTotal from hkland_historytradestat where Date = (select max(Date) \
-    #     from hkland_historytradestat where MarketTypeCode = {}) and MarketTypeCode = {};'''.format(market_type, market_type)
-    #     ret = dc.select_one(sql)
-    #     return ret
-
     def select_last_total(self, market_type, dt):
         """查找距给出时间前一天的时间点的累计值"""
         sql = '''select Date, MoneyInHistoryTotal from hkland_historytradestat where Date = (select max(Date) \
@@ -163,20 +154,20 @@ class HistoryCalSpider(BaseSpider):
         buy_amount = self.re_hk_data(buy_sell_info[1][1])
         sell_amount = self.re_hk_data(buy_sell_info[2][1])
         netbuyamount = buy_amount - sell_amount
-        logger.info("当前分钟的买入金额是 {} 百万港元, 卖出金额是 {} 百万港元".format(buy_amount, sell_amount))
-        logger.info("当前分钟的净流入是 {} 百万港元".format(netbuyamount))
+        logger.debug("当前分钟的买入金额是 {} 百万港元, 卖出金额是 {} 百万港元".format(buy_amount, sell_amount))
+        logger.debug("当前分钟的净流入是 {} 百万港元".format(netbuyamount))
 
         # 当前分钟的历史资金累计流入(百万) = 上一天的历史资金累计流入(百万) + 当前分钟的当日成交净买额(百万元)
         moneyinhistorytotal = self.sz_hk_his + netbuyamount
-        logger.info("当前分钟的历史资金累计流入是{}百万".format(moneyinhistorytotal))
+        logger.debug("当前分钟的历史资金累计流入是{}百万".format(moneyinhistorytotal))
 
         date_min = datas2[0].get("section")[0].get("subtitle")[1]
         date_min = datetime.datetime.strptime(date_min, "%d/%m/%Y (%H:%M)")
-        logger.info("解析出的当前的分钟时间是{}".format(date_min))
+        logger.debug("解析出的当前的分钟时间是{}".format(date_min))
 
         sz = SZSEStatsOnTime()
         ret = sz.get_balance_info()
-        logger.info("从深交所接口获取的港股通(深)数据是{}".format(ret))
+        logger.debug("从深交所接口获取的港股通(深)数据是{}".format(ret))
         money_limit = ret.get("DailyLimit")
         money_balance = ret.get("Balance")
         money_in = money_limit - money_balance
@@ -219,20 +210,20 @@ class HistoryCalSpider(BaseSpider):
         buy_amount = self.re_hk_data(buy_sell_info[1][1])
         sell_amount = self.re_hk_data(buy_sell_info[2][1])
         netbuyamount = buy_amount - sell_amount
-        logger.info("当前分钟的买入金额是 {} 百万港元, 卖出金额是 {} 百万港元".format(buy_amount, sell_amount))
-        logger.info("当前分钟的净流入是 {} 百万港元".format(netbuyamount))
+        logger.debug("当前分钟的买入金额是 {} 百万港元, 卖出金额是 {} 百万港元".format(buy_amount, sell_amount))
+        logger.debug("当前分钟的净流入是 {} 百万港元".format(netbuyamount))
 
         # 当前分钟的历史资金累计流入(百万) = 上一天的历史资金累计流入(百万) + 当前分钟的当日成交净买额(百万元)
         moneyinhistorytotal = self.sh_hk_his + netbuyamount
-        logger.info("当前分钟的历史资金累计流入是{}百万".format(moneyinhistorytotal))
+        logger.debug("当前分钟的历史资金累计流入是{}百万".format(moneyinhistorytotal))
 
         date_min = datas2[0].get("section")[0].get("subtitle")[1]
         date_min = datetime.datetime.strptime(date_min, "%d/%m/%Y (%H:%M)")
-        logger.info("解析出的当前的分钟时间是{}".format(date_min))
+        logger.debug("解析出的当前的分钟时间是{}".format(date_min))
 
         sse = SSEStatsOnTime()
         ret = sse.get_balance_info()
-        logger.info("上交所的港股通(沪)接口数据是{}".format(ret))
+        logger.debug("上交所的港股通(沪)接口数据是{}".format(ret))
         money_limit = ret.get("DailyLimit")
         money_balance = ret.get("Balance")
         money_in = money_limit - money_balance
@@ -284,11 +275,11 @@ class HistoryCalSpider(BaseSpider):
         m_dt = re.findall("余额 \(于 (.*)\)", m_dt)[0]
         complete_dt = " ".join([show_dt, m_dt])
         complete_dt = datetime.datetime.strptime(complete_dt, "%Y-%m-%d %H:%M")
-        logger.info("当前的分钟时间是{}".format(complete_dt))
+        logger.debug("当前的分钟时间是{}".format(complete_dt))
 
         # 当前分钟余额 单位: 百万
         money_balance = self.re_data(flow_info[1][1])
-        logger.info("当前分钟的余额是{}百万".format(money_balance))
+        logger.debug("当前分钟的余额是{}百万".format(money_balance))
 
         # 当日资金额度 单位: 百万
         money_limit = self.re_data(flow_info[0][1])
@@ -296,13 +287,13 @@ class HistoryCalSpider(BaseSpider):
 
         # 当前分钟资金流入 = 额度 - 余额 单位: 百万
         money_in = money_limit - money_balance
-        logger.info("当前分钟的资金流入是{}百万".format(money_in))
+        logger.debug("当前分钟的资金流入是{}百万".format(money_in))
 
         body2 = requests.get(url2, headers=self.headers).text
         datas2 = json.loads(
             body2.rstrip(";").lstrip("northbound11 =").lstrip("northbound12 =").lstrip("northbound21 =").lstrip(
                 "northbound22 ="))
-        logger.info("\n"+pprint.pformat(datas2))
+        logger.debug("\n"+pprint.pformat(datas2))
         '''
         [{'category': 'Northbound',
           'section': [{'item': [['买入及卖出', 'RMB19,462 Mil', {}],
@@ -315,8 +306,8 @@ class HistoryCalSpider(BaseSpider):
         buy_amount = self.re_data(buy_sell_info[1][1])
         sell_amount = self.re_data(buy_sell_info[2][1])
         netbuyamount = buy_amount - sell_amount
-        logger.info("当前分钟的买入金额是 {} 百万, 卖出金额是 {} 百万".format(buy_amount, sell_amount))
-        logger.info("当前分钟的净流入是 {} 百万".format(netbuyamount))
+        logger.debug("当前分钟的买入金额是 {} 百万, 卖出金额是 {} 百万".format(buy_amount, sell_amount))
+        logger.debug("当前分钟的净流入是 {} 百万".format(netbuyamount))
 
         # 当前分钟的历史资金累计流入(百万) = 上一天的历史资金累计流入(百万) + 当前分钟的当日成交净买额(百万元)
         moneyinhistorytotal = self.hk_sz_his + netbuyamount
@@ -344,7 +335,7 @@ class HistoryCalSpider(BaseSpider):
 
         body = requests.get(url, headers=self.headers).text
         datas = json.loads(body.rstrip(";").lstrip("northbound11 =").lstrip("northbound12 =").lstrip("northbound21 =").lstrip("northbound22 ="))
-        logger.info("\n"+pprint.pformat(datas))
+        logger.debug("\n"+pprint.pformat(datas))
         '''
         [{'category': 'Northbound',
           'section': [{'item': [['额度', 'RMB52,000 Mil', {}],
@@ -357,7 +348,7 @@ class HistoryCalSpider(BaseSpider):
         # 当前日期
         show_dt = datas[0].get("section")[0].get("subtitle")[1]
         show_dt = datetime.datetime.strptime(show_dt, "%d/%m/%Y").strftime("%Y-%m-%d")
-        logger.info("当前的日期是{}".format(show_dt))
+        logger.debug("当前的日期是{}".format(show_dt))
         flow_info = datas[0].get("section")[0].get("item")
 
         # 当前分钟时间
@@ -365,19 +356,19 @@ class HistoryCalSpider(BaseSpider):
         m_dt = re.findall("余额 \(于 (.*)\)", m_dt)[0]
         complete_dt = " ".join([show_dt, m_dt])
         complete_dt = datetime.datetime.strptime(complete_dt, "%Y-%m-%d %H:%M")
-        logger.info("当前的分钟时间是{}".format(complete_dt))
+        logger.debug("当前的分钟时间是{}".format(complete_dt))
 
         # 当前分钟余额 单位: 百万
         money_balance = self.re_data(flow_info[1][1])
-        logger.info("当前分钟的余额是{}百万".format(money_balance))
+        logger.debug("当前分钟的余额是{}百万".format(money_balance))
 
         # 当日资金额度 单位: 百万
         money_limit = self.re_data(flow_info[0][1])
-        logger.info("当日资金的额度是{}百万".format(money_limit))
+        logger.debug("当日资金的额度是{}百万".format(money_limit))
 
         # 当前分钟资金流入 = 额度 - 余额 单位: 百万
         money_in = money_limit - money_balance
-        logger.info("当前分钟的资金流入是{}百万".format(money_in))
+        logger.debug("当前分钟的资金流入是{}百万".format(money_in))
 
         body2 = requests.get(url2, headers=self.headers).text
         datas2 = json.loads(body2.rstrip(";").lstrip("northbound11 =").lstrip("northbound12 =").lstrip("northbound21 =").lstrip("northbound22 ="))
@@ -394,12 +385,12 @@ class HistoryCalSpider(BaseSpider):
         buy_amount = self.re_data(buy_sell_info[1][1])
         sell_amount = self.re_data(buy_sell_info[2][1])
         netbuyamount = buy_amount - sell_amount
-        logger.info("当前分钟的买入金额是 {} 百万, 卖出金额是 {} 百万".format(buy_amount, sell_amount))
-        logger.info("当前分钟的净流入是 {} 百万".format(netbuyamount))
+        logger.debug("当前分钟的买入金额是 {} 百万, 卖出金额是 {} 百万".format(buy_amount, sell_amount))
+        logger.debug("当前分钟的净流入是 {} 百万".format(netbuyamount))
 
         # 当前分钟的历史资金累计流入(百万) = 上一天的历史资金累计流入(百万) + 当前分钟的当日成交净买额(百万元)
         moneyinhistorytotal = self.hk_sh_his + netbuyamount
-        logger.info("当前分钟的历史资金累计流入是{}百万".format(moneyinhistorytotal))
+        logger.debug("当前分钟的历史资金累计流入是{}百万".format(moneyinhistorytotal))
 
         item = {
             "Date": complete_dt,    # 陆股通分钟时间点
@@ -460,29 +451,26 @@ class HistoryCalSpider(BaseSpider):
         # self.ding("沪股通: {}\n深股通: {}\n港股通(沪): {}\n港股通(深):{}\n".format(item_hk_sh, item_hk_sz, item_sh_hk, item_sh_sz))
         print("沪股通: {}\n深股通: {}\n港股通(沪): {}\n港股通(深):{}\n".format(item_hk_sh, item_hk_sz, item_sh_hk, item_sh_sz))
 
-    def _create_stock_table(self):
-        # 历史资金累计流入 其实是净买额累计流入
-        sql = '''
-        CREATE TABLE IF NOT EXISTS `{}` (
-          `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-          `Date` datetime NOT NULL COMMENT '分钟时间点',
-          `MoneyIn` decimal(20,4) NOT NULL COMMENT '当日资金流入(百万）',
-          `MoneyBalance` decimal(20,4) NOT NULL COMMENT '当日余额（百万）',
-          `MoneyInHistoryTotal` decimal(20,4) NOT NULL COMMENT '历史资金累计流入(其实是净买额累计流入)(百万元）',
-          `NetBuyAmount` decimal(20,4) NOT NULL COMMENT '当日成交净买额(百万元）',
-          `BuyAmount` decimal(20,4) NOT NULL COMMENT '买入成交额(百万元）',
-          `SellAmount` decimal(20,4) NOT NULL COMMENT '卖出成交额(百万元）',
-          `MarketTypeCode` int(11) NOT NULL COMMENT '市场类型代码',
-          `MarketType` varchar(20) COLLATE utf8_bin DEFAULT NULL COMMENT '市场类型',
-          `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
-          `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-          PRIMARY KEY (`id`),
-          UNIQUE KEY `un` (`Date`,`MarketTypeCode`)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='交易所计算陆股通资金流向汇总(港股通币种为港元，陆股通币种为人民币)';
-        '''.format(self.table_name)
-        client = self._init_pool(self.spider_cfg)
-        client.insert(sql)
-        client.dispose()
+    # def _create_stock_table(self):
+    #     # 历史资金累计流入 其实是净买额累计流入
+    #     sql = '''
+    #     CREATE TABLE IF NOT EXISTS `{}` (
+    #       `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+    #       `Date` datetime NOT NULL COMMENT '分钟时间点',
+    #       `MoneyIn` decimal(20,4) NOT NULL COMMENT '当日资金流入(百万）',
+    #       `MoneyBalance` decimal(20,4) NOT NULL COMMENT '当日余额（百万）',
+    #       `MoneyInHistoryTotal` decimal(20,4) NOT NULL COMMENT '历史资金累计流入(其实是净买额累计流入)(百万元）',
+    #       `NetBuyAmount` decimal(20,4) NOT NULL COMMENT '当日成交净买额(百万元）',
+    #       `BuyAmount` decimal(20,4) NOT NULL COMMENT '买入成交额(百万元）',
+    #       `SellAmount` decimal(20,4) NOT NULL COMMENT '卖出成交额(百万元）',
+    #       `MarketTypeCode` int(11) NOT NULL COMMENT '市场类型代码',
+    #       `MarketType` varchar(20) COLLATE utf8_bin DEFAULT NULL COMMENT '市场类型',
+    #       `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
+    #       `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    #       PRIMARY KEY (`id`),
+    #       UNIQUE KEY `un` (`Date`,`MarketTypeCode`)
+    #     ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='交易所计算陆股通资金流向汇总(港股通币种为港元，陆股通币种为人民币)';
+    #     '''.format(self.table_name)
 
 
 if __name__ == '__main__':

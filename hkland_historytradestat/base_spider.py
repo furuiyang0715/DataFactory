@@ -12,10 +12,13 @@ import requests
 from hkland_historytradestat.configs import (PRODUCT_MYSQL_HOST, PRODUCT_MYSQL_PORT, PRODUCT_MYSQL_USER,
                                              PRODUCT_MYSQL_PASSWORD, PRODUCT_MYSQL_DB, JUY_HOST, JUY_PORT,
                                              JUY_USER, JUY_PASSWD, JUY_DB, SECRET, TOKEN, DC_HOST, DC_PORT, DC_USER,
-                                             DC_PASSWD, DC_DB)
+                                             DC_PASSWD, DC_DB, LOCAL)
 from hkland_historytradestat.sql_pool import PyMysqlPoolBase
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+if LOCAL:
+    logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+else:
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 
