@@ -98,18 +98,19 @@ class HistoryCalSpider(BaseSpider):
         self.sz_hk_his = self.select_last_total(4, self.today)
 
         # TODO
-        self.table_name = 'hkland_calhistory'
-        self.fields = [
-            'Date',
-            'MoneyIn',
-            'MoneyBalance',
-            'MoneyInHistoryTotal',
-            'NetBuyAmount',
-            'BuyAmount',
-            'SellAmount',
-            'MarketTypeCode',
-            'MarketType',
-        ]
+        # self.table_name = 'hkland_calhistory'
+        self.table_name = 'hkland_historytradestat_test'
+        # self.fields = [
+        #     'Date',
+        #     'MoneyIn',
+        #     'MoneyBalance',
+        #     'MoneyInHistoryTotal',
+        #     'NetBuyAmount',
+        #     'BuyAmount',
+        #     'SellAmount',
+        #     'MarketTypeCode',
+        #     'MarketType',
+        # ]
 
     @staticmethod
     def re_data(data):
@@ -441,8 +442,7 @@ class HistoryCalSpider(BaseSpider):
         self._spider_init()
 
         # TODO
-        # self._create_table()
-        self._create_stock_table()
+        self._create_table()
 
         _now = datetime.datetime.now()
         _year, _month, _day = _now.year, _now.month, _now.day
@@ -473,6 +473,9 @@ class HistoryCalSpider(BaseSpider):
 
         print("沪股通: {}\n深股通: {}\n港股通(沪): {}\n港股通(深):{}\n".format(item_hk_sh, item_hk_sz, item_sh_hk, item_sh_sz))
         items = [item for item in [item_hk_sh, item_hk_sz, item_sh_hk, item_sh_sz] if item is not None]
+        for item in items:
+            item["CMFID"] = 1
+            item['CMFTime'] = datetime.datetime.now()
         ret = self._batch_save(self.spider_client, items, self.table_name, self.fields)
         self.ding("历史数据计算: ret: {}, 沪股通: {}\n深股通: {}\n港股通(沪): {}\n港股通(深):{}\n".format(ret, item_hk_sh, item_hk_sz, item_sh_hk, item_sh_sz))
 
@@ -482,28 +485,28 @@ class HistoryCalSpider(BaseSpider):
         except:
             pass
 
-    def _create_stock_table(self):
-        # 历史资金累计流入 其实是净买额累计流入
-        sql = '''
-        CREATE TABLE IF NOT EXISTS `{}` (
-          `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-          `Date` datetime NOT NULL COMMENT '分钟时间点',
-          `MoneyIn` decimal(20,4) NOT NULL COMMENT '当日资金流入(百万）',
-          `MoneyBalance` decimal(20,4) NOT NULL COMMENT '当日余额（百万）',
-          `MoneyInHistoryTotal` decimal(20,4) NOT NULL COMMENT '历史资金累计流入(其实是净买额累计流入)(百万元）',
-          `NetBuyAmount` decimal(20,4) NOT NULL COMMENT '当日成交净买额(百万元）',
-          `BuyAmount` decimal(20,4) NOT NULL COMMENT '买入成交额(百万元）',
-          `SellAmount` decimal(20,4) NOT NULL COMMENT '卖出成交额(百万元）',
-          `MarketTypeCode` int(11) NOT NULL COMMENT '市场类型代码',
-          `MarketType` varchar(20) COLLATE utf8_bin DEFAULT NULL COMMENT '市场类型',
-          `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
-          `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-          PRIMARY KEY (`id`),
-          UNIQUE KEY `un` (`Date`,`MarketTypeCode`)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='交易所计算陆股通资金流向汇总(港股通币种为港元，陆股通币种为人民币)';
-        '''.format(self.table_name)
-        self.spider_client.insert(sql)
-        self.spider_client.end()
+    # def _create_stock_table(self):
+    #     # 历史资金累计流入 其实是净买额累计流入
+    #     sql = '''
+    #     CREATE TABLE IF NOT EXISTS `{}` (
+    #       `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+    #       `Date` datetime NOT NULL COMMENT '分钟时间点',
+    #       `MoneyIn` decimal(20,4) NOT NULL COMMENT '当日资金流入(百万）',
+    #       `MoneyBalance` decimal(20,4) NOT NULL COMMENT '当日余额（百万）',
+    #       `MoneyInHistoryTotal` decimal(20,4) NOT NULL COMMENT '历史资金累计流入(其实是净买额累计流入)(百万元）',
+    #       `NetBuyAmount` decimal(20,4) NOT NULL COMMENT '当日成交净买额(百万元）',
+    #       `BuyAmount` decimal(20,4) NOT NULL COMMENT '买入成交额(百万元）',
+    #       `SellAmount` decimal(20,4) NOT NULL COMMENT '卖出成交额(百万元）',
+    #       `MarketTypeCode` int(11) NOT NULL COMMENT '市场类型代码',
+    #       `MarketType` varchar(20) COLLATE utf8_bin DEFAULT NULL COMMENT '市场类型',
+    #       `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
+    #       `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    #       PRIMARY KEY (`id`),
+    #       UNIQUE KEY `un` (`Date`,`MarketTypeCode`)
+    #     ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='交易所计算陆股通资金流向汇总(港股通币种为港元，陆股通币种为人民币)';
+    #     '''.format(self.table_name)
+    #     self.spider_client.insert(sql)
+    #     self.spider_client.end()
 
 
 def task():
