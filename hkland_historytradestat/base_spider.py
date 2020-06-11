@@ -11,7 +11,8 @@ import requests
 
 from hkland_historytradestat.configs import (PRODUCT_MYSQL_HOST, PRODUCT_MYSQL_PORT, PRODUCT_MYSQL_USER,
                                              PRODUCT_MYSQL_PASSWORD, PRODUCT_MYSQL_DB, JUY_HOST, JUY_PORT,
-                                             JUY_USER, JUY_PASSWD, JUY_DB, SECRET, TOKEN)
+                                             JUY_USER, JUY_PASSWD, JUY_DB, SECRET, TOKEN, DC_HOST, DC_PORT, DC_USER,
+                                             DC_PASSWD, DC_DB)
 from hkland_historytradestat.sql_pool import PyMysqlPoolBase
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -19,6 +20,14 @@ logger = logging.getLogger(__name__)
 
 
 class BaseSpider(object):
+    dc_cfg = {
+        "host": DC_HOST,
+        "port": DC_PORT,
+        "user": DC_USER,
+        "password": DC_PASSWD,
+        "db": DC_DB,
+    }
+
     product_cfg = {
         "host": PRODUCT_MYSQL_HOST,
         "port": PRODUCT_MYSQL_PORT,
@@ -39,6 +48,7 @@ class BaseSpider(object):
         self.tool_table_name = 'base_table_updatetime'
         self.juyuan_client = None
         self.product_client = None
+        self.dc_client = None
 
     def _init_pool(self, cfg: dict):
         """
@@ -63,6 +73,10 @@ class BaseSpider(object):
     def _product_init(self):
         if not self.product_client:
             self.product_client = self._init_pool(self.product_cfg)
+
+    def _dc_init(self):
+        if not self.dc_client:
+            self.dc_client = self._init_pool(self.dc_cfg)
 
     def __del__(self):
         if self.juyuan_client:

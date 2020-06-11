@@ -39,6 +39,19 @@ class JqkaHistory(BaseSpider):
             # 4 | 港股通(深市)
 
         }
+        self.hk_sh_his = self.select_last_total(1).get("MoneyInHistoryTotal")
+        self.hk_sz_his = self.select_last_total(3).get("MoneyInHistoryTotal")
+        self.sh_hk_his = self.select_last_total(2).get("MoneyInHistoryTotal")
+        self.sz_hk_his = self.select_last_total(4).get("MoneyInHistoryTotal")
+        self.fields = ["Date", 'MoneyInHistoryTotal', 'MarketTypeCode', 'MarketType',
+                       'MoneyIn', "MoneyBalance", "NetBuyAmount", "BuyAmount", "SellAmount"]
+
+    def select_last_total(self, market_type):
+        """查找距给出时间最近的一个时间点的累计值"""
+        sql = '''select Date, MoneyInHistoryTotal from hkland_historytradestat where Date = (select max(Date) \
+        from hkland_historytradestat where MarketTypeCode = {}) and MarketTypeCode = {};'''.format(market_type, market_type)
+        ret = self.dc_client.select_one(sql)
+        return ret
 
     @property
     def cookies(self):
@@ -297,6 +310,7 @@ class JqkaHistory(BaseSpider):
                 for field in moneyfields:
                     item[field] = self.re_str_data(item.get(field))
                 item["Date"] = top_dt
+                # 历史资金累计流入(百万) = 上一天的历史资金累计流入(百万) + 今天的当日成交净买额(百万元)
                 item['MoneyInHistoryTotal'] = ''
                 _type_code, _type = self.market_map.get(category)
                 item['MarketTypeCode'] = _type_code
