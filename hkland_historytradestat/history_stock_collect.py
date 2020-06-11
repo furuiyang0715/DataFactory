@@ -177,7 +177,8 @@ class HistoryCalSpider(BaseSpider):
         money_in = int(money_in / 100 / 10000)
 
         item = {
-            "Date": date_min,  # 具体到分钟的交易时间
+            # "Date": date_min,  # 具体到分钟的交易时间
+            "Date": self.today,
             "MoneyBalance": money_balance,  # 当日余额(百万）
             "MoneyIn": money_in,  # 当日资金流入(百万) = 额度 - 余额
             "BuyAmount": buy_amount,  # 当日买入成交额(百万元)
@@ -232,7 +233,8 @@ class HistoryCalSpider(BaseSpider):
         money_in = int(money_in / 100 / 10000)
 
         item = {
-            "Date": date_min,  # 具体到分钟的交易时间
+            # "Date": date_min,  # 具体到分钟的交易时间
+            "Date": self.today,
             "MoneyBalance": money_balance,  # 当日余额(百万）
             "MoneyIn": money_in,  # 当日资金流入(百万) = 额度 - 余额
             "BuyAmount": buy_amount,  # 当日买入成交额(百万元)
@@ -314,7 +316,8 @@ class HistoryCalSpider(BaseSpider):
         logger.info("当前分钟的历史资金累计流入是{}百万".format(moneyinhistorytotal))
 
         item = {
-            "Date": complete_dt,   # 具体到分钟的交易时间
+            # "Date": complete_dt,   # 具体到分钟的交易时间
+            "Date": self.today,
             "MoneyBalance": money_balance,  # 当日余额(百万）
             "MoneyIn": money_in,  # 当日资金流入(百万) = 额度 - 余额
             "BuyAmount": buy_amount,  # 当日买入成交额(百万元)
@@ -393,7 +396,8 @@ class HistoryCalSpider(BaseSpider):
         logger.debug("当前分钟的历史资金累计流入是{}百万".format(moneyinhistorytotal))
 
         item = {
-            "Date": complete_dt,    # 陆股通分钟时间点
+            # "Date": complete_dt,    # 陆股通分钟时间点
+            "Date": self.today,
             "MoneyBalance": money_balance,   # 当日余额(百万）
             "MoneyIn": money_in,   # 当日资金流入(百万) = 额度 - 余额
             "BuyAmount": buy_amount,   # 当日买入成交额(百万元)
@@ -451,26 +455,27 @@ class HistoryCalSpider(BaseSpider):
         # self.ding("沪股通: {}\n深股通: {}\n港股通(沪): {}\n港股通(深):{}\n".format(item_hk_sh, item_hk_sz, item_sh_hk, item_sh_sz))
         print("沪股通: {}\n深股通: {}\n港股通(沪): {}\n港股通(深):{}\n".format(item_hk_sh, item_hk_sz, item_sh_hk, item_sh_sz))
 
-    # def _create_stock_table(self):
-    #     # 历史资金累计流入 其实是净买额累计流入
-    #     sql = '''
-    #     CREATE TABLE IF NOT EXISTS `{}` (
-    #       `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-    #       `Date` datetime NOT NULL COMMENT '分钟时间点',
-    #       `MoneyIn` decimal(20,4) NOT NULL COMMENT '当日资金流入(百万）',
-    #       `MoneyBalance` decimal(20,4) NOT NULL COMMENT '当日余额（百万）',
-    #       `MoneyInHistoryTotal` decimal(20,4) NOT NULL COMMENT '历史资金累计流入(其实是净买额累计流入)(百万元）',
-    #       `NetBuyAmount` decimal(20,4) NOT NULL COMMENT '当日成交净买额(百万元）',
-    #       `BuyAmount` decimal(20,4) NOT NULL COMMENT '买入成交额(百万元）',
-    #       `SellAmount` decimal(20,4) NOT NULL COMMENT '卖出成交额(百万元）',
-    #       `MarketTypeCode` int(11) NOT NULL COMMENT '市场类型代码',
-    #       `MarketType` varchar(20) COLLATE utf8_bin DEFAULT NULL COMMENT '市场类型',
-    #       `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
-    #       `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    #       PRIMARY KEY (`id`),
-    #       UNIQUE KEY `un` (`Date`,`MarketTypeCode`)
-    #     ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='交易所计算陆股通资金流向汇总(港股通币种为港元，陆股通币种为人民币)';
-    #     '''.format(self.table_name)
+    def _create_stock_table(self):
+        # 历史资金累计流入 其实是净买额累计流入
+        sql = '''
+        CREATE TABLE IF NOT EXISTS `{}` (
+          `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+          `Date` datetime NOT NULL COMMENT '分钟时间点',
+          `MoneyIn` decimal(20,4) NOT NULL COMMENT '当日资金流入(百万）',
+          `MoneyBalance` decimal(20,4) NOT NULL COMMENT '当日余额（百万）',
+          `MoneyInHistoryTotal` decimal(20,4) NOT NULL COMMENT '历史资金累计流入(其实是净买额累计流入)(百万元）',
+          `NetBuyAmount` decimal(20,4) NOT NULL COMMENT '当日成交净买额(百万元）',
+          `BuyAmount` decimal(20,4) NOT NULL COMMENT '买入成交额(百万元）',
+          `SellAmount` decimal(20,4) NOT NULL COMMENT '卖出成交额(百万元）',
+          `MarketTypeCode` int(11) NOT NULL COMMENT '市场类型代码',
+          `MarketType` varchar(20) COLLATE utf8_bin DEFAULT NULL COMMENT '市场类型',
+          `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
+          `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          PRIMARY KEY (`id`),
+          UNIQUE KEY `un` (`Date`,`MarketTypeCode`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='交易所计算陆股通资金流向汇总(港股通币种为港元，陆股通币种为人民币)';
+        '''.format(self.table_name)
+        self.spider_client.insert(sql)
 
 
 if __name__ == '__main__':
