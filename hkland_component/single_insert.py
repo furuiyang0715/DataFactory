@@ -474,12 +474,13 @@ def run_20200611():
         {'CompType': 3, 'SecuCode': '300355', 'OutDate': datetime.datetime(2020, 6, 15, 0, 0)},
     ]
     sz_hk_remove_out = [
-        {'CompType': 4, 'SecuCode': '00494', 'OutDate': datetime.datetime(2020, 5, 18, 0, 0)},
-        {'CompType': 4, 'SecuCode': '02989', 'OutDate': datetime.datetime(2020, 5, 8, 0, 0)},
+        {'CompType': 4, 'SecuCode': '00494', 'InDate': datetime.datetime(2016, 12, 5), 'OutDate': datetime.datetime(2020, 5, 18, 0, 0), 'Flag': 2, "InnerCode": 1000405},
+        {'CompType': 4, 'SecuCode': '02989', 'InDate': datetime.datetime(2020, 3, 30), 'OutDate': datetime.datetime(2020, 5, 8, 0, 0), 'Flag': 2, "InnerCode": 1253782},
     ]
     for r in sz_hk_remove_out:
-        #
-        pass
+        # ["CompType", "InnerCode", "SecuCode", "InDate", "OutDate", "Flag"]
+        # select * from hkland_sgcomponent where SecuCode = '00494';
+        human_insert('hkland_sgcomponent', r)
 
 
 if __name__ == "__main__":
