@@ -1,41 +1,50 @@
 # 将变更的记录进行归类
 
-change_addition = 'Addition'
-change_remove = ''
 
-addition_sentence = 'This stock will also be added to the List of Eligible SSE Securities for \
-Margin Trading and the List of Eligible SSE Securities for Short Selling'
-recover_sentence = 'This stock will also be added to the List of Eligible SSE Securities \
-for Margin Trading and the List of Eligible SSE Securities for Short Selling as it is \
-also included in SSE stock list for margin trading and shortselling.'
-remove_sentence = 'This stock will also be removed from the List of Eligible SSE Securities \
-for Margin Trading and the List of Eligible SSE Securities for Short Selling.'
+def process_sh_changes(changes):
+    change_addition = 'Addition'
+    change_remove = 'Transfer to List of Special SSE Securities/Special China Connect Securities (stocks eligible for sell only)'
+    change_recover = 'Addition (from List of Special SSE Securities/Special China Connect Securities (stocks eligible for sell only))'
 
-# 沪
-add_1 = [
-    '600070', '600984', '601512', '601816', '603053', '603068', '603218', '603489', '603520',
-    '603610', '603690', '603786', '603920', '603927', '603960'
-]
+    addition_sentence = 'This stock will also be added to the List of Eligible SSE Securities for \
+    Margin Trading and the List of Eligible SSE Securities for Short Selling'
+    recover_sentence = 'This stock will also be added to the List of Eligible SSE Securities \
+    for Margin Trading and the List of Eligible SSE Securities for Short Selling as it is \
+    also included in SSE stock list for margin trading and shortselling.'
+    remove_sentence = 'This stock will also be removed from the List of Eligible SSE Securities \
+    for Margin Trading and the List of Eligible SSE Securities for Short Selling.'
 
-add_134 = [
-    '600131', '600223', '600529', '600764', '601519', '603012', '603018', '603601', '603678',
-]
+    add_134 = []
+    add_1 = []
 
-recover_1 = [
-    '600988',
-]
+    recover_1 = []
+    recover_134 = []
 
-recover_134 = [
-    '600079', '600143', '600621', '600737', '600776', '600802', '603000',
-]
+    remove_1 = []
+    remove_134 = []
+    for change in changes:
+        _change, _remarks, secu_code = change.get('Ch_ange'), change.get("Remarks"), change.get("SSESCode")
+        if _change == change_addition:
+            if addition_sentence in _remarks:
+                add_134.append(secu_code)
+            else:
+                add_1.append(secu_code)
+        elif _change == change_recover:
+            if recover_sentence in _remarks:
+                recover_134.append(secu_code)
+            else:
+                recover_1.append(secu_code)
+        elif _change == change_remove:
+            if remove_sentence in _remarks:
+                remove_1.append(secu_code)
+            else:
+                remove_134.append(secu_code)
 
-remove_1 = [
-    '600693', '603007', '603080', '603165', '603332', '603339', '603351', '603603', '603773', '603877',
-    '603897', '603898',
-]
+    print(add_1)
+    print(add_134)
 
-remove_134 = [
-    '600123', '600230', '600231', '600239', '600297', '600398', '600418', '600499', '600528',
-    '600535', '600623', '600661', '600664', '600771', '600826', '600986', '601002', '601222',
-    '601997', '603959',
-]
+    print(recover_1)
+    print(recover_134)
+
+    print(remove_1)
+    print(remove_134)
