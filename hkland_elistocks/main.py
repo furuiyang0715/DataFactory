@@ -130,6 +130,7 @@ def task_2():
     sh = SHHumanTools()
     zh = ZHHumanTools()
     info = ''
+    count = 1
     for ins in (sh, zh):
         ret = ins.get_distinct_spider_udpate_time()
         dt_list = sorted([r.get("Time") for r in ret])
@@ -168,12 +169,19 @@ def task_2():
         # print(pprint.pformat(to_insert))
         info += "{} 与第一相比 应该删除的记录是: {}\n".format(ins.table_name, len(to_delete))
         info += "{} 与第一次相比, 应该增加的记录是: {}\n".format(ins.table_name, len(to_insert))
+
+        with open("to_delete_{}.txt".format(count), "w") as f:
+            f.write(pprint.pformat(to_delete))
+        with open("to_insert_{}.txt".format(count), "w") as f:
+            f.write(pprint.pformat(to_insert))
+
         ins.refresh_update_time()
+        count += 1
 
     r1, r2 = list_check()
     info += "沪股合资格校对的结果是 {}, 深股合资格校对的结果是 {}\n".format(r1, r2)
     print(info)
-    tools.ding_msg(info)
+    # tools.ding_msg(info)
 
 
 # task_2()
@@ -191,4 +199,5 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    # main()
+    task_2()

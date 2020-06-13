@@ -8,3 +8,5 @@ __pycache__
 *.log.*
 *.pickle
 temp
+to_delete_*.txt
+to_insert_*.txt
