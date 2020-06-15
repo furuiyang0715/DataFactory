@@ -231,15 +231,17 @@ class DailyUpdate(BaseSpider):
                         '002366', '300367', '000036', '000592', '000861', '000926', '000928', '002215', '002274',
                         '002378', '002639', '300266', '300355']
         '''
+        self._dc_init()
         base_sql = """select * from hkland_hgelistocks where SecuCode = '{}' order by InDate;"""
         for code in ['600070', '600984', '601512', '601816', '603053', '603068', '603218', '603489', '603520',
                     '603610', '603690', '603786', '603920', '603927', '603960']:
             sql = base_sql.format(code)
+            logger.debug(sql)
+            ret = self.dc_client.select_all(sql)
+            print(ret)
+            # 首次新增的在之前的查询中应该为空
+            assert not ret
 
-
-
-
-            pass
 
     def refresh_time(self):
         sh = SHHumanTools()
