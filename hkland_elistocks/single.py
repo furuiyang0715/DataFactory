@@ -285,8 +285,9 @@ class DailyUpdate(BaseSpider):
         #     for r in ret:
         #         if r.get("OutDate") is None and r.get("TargetCategory") == 2:
         #             to_over = r
-        #     to_over.update({"OutDate": _dt, "Flag": 2})
-        #     items3.append(to_over)
+        #     if to_over:
+        #         to_over.update({"OutDate": _dt, "Flag": 2})
+        #         items3.append(to_over)
         #     # 增加 1
         #     item = dict()
         #     item['TradingType'] = 1     # 沪股通 1
@@ -305,9 +306,41 @@ class DailyUpdate(BaseSpider):
         # for code, _dt in sh_recover_134:
         #     sql = base_sql.format(code)
         #     ret = self.dc_client.select_all(sql)
-        #     print(pprint.pformat(ret))
-        #     print()
-        #     print()
+        #     logger.debug(pprint.pformat(ret))
+        #     # 结束 2
+        #     to_over = None
+        #     for r in ret:
+        #         if r.get("OutDate") is None and r.get("TargetCategory") == 2:
+        #             to_over = r
+        #     if to_over:
+        #         logger.debug("to over: {}".format(to_over))
+        #         to_over.update({"OutDate": _dt, "Flag": 2})
+        #         items4.append(to_over)
+        #     # 增加 134
+        #     _item1, _item2, _item3 = dict(), dict(), dict()
+        #     for item in (_item1, _item2, _item3):
+        #         item['TradingType'] = 1  # 沪股通 1
+        #         item['SecuCode'] = code
+        #         item['InnerCode'], item['SecuAbbr'] = self.get_juyuan_codeinfo(code)
+        #         item['InDate'] = _dt
+        #         item['Flag'] = 1
+        #     _item1['TargetCategory'] = 1
+        #     _item2['TargetCategory'] = 3
+        #     _item3['TargetCategory'] = 4
+        #     logger.debug("增加 1:{}".format(_item1))
+        #     logger.debug("增加 3:{}".format(_item2))
+        #     logger.debug("增加 4:{}".format(_item3))
+        #     items4.extend([_item1, _item2, _item3])
+        # ret4 = self._batch_save(self.product_client, items4, sh_table_name, sh_fields)
+        # print(ret4)
+
+
+
+
+
+
+
+
 
 
 
