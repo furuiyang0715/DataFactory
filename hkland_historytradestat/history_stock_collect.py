@@ -101,7 +101,7 @@ class HistoryCalSpider(BaseSpider):
         self.sz_hk_his = self.select_last_total(4, self.today)
 
         # TODO
-        self.table_name = 'hkland_calhistory'
+        self.table_name = 'hkland_historytradestat'
         # self.table_name = 'hkland_historytradestat_test'
 
     @staticmethod
