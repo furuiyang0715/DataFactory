@@ -532,7 +532,10 @@ docker build -f Dockerfile_calhistory -t registry.cn-shenzhen.aliyuncs.com/jzdev
 docker push registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_calhistory:v1
 sudo docker pull registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_calhistory:v1
 
-sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name cal_history \
+# 测试计算库在爬虫库中 名称为 cal_history 
+# 正式的容器名为 cal_history_product
+
+sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name cal_history_product \
 --env LOCAL=0 \
 registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_calhistory:v1
 '''
