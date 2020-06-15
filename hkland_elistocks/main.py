@@ -13,7 +13,7 @@ import schedule
 sys.path.append("./../")
 
 from hkland_elistocks import tools
-from hkland_elistocks.process_changes import process_sh_changes
+from hkland_elistocks.process_changes import process_sh_changes, process_sz_changes
 from hkland_elistocks.snail import records_sh, records_sz
 from hkland_elistocks.my_log import logger
 from hkland_elistocks.list_check import list_check
@@ -171,7 +171,11 @@ def task_2():
         info += "{} 与第一相比 应该删除的记录是: {}\n".format(ins.table_name, len(to_delete))
         info += "{} 与第一次相比, 应该增加的记录是: {}\n".format(ins.table_name, len(to_insert))
 
-        process_sh_changes(to_insert)
+        if count == 1:
+            # process_sh_changes(to_insert)
+            pass
+        else:
+            process_sz_changes(to_insert)
 
         # with open("to_delete_{}.txt".format(count), "w") as f:
         #     f.write(pprint.pformat(to_delete))
