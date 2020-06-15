@@ -166,8 +166,6 @@ def task_2():
             if not one in latest_records and not one in records_sh and not one in records_sz:
                 to_delete.append(one)
 
-        # print(pprint.pformat(to_delete))
-        # print(pprint.pformat(to_insert))
         info += "{} 与第一相比 应该删除的记录是: {}\n".format(ins.table_name, len(to_delete))
         info += "{} 与第一次相比, 应该增加的记录是: {}\n".format(ins.table_name, len(to_insert))
 
@@ -177,10 +175,10 @@ def task_2():
         else:
             process_sz_changes(to_insert)
 
-        # with open("to_delete_{}.txt".format(count), "w") as f:
-        #     f.write(pprint.pformat(to_delete))
-        # with open("to_insert_{}.txt".format(count), "w") as f:
-        #     f.write(pprint.pformat(to_insert))
+        with open("to_delete_{}.txt".format(count), "w") as f:
+            f.write(pprint.pformat(to_delete))
+        with open("to_insert_{}.txt".format(count), "w") as f:
+            f.write(pprint.pformat(to_insert))
 
         ins.refresh_update_time()
         count += 1

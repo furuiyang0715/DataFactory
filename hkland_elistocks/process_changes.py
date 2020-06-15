@@ -10,7 +10,7 @@ also included in SZSE stock list for margin trading and shortselling.'
     remove_sentence = 'This stock will also be removed from the List of Eligible SZSE Securities \
 for Margin Trading and the List of Eligible SZSE Securities for Short Selling.'
 
-    process(changes, change_addition, change_remove, change_recover, addition_sentence, recover_sentence,
+    process("sz", changes, change_addition, change_remove, change_recover, addition_sentence, recover_sentence,
             remove_sentence)
 
 
@@ -27,11 +27,11 @@ also included in SSE stock list for margin trading and shortselling.'
     remove_sentence = 'This stock will also be removed from the List of Eligible SSE Securities \
 for Margin Trading and the List of Eligible SSE Securities for Short Selling.'
 
-    process(changes, change_addition, change_remove, change_recover, addition_sentence, recover_sentence,
+    process("sh", changes, change_addition, change_remove, change_recover, addition_sentence, recover_sentence,
             remove_sentence)
 
 
-def process(changes, change_addition, change_remove, change_recover, addition_sentence, recover_sentence, remove_sentence):
+def process(flag, changes, change_addition, change_remove, change_recover, addition_sentence, recover_sentence, remove_sentence):
     add_134 = []
     add_1 = []
 
@@ -58,11 +58,9 @@ def process(changes, change_addition, change_remove, change_recover, addition_se
             else:
                 remove_1.append(secu_code)
 
-    print(add_1)
-    print(add_134)
-
-    print(recover_1)
-    print(recover_134)
-
-    print(remove_1)
-    print(remove_134)
+    print("{}_add_1: ".format(flag), add_1)
+    print("{}_add_134: ".format(flag), add_134)
+    print("{}_recover_1: ".format(flag), recover_1)
+    print("{}_recover_134: ".format(flag), recover_134)
+    print("{}_remove_1: ".format(flag), remove_1)
+    print("{}_remove_134".format(flag), remove_134)
