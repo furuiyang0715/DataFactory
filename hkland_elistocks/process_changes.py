@@ -42,21 +42,22 @@ def process(flag, changes, change_addition, change_remove, change_recover, addit
     remove_134 = []
     for change in changes:
         _change, _remarks, secu_code = change.get('Ch_ange'), change.get("Remarks"), change.get("SSESCode")
+        _effectivedate = change.get("EffectiveDate")
         if _change == change_addition:
             if addition_sentence in _remarks:
-                add_134.append(secu_code)
+                add_134.append((secu_code, _effectivedate))
             else:
-                add_1.append(secu_code)
+                add_1.append((secu_code, _effectivedate))
         elif _change == change_recover:
             if recover_sentence in _remarks:
-                recover_134.append(secu_code)
+                recover_134.append((secu_code, _effectivedate))
             else:
-                recover_1.append(secu_code)
+                recover_1.append((secu_code, _effectivedate))
         elif _change == change_remove:
             if remove_sentence in _remarks:
-                remove_134.append(secu_code)
+                remove_134.append((secu_code, _effectivedate))
             else:
-                remove_1.append(secu_code)
+                remove_1.append((secu_code, _effectivedate))
 
     print("{}_add_1: ".format(flag), add_1)
     print("{}_add_134: ".format(flag), add_134)

@@ -241,6 +241,13 @@ class DailyUpdate(BaseSpider):
             print(ret)
             # 首次新增的在之前的查询中应该为空
             assert not ret
+            # TradingType | TargetCategory | InnerCode | SecuCode | SecuAbbr| InDate | OutDate | Flag | CCASSCode | ParValue
+            # | CREATETIMEJZ        | UPDATETIMEJZ        | CMFID | CMFTime
+            item = {}
+            item['TradingType'] = 1     # 沪股通 1
+            item['TargetCategory'] = 1
+            # item['InnerCode'] =
+
 
 
     def refresh_time(self):
