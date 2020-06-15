@@ -4,6 +4,7 @@ import hashlib
 import hmac
 import json
 import logging
+import pprint
 import time
 import traceback
 import urllib.parse
@@ -221,53 +222,79 @@ class DailyUpdate(BaseSpider):
 
         self._dc_init()
         self._product_init()
-        base_sql = """select * from hkland_hgelistocks where SecuCode = '{}' order by InDate;"""
+        select_fields = ' CCASSCode, Flag, InDate, InnerCode, OutDate, ParValue,SecuAbbr, SecuCode, TargetCategory, TradingType '
+        base_sql = """select""" + select_fields + """from hkland_hgelistocks where SecuCode = '{}' order by InDate;"""
 
-        items1 = []
-        for code, _dt in sh_add_1:
-            sql = base_sql.format(code)
-            logger.debug(sql)
-            ret = self.dc_client.select_all(sql)
-            # 首次新增 1 的在之前的查询中应该为空
-            assert not ret
-            item = dict()
-            item['TradingType'] = 1     # 沪股通 1
-            item['TargetCategory'] = 1
-            item['InnerCode'], item['SecuAbbr'] = self.get_juyuan_codeinfo(code)
-            item['InDate'] = _dt
-            # item['OutDate'] = None
-            item['Flag'] = 1
-            # item['CMFID'] = None
-            # item['CMFTime'] = None
-            # item['CCASSCode'] = None
-            # item['ParValue'] = None
-            items1.append(item)
-        # ret1 = self._batch_save(self.product_client, items1, sh_table_name, sh_fields)
-        # print(ret1)    # 15
+        # items1 = []
+        # for code, _dt in sh_add_1:
+        #     sql = base_sql.format(code)
+        #     logger.debug(sql)
+        #     ret = self.dc_client.select_all(sql)
+        #     # 首次新增 1 的在之前的查询中应该为空
+        #     assert not ret
+        #     item = dict()
+        #     item['TradingType'] = 1     # 沪股通 1
+        #     item['TargetCategory'] = 1
+        #     item['InnerCode'], item['SecuAbbr'] = self.get_juyuan_codeinfo(code)
+        #     item['InDate'] = _dt
+        #     # item['OutDate'] = None
+        #     item['Flag'] = 1
+        #     # item['CMFID'] = None
+        #     # item['CMFTime'] = None
+        #     # item['CCASSCode'] = None
+        #     # item['ParValue'] = None
+        #     items1.append(item)
+        # # ret1 = self._batch_save(self.product_client, items1, sh_table_name, sh_fields)
+        # # print(ret1)    # 15
+        #
+        # print("* " * 20)
+        # items2 = []
+        # for code, _dt in sh_add_134:
+        #     sql = base_sql.format(code)
+        #     logger.debug(sql)
+        #     ret = self.dc_client.select_all(sql)
+        #     # 首次新增 134 的在之前的查询中应该为空
+        #     assert not ret
+        #     _item1, _item2, _item3 = dict(), dict(), dict()
+        #     for item in (_item1, _item2, _item3):
+        #         item['TradingType'] = 1  # 沪股通 1
+        #         item['InnerCode'], item['SecuAbbr'] = self.get_juyuan_codeinfo(code)
+        #         item['InDate'] = _dt
+        #         item['Flag'] = 1
+        #     _item1['TargetCategory'] = 1
+        #     _item2['TargetCategory'] = 3
+        #     _item3['TargetCategory'] = 4
+        #     # print(_item1)
+        #     # print(_item2)
+        #     # print(_item3)
+        #     items2.extend([_item1, _item2, _item3])
+        # # ret2 = self._batch_save(self.product_client, items2, sh_table_name, sh_fields)
+        # # print(ret2)    # 27
 
-        print("* " * 20)
-        items2 = []
-        for code, _dt in sh_add_134:
-            sql = base_sql.format(code)
-            logger.debug(sql)
-            ret = self.dc_client.select_all(sql)
-            # 首次新增 134 的在之前的查询中应该为空
-            assert not ret
-            _item1, _item2, _item3 = dict(), dict(), dict()
-            for item in (_item1, _item2, _item3):
-                item['TradingType'] = 1  # 沪股通 1
-                item['InnerCode'], item['SecuAbbr'] = self.get_juyuan_codeinfo(code)
-                item['InDate'] = _dt
-                item['Flag'] = 1
-            _item1['TargetCategory'] = 1
-            _item2['TargetCategory'] = 3
-            _item3['TargetCategory'] = 4
-            # print(_item1)
-            # print(_item2)
-            # print(_item3)
-            items2.extend([_item1, _item2, _item3])
-        # ret2 = self._batch_save(self.product_client, items2, sh_table_name, sh_fields)
-        # print(ret2)    # 27
+        # print("* " * 20)
+        # items3 = []
+        # for code, _dt in sh_recover_1:
+        #     sql = base_sql.format(code)
+        #     ret = self.dc_client.select_all(sql)
+        #     print(pprint.pformat(ret))
+        #
+        #     item = dict()
+        #     item['TradingType'] = 1     # 沪股通 1
+        #     item['TargetCategory'] = 1
+        #     item['InnerCode'], item['SecuAbbr'] = self.get_juyuan_codeinfo(code)
+        #     item['InDate'] = _dt
+        #     item['Flag'] = 1
+        #     items3.append(item)
+        # print(items3)
+        # ret3 = self._batch_save(self.product_client, items3, sh_table_name, sh_fields)
+        # print(ret3)   # 1
+
+
+# for r in ret:
+#     if r.get("OutDate") is None and r.get("TargetCategory") == 1:
+#         item = r
+# if item:
+#     item.update({"OutDate": _dt, "Flag": 2})
 
 
     def refresh_time(self):
