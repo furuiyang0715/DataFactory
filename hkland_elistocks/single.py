@@ -61,6 +61,8 @@ class BaseSpider(object):
     def __init__(self):
         self.juyuan_client = None
         self.product_client = None
+        self.dc_client = None
+        self.spider_client = None
 
     def _init_pool(self, cfg: dict):
         pool = PyMysqlPoolBase(**cfg)
@@ -74,11 +76,23 @@ class BaseSpider(object):
         if not self.product_client:
             self.product_client = self._init_pool(self.product_cfg)
 
+    def _dc_init(self):
+        if not self.dc_client:
+            self.dc_client = self._init_pool(self.dc_cfg)
+
+    def _spider_init(self):
+        if not self.spider_client:
+            self.spider_client = self._init_pool(self.spider_cfg)
+
     def __del__(self):
         if self.juyuan_client:
             self.juyuan_client.dispose()
         if self.product_client:
             self.product_client.dispose()
+        if self.spider_client:
+            self.spider_client.dispose()
+        if self.dc_client:
+            self.dc_client.dispose()
 
     def contract_sql(self, datas, table: str, update_fields: list):
         if not isinstance(datas, list):
