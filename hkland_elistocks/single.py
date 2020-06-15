@@ -1,4 +1,5 @@
 import base64
+import datetime
 import hashlib
 import hmac
 import json
@@ -6,6 +7,7 @@ import logging
 import time
 import traceback
 import urllib.parse
+
 
 import requests
 
@@ -157,6 +159,14 @@ class BaseSpider(object):
             sql_pool.end()
             return count
 
+    def get_juyuan_codeinfo(self, secu_code):
+        self._juyuan_init()
+        sql = 'SELECT SecuCode,InnerCode, SecuAbbr from SecuMain WHERE SecuCategory in (1, 2, 8) \
+and SecuMarket in (83, 90) \
+and ListedSector in (1, 2, 6, 7) and SecuCode = "{}";'.format(secu_code)
+        ret = self.juyuan_client.select_one(sql)
+        return ret.get('InnerCode'), ret.get("SecuAbbr")
+
     def ding(self, msg):
         def get_url():
             timestamp = str(round(time.time() * 1000))
@@ -197,58 +207,40 @@ class BaseSpider(object):
 class DailyUpdate(BaseSpider):
 
     def run_0615(self):
-        '''
-        sh_add_1:  ['600070', '600984', '601512', '601816', '603053', '603068', '603218', '603489', '603520',
-                    '603610', '603690', '603786', '603920', '603927', '603960']
-        sh_add_134:  ['600131', '600223', '600529', '600764', '601519', '603012', '603018', '603601', '603678']
-        sh_recover_1:  ['600988']
-        sh_recover_134:  ['600079', '600143', '600621', '600737', '600776', '600802', '603000']
-        sh_remove_1:  ['600693', '603007', '603080', '603165', '603332', '603339', '603351', '603603', '603773',
-                        '603877', '603897', '603898']
-        sh_remove_134 ['600123', '600230', '600231', '600239', '600297', '600398', '600418', '600499', '600528',
-                        '600535', '600623', '600661', '600664', '600771', '600826', '600986', '601002', '601222',
-                        '601997', '603959']
+        # TradingType | TargetCategory | InnerCode | SecuCode | SecuAbbr| InDate | OutDate | Flag | CCASSCode | ParValue
+        # | CREATETIMEJZ | UPDATETIMEJZ | CMFID | CMFTime
+        sh_table_name = 'hkland_hgelistocks'
+        sh_fields = ["TradingType", "TargetCategory", "InnerCode", "SecuCode", "SecuAbbr", "InDate", "OutDate", "Flag"]
 
-        sz_add_1:  ['000032', '000785', '002015', '002351', '002459', '002541', '002552', '002793', '002803',
-                    '002837', '002955', '002959', '002961', '002962', '002966', '300080', '300455', '300468',
-                    '300552', '300677', '300775', '300776', '300777', '300782', '300783', '300785', '300788',
-                    '300793', '300799', '002201', '002641', '002706', '002756', '002838', '002869', '002880',
-                    '300114', '300132', '300209', '300319', '300388', '300395', '300448', '300525', '300526',
-                    '300573', '300579', '300590', '300603', '300604', '300653', '300657', '300659', '300662',
-                    '300709', '300771']
-        sz_add_134:  ['000912', '002214', '300663', '002243', '002947', '300328']
-        sz_recover_1:  ['000058', '002239', '002312', '002605', '300083', '300376', '002791', '000601', '000796',
-                        '000903', '002083', '002126', '002135', '002324', '002479', '002484', '002528', '002609',
-                        '002616', '002850', '002918', '300031', '300045', '300229', '300303', '300386', '300438',
-                        '300477', '300568', '300571', '300607', '300613', '300623', '300624', '300664', '300672',
-                        '300684', '300737']
-        sz_recover_134:  ['000030', '000519', '000700', '000719', '000917', '002169', '002250', '002287', '000652',
-                        '000823', '000829', '002022', '002079', '002106', '002117', '002161', '002182', '002276',
-                        '002313', '002428', '002518', '300020', '300177', '300202', '300256', '300287', '300397']
-        sz_remove_1:  ['000429', '000863', '002314', '000657', '000666', '000815', '000882', '002057', '002309',
-                        '002550', '300185', '300252']
-        sz_remove_134 ['000088', '000552', '002280', '002293', '002370', '002608', '000040', '000525', '000980',
-                        '002366', '300367', '000036', '000592', '000861', '000926', '000928', '002215', '002274',
-                        '002378', '002639', '300266', '300355']
-        '''
+        sh_add_1 = [('600070', datetime.date(2020, 6, 15)), ('600984', datetime.date(2020, 6, 15)), ('601512', datetime.date(2020, 6, 15)), ('601816', datetime.date(2020, 6, 15)), ('603053', datetime.date(2020, 6, 15)), ('603068', datetime.date(2020, 6, 15)), ('603218', datetime.date(2020, 6, 15)), ('603489', datetime.date(2020, 6, 15)), ('603520', datetime.date(2020, 6, 15)), ('603610', datetime.date(2020, 6, 15)), ('603690', datetime.date(2020, 6, 15)), ('603786', datetime.date(2020, 6, 15)), ('603920', datetime.date(2020, 6, 15)), ('603927', datetime.date(2020, 6, 15)), ('603960', datetime.date(2020, 6, 15))]
+        sh_add_134 = [('600131', datetime.date(2020, 6, 15)), ('600223', datetime.date(2020, 6, 15)), ('600529', datetime.date(2020, 6, 15)), ('600764', datetime.date(2020, 6, 15)), ('601519', datetime.date(2020, 6, 15)), ('603012', datetime.date(2020, 6, 15)), ('603018', datetime.date(2020, 6, 15)), ('603601', datetime.date(2020, 6, 15)), ('603678', datetime.date(2020, 6, 15))]
+        sh_recover_1 = [('600988', datetime.date(2020, 6, 15))]
+        sh_recover_134 = [('600079', datetime.date(2020, 6, 15)), ('600143', datetime.date(2020, 6, 15)), ('600621', datetime.date(2020, 6, 15)), ('600737', datetime.date(2020, 6, 15)), ('600776', datetime.date(2020, 6, 15)), ('600802', datetime.date(2020, 6, 15)), ('603000', datetime.date(2020, 6, 15))]
+        sh_remove_1 = [('600693', datetime.date(2020, 6, 15)), ('603007', datetime.date(2020, 6, 15)), ('603080', datetime.date(2020, 6, 15)), ('603165', datetime.date(2020, 6, 15)), ('603332', datetime.date(2020, 6, 15)), ('603339', datetime.date(2020, 6, 15)), ('603351', datetime.date(2020, 6, 15)), ('603603', datetime.date(2020, 6, 15)), ('603773', datetime.date(2020, 6, 15)), ('603877', datetime.date(2020, 6, 15)), ('603897', datetime.date(2020, 6, 15)), ('603898', datetime.date(2020, 6, 15))]
+        sh_remove_134 = [('600123', datetime.date(2020, 6, 15)), ('600230', datetime.date(2020, 6, 15)), ('600231', datetime.date(2020, 6, 15)), ('600239', datetime.date(2020, 6, 15)), ('600297', datetime.date(2020, 6, 15)), ('600398', datetime.date(2020, 6, 15)), ('600418', datetime.date(2020, 6, 15)), ('600499', datetime.date(2020, 6, 15)), ('600528', datetime.date(2020, 6, 15)), ('600535', datetime.date(2020, 6, 15)), ('600623', datetime.date(2020, 6, 15)), ('600661', datetime.date(2020, 6, 15)), ('600664', datetime.date(2020, 6, 15)), ('600771', datetime.date(2020, 6, 15)), ('600826', datetime.date(2020, 6, 15)), ('600986', datetime.date(2020, 6, 15)), ('601002', datetime.date(2020, 6, 15)), ('601222', datetime.date(2020, 6, 15)), ('601997', datetime.date(2020, 6, 15)), ('603959', datetime.date(2020, 6, 15))]
+
         self._dc_init()
         base_sql = """select * from hkland_hgelistocks where SecuCode = '{}' order by InDate;"""
-        for code in ['600070', '600984', '601512', '601816', '603053', '603068', '603218', '603489', '603520',
-                    '603610', '603690', '603786', '603920', '603927', '603960']:
+        items = []
+        for code, _dt in sh_add_1:
             sql = base_sql.format(code)
             logger.debug(sql)
             ret = self.dc_client.select_all(sql)
-            print(ret)
             # 首次新增的在之前的查询中应该为空
             assert not ret
-            # TradingType | TargetCategory | InnerCode | SecuCode | SecuAbbr| InDate | OutDate | Flag | CCASSCode | ParValue
-            # | CREATETIMEJZ        | UPDATETIMEJZ        | CMFID | CMFTime
-            item = {}
+            item = dict()
             item['TradingType'] = 1     # 沪股通 1
             item['TargetCategory'] = 1
-            # item['InnerCode'] =
-
-
+            item['InnerCode'], item['SecuAbbr'] = self.get_juyuan_codeinfo(code)
+            item['InDate'] = _dt
+            # item['OutDate'] = None
+            item['Flag'] = 1
+            # item['CMFID'] = None
+            # item['CMFTime'] = None
+            # item['CCASSCode'] = None
+            # item['ParValue'] = None
+            items.append(item)
+        self._batch_save(self.product_client, items, sh_table_name, sh_fields)
 
     def refresh_time(self):
         sh = SHHumanTools()
