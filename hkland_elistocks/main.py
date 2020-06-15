@@ -172,7 +172,7 @@ def task_2():
         info += "{} 与第一次相比, 应该增加的记录是: {}\n".format(ins.table_name, len(to_insert))
 
         if count == 1:
-            # process_sh_changes(to_insert)
+            process_sh_changes(to_insert)
             pass
         else:
             process_sz_changes(to_insert)
