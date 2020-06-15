@@ -220,13 +220,15 @@ class DailyUpdate(BaseSpider):
         sh_remove_134 = [('600123', datetime.date(2020, 6, 15)), ('600230', datetime.date(2020, 6, 15)), ('600231', datetime.date(2020, 6, 15)), ('600239', datetime.date(2020, 6, 15)), ('600297', datetime.date(2020, 6, 15)), ('600398', datetime.date(2020, 6, 15)), ('600418', datetime.date(2020, 6, 15)), ('600499', datetime.date(2020, 6, 15)), ('600528', datetime.date(2020, 6, 15)), ('600535', datetime.date(2020, 6, 15)), ('600623', datetime.date(2020, 6, 15)), ('600661', datetime.date(2020, 6, 15)), ('600664', datetime.date(2020, 6, 15)), ('600771', datetime.date(2020, 6, 15)), ('600826', datetime.date(2020, 6, 15)), ('600986', datetime.date(2020, 6, 15)), ('601002', datetime.date(2020, 6, 15)), ('601222', datetime.date(2020, 6, 15)), ('601997', datetime.date(2020, 6, 15)), ('603959', datetime.date(2020, 6, 15))]
 
         self._dc_init()
+        self._product_init()
         base_sql = """select * from hkland_hgelistocks where SecuCode = '{}' order by InDate;"""
-        items = []
+
+        items1 = []
         for code, _dt in sh_add_1:
             sql = base_sql.format(code)
             logger.debug(sql)
             ret = self.dc_client.select_all(sql)
-            # 首次新增的在之前的查询中应该为空
+            # 首次新增 1 的在之前的查询中应该为空
             assert not ret
             item = dict()
             item['TradingType'] = 1     # 沪股通 1
@@ -239,8 +241,34 @@ class DailyUpdate(BaseSpider):
             # item['CMFTime'] = None
             # item['CCASSCode'] = None
             # item['ParValue'] = None
-            items.append(item)
-        self._batch_save(self.product_client, items, sh_table_name, sh_fields)
+            items1.append(item)
+        # ret1 = self._batch_save(self.product_client, items1, sh_table_name, sh_fields)
+        # print(ret1)    # 15
+
+        print("* " * 20)
+        items2 = []
+        for code, _dt in sh_add_134:
+            sql = base_sql.format(code)
+            logger.debug(sql)
+            ret = self.dc_client.select_all(sql)
+            # 首次新增 134 的在之前的查询中应该为空
+            assert not ret
+            _item1, _item2, _item3 = dict(), dict(), dict()
+            for item in (_item1, _item2, _item3):
+                item['TradingType'] = 1  # 沪股通 1
+                item['InnerCode'], item['SecuAbbr'] = self.get_juyuan_codeinfo(code)
+                item['InDate'] = _dt
+                item['Flag'] = 1
+            _item1['TargetCategory'] = 1
+            _item2['TargetCategory'] = 3
+            _item3['TargetCategory'] = 4
+            # print(_item1)
+            # print(_item2)
+            # print(_item3)
+            items2.extend([_item1, _item2, _item3])
+        # ret2 = self._batch_save(self.product_client, items2, sh_table_name, sh_fields)
+        # print(ret2)    # 27
+
 
     def refresh_time(self):
         sh = SHHumanTools()
