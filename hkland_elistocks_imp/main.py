@@ -597,200 +597,245 @@ class DailyUpdate(BaseSpider):
         select_fields = ' CCASSCode, Flag, InDate, InnerCode, OutDate, ParValue,SecuAbbr, SecuCode, TargetCategory, TradingType '
         base_sql = """select""" + select_fields + """from hkland_sgelistocks where SecuCode = '{}' order by InDate;"""
 
-        # print("* " * 20)
-        # items = []
-        # for code, _dt in sz_removal_2:
-        #     sql = base_sql.format(code)
-        #     logger.debug(sql)
-        #     if self.is_local:
-        #         ret = self.test_client.select_all(sql)
-        #     else:
-        #         ret = self.dc_client.select_all(sql)
-        #     to_removal = None
-        #     for r in ret:
-        #         if r.get("OutDate") is None and r.get("TargetCategory") == 2 and r.get("Flag") == 1:
-        #             to_removal = r
-        #     print(to_removal)
-        #     # 从只可买入名单中移除
-        #     to_removal.update({"OutDate": _dt, "Flag": 2})
-        #     items.append(to_removal)
-        #
-        # if self.is_local:
-        #     ret = self._batch_save(self.test_client, items, sz_table_name, sz_fields)
-        # else:
-        #     ret = self._batch_save(self.product_client, items, sz_table_name, sz_fields)
-        # print(ret)
+        print("* " * 20)
+        items = []
+        for code, _dt in sz_removal_2:
+            sql = base_sql.format(code)
+            logger.debug(sql)
+            if self.is_local:
+                ret = self.test_client.select_all(sql)
+            else:
+                ret = self.dc_client.select_all(sql)
+            to_removal = None
+            for r in ret:
+                if r.get("OutDate") is None and r.get("TargetCategory") == 2 and r.get("Flag") == 1:
+                    to_removal = r
+            print(to_removal)
+            # 从只可买入名单中移除
+            to_removal.update({"OutDate": _dt, "Flag": 2})
+            items.append(to_removal)
 
-        # print("* " * 20)
-        # items1 = []
-        # for code, _dt in sz_add_1:
-        #     sql = base_sql.format(code)
-        #     logger.debug(sql)
-        #     if self.is_local:
-        #         ret = self.test_client.select_all(sql)
-        #     else:
-        #         ret = self.dc_client.select_all(sql)
-        #     # 首次新增 1 的在之前的查询中应该为空
-        #     # assert not ret
-        #     item = dict()
-        #     item['TradingType'] = 1  # 沪股通 1
-        #     item['TargetCategory'] = 1
-        #     item['SecuCode'] = code
-        #     item['InnerCode'], item['SecuAbbr'] = self.get_juyuan_codeinfo(code)
-        #     item['InDate'] = _dt
-        #     item['Flag'] = 1
-        #     items1.append(item)
-        #
-        # print(len(items1))
-        # if self.is_local:
-        #     ret1 = self._batch_save(self.test_client, items1, sz_table_name, sz_fields)
-        # else:
-        #     ret1 = self._batch_save(self.product_client, items1, sz_table_name, sz_fields)
-        # print(ret1)   # 56
+        if self.is_local:
+            ret = self._batch_save(self.test_client, items, sz_table_name, sz_fields)
+        else:
+            ret = self._batch_save(self.product_client, items, sz_table_name, sz_fields)
+        print(ret)
 
-        # print("* " * 20)
-        # items2 = []
-        # for code, _dt in sz_add_134:
-        #     sql = base_sql.format(code)
-        #     logger.debug(sql)
-        #     if self.is_local:
-        #         ret = self.test_client.select_all(sql)
-        #     else:
-        #         ret = self.dc_client.select_all(sql)
-        #     # 首次新增 134 的在之前的查询中应该为空
-        #     # assert not ret
-        #     _item1, _item2, _item3 = dict(), dict(), dict()
-        #     for item in (_item1, _item2, _item3):
-        #         item['TradingType'] = 1  # 沪股通 1
-        #         item['SecuCode'] = code
-        #         item['InnerCode'], item['SecuAbbr'] = self.get_juyuan_codeinfo(code)
-        #         item['InDate'] = _dt
-        #         item['Flag'] = 1
-        #     _item1['TargetCategory'] = 1
-        #     _item2['TargetCategory'] = 3
-        #     _item3['TargetCategory'] = 4
-        #     logger.debug(_item1)
-        #     logger.debug(_item2)
-        #     logger.debug(_item3)
-        #     items2.extend([_item1, _item2, _item3])
-        # # print(len(items2))
-        # if self.is_local:
-        #     ret2 = self._batch_save(self.test_client, items2, sz_table_name, sz_fields)
-        # else:
-        #     ret2 = self._batch_save(self.product_client, items2, sz_table_name, sz_fields)
-        # print(ret2)    # 18
+        print("* " * 20)
+        items1 = []
+        for code, _dt in sz_add_1:
+            sql = base_sql.format(code)
+            logger.debug(sql)
+            if self.is_local:
+                ret = self.test_client.select_all(sql)
+            else:
+                ret = self.dc_client.select_all(sql)
+            # 首次新增 1 的在之前的查询中应该为空
+            # assert not ret
+            item = dict()
+            item['TradingType'] = 1  # 沪股通 1
+            item['TargetCategory'] = 1
+            item['SecuCode'] = code
+            item['InnerCode'], item['SecuAbbr'] = self.get_juyuan_codeinfo(code)
+            item['InDate'] = _dt
+            item['Flag'] = 1
+            items1.append(item)
 
-        # print("* " * 20)
-        # items3 = []
-        # for code, _dt in sz_recover_1:
-        #     sql = base_sql.format(code)
-        #     logger.debug(sql)
-        #     if self.is_local:
-        #         ret = self.test_client.select_all(sql)
-        #     else:
-        #         ret = self.dc_client.select_all(sql)
-        #     # print(pprint.pformat(ret))
-        #     # 结束 2
-        #     to_over = None
-        #     for r in ret:
-        #         if r.get("OutDate") is None and r.get("TargetCategory") == 2:
-        #             to_over = r
-        #     if to_over:
-        #         to_over.update({"OutDate": _dt, "Flag": 2})
-        #         items3.append(to_over)
-        #     # 增加 1
-        #     item = dict()
-        #     item['TradingType'] = 1  # 沪股通 1
-        #     item['TargetCategory'] = 1
-        #     item['SecuCode'] = code
-        #     item['InnerCode'], item['SecuAbbr'] = self.get_juyuan_codeinfo(code)
-        #     item['InDate'] = _dt
-        #     item['Flag'] = 1
-        #     items3.append(item)
-        #
-        # print(len(items3))   # 76
-        # if self.is_local:
-        #     ret3 = self._batch_save(self.test_client, items3, sz_table_name, sz_fields)
-        # else:
-        #     ret3 = self._batch_save(self.product_client, items3, sz_table_name, sz_fields)
-        # print(ret3)    # 114
+        print(len(items1))
+        if self.is_local:
+            ret1 = self._batch_save(self.test_client, items1, sz_table_name, sz_fields)
+        else:
+            ret1 = self._batch_save(self.product_client, items1, sz_table_name, sz_fields)
+        print(ret1)   # 56
 
-        # print("* " * 20)
-        # items4 = []
-        # for code, _dt in sz_recover_134:
-        #     sql = base_sql.format(code)
-        #     if self.is_local:
-        #         ret = self.test_client.select_all(sql)
-        #     else:
-        #         ret = self.dc_client.select_all(sql)
-        #     # logger.debug(pprint.pformat(ret))
-        #     # 结束 2
-        #     to_over = None
-        #     for r in ret:
-        #         if r.get("OutDate") is None and r.get("TargetCategory") == 2:
-        #             to_over = r
-        #     if to_over:
-        #         logger.debug("to over: {}".format(to_over))
-        #         to_over.update({"OutDate": _dt, "Flag": 2})
-        #         items4.append(to_over)
-        #     # 增加 134
-        #     _item1, _item2, _item3 = dict(), dict(), dict()
-        #     for item in (_item1, _item2, _item3):
-        #         item['TradingType'] = 1  # 沪股通 1
-        #         item['SecuCode'] = code
-        #         item['InnerCode'], item['SecuAbbr'] = self.get_juyuan_codeinfo(code)
-        #         item['InDate'] = _dt
-        #         item['Flag'] = 1
-        #     _item1['TargetCategory'] = 1
-        #     _item2['TargetCategory'] = 3
-        #     _item3['TargetCategory'] = 4
-        #     logger.debug("增加 1:{}".format(_item1))
-        #     logger.debug("增加 3:{}".format(_item2))
-        #     logger.debug("增加 4:{}".format(_item3))
-        #     items4.extend([_item1, _item2, _item3])
-        #
-        # print(len(items4))   # 108
-        # if self.is_local:
-        #     ret4 = self._batch_save(self.test_client, items4, sz_table_name, sz_fields)
-        # else:
-        #     ret4 = self._batch_save(self.product_client, items4, sz_table_name, sz_fields)
-        # print(ret4)    # 135
+        print("* " * 20)
+        items2 = []
+        for code, _dt in sz_add_134:
+            sql = base_sql.format(code)
+            logger.debug(sql)
+            if self.is_local:
+                ret = self.test_client.select_all(sql)
+            else:
+                ret = self.dc_client.select_all(sql)
+            # 首次新增 134 的在之前的查询中应该为空
+            # assert not ret
+            _item1, _item2, _item3 = dict(), dict(), dict()
+            for item in (_item1, _item2, _item3):
+                item['TradingType'] = 1  # 沪股通 1
+                item['SecuCode'] = code
+                item['InnerCode'], item['SecuAbbr'] = self.get_juyuan_codeinfo(code)
+                item['InDate'] = _dt
+                item['Flag'] = 1
+            _item1['TargetCategory'] = 1
+            _item2['TargetCategory'] = 3
+            _item3['TargetCategory'] = 4
+            logger.debug(_item1)
+            logger.debug(_item2)
+            logger.debug(_item3)
+            items2.extend([_item1, _item2, _item3])
+        # print(len(items2))
+        if self.is_local:
+            ret2 = self._batch_save(self.test_client, items2, sz_table_name, sz_fields)
+        else:
+            ret2 = self._batch_save(self.product_client, items2, sz_table_name, sz_fields)
+        print(ret2)    # 18
 
-        # print("* " * 20)
-        # items5 = []
-        # for code, _dt in sz_remove_1:
-        #     # 移除 1
-        #     sql = base_sql.format(code)
-        #     if self.is_local:
-        #         ret = self.test_client.select_all(sql)
-        #     else:
-        #         ret = self.dc_client.select_all(sql)
-        #     # logger.debug(pprint.pformat(ret))
-        #     to_over = None
-        #     for r in ret:
-        #         if r.get("OutDate") is None and r.get("TargetCategory") == 1:
-        #             to_over = r
-        #     if to_over:
-        #         logger.debug("to over: {}".format(to_over))
-        #         to_over.update({"OutDate": _dt, "Flag": 2})
-        #         items5.append(to_over)
-        #     # 增加 2
-        #     item = dict()
-        #     item['TradingType'] = 1  # 沪股通 1
-        #     item['SecuCode'] = code
-        #     item['InnerCode'], item['SecuAbbr'] = self.get_juyuan_codeinfo(code)
-        #     item['InDate'] = _dt
-        #     item['Flag'] = 1
-        #     item['TargetCategory'] = 2
-        #     logger.debug("增加 2: {}".format(item))
-        #     items5.append(item)
-        #
-        # # print(len(items5))    # 24
-        # if self.is_local:
-        #     ret5 = self._batch_save(self.test_client, items5, sz_table_name, sz_fields)
-        # else:
-        #     ret5 = self._batch_save(self.product_client, items5, sz_table_name, sz_fields)
-        # print(ret5)    # 36
+        print("* " * 20)
+        items3 = []
+        for code, _dt in sz_recover_1:
+            sql = base_sql.format(code)
+            logger.debug(sql)
+            if self.is_local:
+                ret = self.test_client.select_all(sql)
+            else:
+                ret = self.dc_client.select_all(sql)
+            # print(pprint.pformat(ret))
+            # 结束 2
+            to_over = None
+            for r in ret:
+                if r.get("OutDate") is None and r.get("TargetCategory") == 2:
+                    to_over = r
+            if to_over:
+                to_over.update({"OutDate": _dt, "Flag": 2})
+                items3.append(to_over)
+            # 增加 1
+            item = dict()
+            item['TradingType'] = 1  # 沪股通 1
+            item['TargetCategory'] = 1
+            item['SecuCode'] = code
+            item['InnerCode'], item['SecuAbbr'] = self.get_juyuan_codeinfo(code)
+            item['InDate'] = _dt
+            item['Flag'] = 1
+            items3.append(item)
+
+        print(len(items3))   # 76
+        if self.is_local:
+            ret3 = self._batch_save(self.test_client, items3, sz_table_name, sz_fields)
+        else:
+            ret3 = self._batch_save(self.product_client, items3, sz_table_name, sz_fields)
+        print(ret3)    # 114
+
+        print("* " * 20)
+        items4 = []
+        for code, _dt in sz_recover_134:
+            sql = base_sql.format(code)
+            if self.is_local:
+                ret = self.test_client.select_all(sql)
+            else:
+                ret = self.dc_client.select_all(sql)
+            # logger.debug(pprint.pformat(ret))
+            # 结束 2
+            to_over = None
+            for r in ret:
+                if r.get("OutDate") is None and r.get("TargetCategory") == 2:
+                    to_over = r
+            if to_over:
+                logger.debug("to over: {}".format(to_over))
+                to_over.update({"OutDate": _dt, "Flag": 2})
+                items4.append(to_over)
+            # 增加 134
+            _item1, _item2, _item3 = dict(), dict(), dict()
+            for item in (_item1, _item2, _item3):
+                item['TradingType'] = 1  # 沪股通 1
+                item['SecuCode'] = code
+                item['InnerCode'], item['SecuAbbr'] = self.get_juyuan_codeinfo(code)
+                item['InDate'] = _dt
+                item['Flag'] = 1
+            _item1['TargetCategory'] = 1
+            _item2['TargetCategory'] = 3
+            _item3['TargetCategory'] = 4
+            logger.debug("增加 1:{}".format(_item1))
+            logger.debug("增加 3:{}".format(_item2))
+            logger.debug("增加 4:{}".format(_item3))
+            items4.extend([_item1, _item2, _item3])
+
+        print(len(items4))   # 108
+        if self.is_local:
+            ret4 = self._batch_save(self.test_client, items4, sz_table_name, sz_fields)
+        else:
+            ret4 = self._batch_save(self.product_client, items4, sz_table_name, sz_fields)
+        print(ret4)    # 135
+
+        print("* " * 20)
+        items5 = []
+        for code, _dt in sz_remove_1:
+            # 移除 1
+            sql = base_sql.format(code)
+            if self.is_local:
+                ret = self.test_client.select_all(sql)
+            else:
+                ret = self.dc_client.select_all(sql)
+            # logger.debug(pprint.pformat(ret))
+            to_over = None
+            for r in ret:
+                if r.get("OutDate") is None and r.get("TargetCategory") == 1:
+                    to_over = r
+            if to_over:
+                logger.debug("to over: {}".format(to_over))
+                to_over.update({"OutDate": _dt, "Flag": 2})
+                items5.append(to_over)
+            # 增加 2
+            item = dict()
+            item['TradingType'] = 1  # 沪股通 1
+            item['SecuCode'] = code
+            item['InnerCode'], item['SecuAbbr'] = self.get_juyuan_codeinfo(code)
+            item['InDate'] = _dt
+            item['Flag'] = 1
+            item['TargetCategory'] = 2
+            logger.debug("增加 2: {}".format(item))
+            items5.append(item)
+
+        # print(len(items5))    # 24
+        if self.is_local:
+            ret5 = self._batch_save(self.test_client, items5, sz_table_name, sz_fields)
+        else:
+            ret5 = self._batch_save(self.product_client, items5, sz_table_name, sz_fields)
+        print(ret5)    # 36
+
+        print("* " * 20)
+        items6 = []
+        print(len(sz_recover_134))
+        for code, _dt in sz_remove_134:
+            print()
+            print()
+            sql = base_sql.format(code)
+            # 增加 2
+            if self.is_local:
+                ret = self.test_client.select_all(sql)
+            else:
+                ret = self.dc_client.select_all(sql)
+            logger.debug(pprint.pformat(ret))
+            item = dict()
+            item['TradingType'] = 1
+            item['SecuCode'] = code
+            item['InnerCode'], item['SecuAbbr'] = self.get_juyuan_codeinfo(code)
+            item['InDate'] = _dt
+            item['Flag'] = 1
+            item['TargetCategory'] = 2
+            logger.debug("增加 2: {}".format(item))
+            items6.append(item)
+            # 结束 134
+            _to_over1 = None
+            _to_over2 = None
+            _to_over3 = None
+            for r in ret:
+                if r.get("OutDate") is None and r.get("TargetCategory") == 1:
+                    _to_over1 = r
+                elif r.get("OutDate") is None and r.get("TargetCategory") == 3:
+                    _to_over2 = r
+                elif r.get("OutDate") is None and r.get("TargetCategory") == 4:
+                    _to_over3 = r
+            for tov in (_to_over1, _to_over2, _to_over3):
+                if tov:
+                    tov.update({"OutDate": _dt, "Flag": 2})
+                    items6.append(tov)
+
+        print(len(items6))    # 90
+        if self.is_local:
+            ret6 = self._batch_save(self.test_client, items6, sz_table_name, sz_fields)
+        else:
+            ret6 = self._batch_save(self.product_client, items6, sz_table_name, sz_fields)
+        print(ret6)     # 140
 
     def refresh_update_time(self):
         """更新工具表的刷新时间"""
