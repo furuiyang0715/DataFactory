@@ -12,15 +12,6 @@ import urllib.parse
 
 import requests
 
-# from hkland_elistocks.configs import (LOCAL, TARGET_HOST, TARGET_PORT, TARGET_USER, TARGET_DB, TARGET_PASSWD,
-#                                       JUY_HOST, JUY_PORT, JUY_USER, JUY_PASSWD, JUY_DB, SECRET, TOKEN, DATACENTER_HOST,
-#                                       DATACENTER_PASSWD, DATACENTER_USER, DATACENTER_DB, DATACENTER_PORT, SPIDER_HOST,
-#                                       SPIDER_PORT, SPIDER_USER, SPIDER_PASSWD, SPIDER_DB, TEST_HOST, TEST_PORT,
-#                                       TEST_USER, TEST_PASSWD, TEST_DB)
-# from hkland_elistocks.sql_pool import PyMysqlPoolBase
-# from hkland_elistocks.sh_human_gene import SHHumanTools
-# from hkland_elistocks.zh_human_gene import ZHHumanTools
-
 from hkland_elistocks_imp.configs import LOCAL, TARGET_HOST, TARGET_PORT, TARGET_USER, TARGET_PASSWD, TARGET_DB, \
     JUY_HOST, JUY_PORT, JUY_USER, JUY_PASSWD, JUY_DB, DATACENTER_HOST, DATACENTER_PORT, DATACENTER_USER, \
     DATACENTER_PASSWD, DATACENTER_DB, SPIDER_HOST, SPIDER_PORT, SPIDER_USER, SPIDER_PASSWD, SPIDER_DB, TEST_HOST, \
@@ -233,10 +224,11 @@ and ListedSector in (1, 2, 6, 7) and SecuCode = "{}";'.format(secu_code)
 
 
 class DailyUpdate(BaseSpider):
+    def __init__(self):
+        super(DailyUpdate, self).__init__()
+        self.is_local = True
 
     def run_0615_sh(self):
-        is_local = True
-
         sh_table_name = 'hkland_hgelistocks'
         sh_fields = ["TradingType", "TargetCategory", "InnerCode", "SecuCode", "SecuAbbr", "InDate", "OutDate", "Flag"]
         sh_add_1 = [('600070', datetime.date(2020, 6, 15)), ('600984', datetime.date(2020, 6, 15)), ('601512', datetime.date(2020, 6, 15)), ('601816', datetime.date(2020, 6, 15)), ('603053', datetime.date(2020, 6, 15)), ('603068', datetime.date(2020, 6, 15)), ('603218', datetime.date(2020, 6, 15)), ('603489', datetime.date(2020, 6, 15)), ('603520', datetime.date(2020, 6, 15)), ('603610', datetime.date(2020, 6, 15)), ('603690', datetime.date(2020, 6, 15)), ('603786', datetime.date(2020, 6, 15)), ('603920', datetime.date(2020, 6, 15)), ('603927', datetime.date(2020, 6, 15)), ('603960', datetime.date(2020, 6, 15))]
@@ -246,7 +238,7 @@ class DailyUpdate(BaseSpider):
         sh_remove_1 = [('600693', datetime.date(2020, 6, 15)), ('603007', datetime.date(2020, 6, 15)), ('603080', datetime.date(2020, 6, 15)), ('603165', datetime.date(2020, 6, 15)), ('603332', datetime.date(2020, 6, 15)), ('603339', datetime.date(2020, 6, 15)), ('603351', datetime.date(2020, 6, 15)), ('603603', datetime.date(2020, 6, 15)), ('603773', datetime.date(2020, 6, 15)), ('603877', datetime.date(2020, 6, 15)), ('603897', datetime.date(2020, 6, 15)), ('603898', datetime.date(2020, 6, 15))]
         sh_remove_134 = [('600123', datetime.date(2020, 6, 15)), ('600230', datetime.date(2020, 6, 15)), ('600231', datetime.date(2020, 6, 15)), ('600239', datetime.date(2020, 6, 15)), ('600297', datetime.date(2020, 6, 15)), ('600398', datetime.date(2020, 6, 15)), ('600418', datetime.date(2020, 6, 15)), ('600499', datetime.date(2020, 6, 15)), ('600528', datetime.date(2020, 6, 15)), ('600535', datetime.date(2020, 6, 15)), ('600623', datetime.date(2020, 6, 15)), ('600661', datetime.date(2020, 6, 15)), ('600664', datetime.date(2020, 6, 15)), ('600771', datetime.date(2020, 6, 15)), ('600826', datetime.date(2020, 6, 15)), ('600986', datetime.date(2020, 6, 15)), ('601002', datetime.date(2020, 6, 15)), ('601222', datetime.date(2020, 6, 15)), ('601997', datetime.date(2020, 6, 15)), ('603959', datetime.date(2020, 6, 15))]
 
-        if is_local:
+        if self.is_local:
             self._test_init()
         else:
             self._dc_init()
@@ -259,7 +251,7 @@ class DailyUpdate(BaseSpider):
         for code, _dt in sh_add_1:
             sql = base_sql.format(code)
             logger.debug(sql)
-            if is_local:
+            if self.is_local:
                 ret = self.test_client.select_all(sql)
             else:
                 ret = self.dc_client.select_all(sql)
@@ -279,7 +271,7 @@ class DailyUpdate(BaseSpider):
             # item['ParValue'] = None
             items1.append(item)
 
-        if is_local:
+        if self.is_local:
             ret1 = self._batch_save(self.test_client, items1, sh_table_name, sh_fields)
         else:
             ret1 = self._batch_save(self.product_client, items1, sh_table_name, sh_fields)
@@ -290,7 +282,7 @@ class DailyUpdate(BaseSpider):
         for code, _dt in sh_add_134:
             sql = base_sql.format(code)
             logger.debug(sql)
-            if is_local:
+            if self.is_local:
                 ret = self.test_client.select_all(sql)
             else:
                 ret = self.dc_client.select_all(sql)
@@ -310,7 +302,7 @@ class DailyUpdate(BaseSpider):
             logger.debug(_item2)
             logger.debug(_item3)
             items2.extend([_item1, _item2, _item3])
-        if is_local:
+        if self.is_local:
             ret2 = self._batch_save(self.test_client, items2, sh_table_name, sh_fields)
         else:
             ret2 = self._batch_save(self.product_client, items2, sh_table_name, sh_fields)
@@ -321,7 +313,7 @@ class DailyUpdate(BaseSpider):
         for code, _dt in sh_recover_1:
             sql = base_sql.format(code)
             logger.debug(sql)
-            if is_local:
+            if self.is_local:
                 ret = self.test_client.select_all(sql)
             else:
                 ret = self.dc_client.select_all(sql)
@@ -344,7 +336,7 @@ class DailyUpdate(BaseSpider):
             item['Flag'] = 1
             items3.append(item)
         # print(pprint.pformat(items3))
-        if is_local:
+        if self.is_local:
             ret3 = self._batch_save(self.test_client, items3, sh_table_name, sh_fields)
         else:
             ret3 = self._batch_save(self.product_client, items3, sh_table_name, sh_fields)
@@ -354,7 +346,7 @@ class DailyUpdate(BaseSpider):
         items4 = []
         for code, _dt in sh_recover_134:
             sql = base_sql.format(code)
-            if is_local:
+            if self.is_local:
                 ret = self.test_client.select_all(sql)
             else:
                 ret = self.dc_client.select_all(sql)
@@ -383,7 +375,7 @@ class DailyUpdate(BaseSpider):
             logger.debug("增加 3:{}".format(_item2))
             logger.debug("增加 4:{}".format(_item3))
             items4.extend([_item1, _item2, _item3])
-        if is_local:
+        if self.is_local:
             ret4 = self._batch_save(self.test_client, items4, sh_table_name, sh_fields)
         else:
             ret4 = self._batch_save(self.product_client, items4, sh_table_name, sh_fields)
@@ -394,7 +386,7 @@ class DailyUpdate(BaseSpider):
         for code, _dt in sh_remove_1:
             # 移除 1
             sql = base_sql.format(code)
-            if is_local:
+            if self.is_local:
                 ret = self.test_client.select_all(sql)
             else:
                 ret = self.dc_client.select_all(sql)
@@ -417,7 +409,7 @@ class DailyUpdate(BaseSpider):
             item['TargetCategory'] = 2
             logger.debug("增加 2: {}".format(item))
             items5.append(item)
-        if is_local:
+        if self.is_local:
             ret5 = self._batch_save(self.test_client, items5, sh_table_name, sh_fields)
         else:
             ret5 = self._batch_save(self.product_client, items5, sh_table_name, sh_fields)
@@ -431,7 +423,7 @@ class DailyUpdate(BaseSpider):
             print()
             sql = base_sql.format(code)
             # 增加 2
-            if is_local:
+            if self.is_local:
                 ret = self.test_client.select_all(sql)
             else:
                 ret = self.dc_client.select_all(sql)
@@ -460,25 +452,47 @@ class DailyUpdate(BaseSpider):
                 if tov:
                     tov.update({"OutDate": _dt, "Flag": 2})
                     items6.append(tov)
-        if is_local:
+        if self.is_local:
             ret6 = self._batch_save(self.test_client, items6, sh_table_name, sh_fields)
         else:
             ret6 = self._batch_save(self.product_client, items6, sh_table_name, sh_fields)
         print(ret6)     # 140
 
-    # def refresh_time(self):
-    #     sh = SHHumanTools()
-    #     zh = ZHHumanTools()
-    #     sh.refresh_update_time()
-    #     zh.refresh_update_time()
+    def refresh_update_time(self):
+        """更新工具表的刷新时间"""
+        def sh_refresh(client):
+            sql = '''select max(UPDATETIMEJZ) as max_dt from hkland_hgelistocks; '''
+            max_dt = client.select_one(sql).get("max_dt")
+            refresh_sql = '''replace into base_table_updatetime (id,TableName, LastUpdateTime,IsValid) values (3, 'hkland_hgelistocks', '{}', 1); '''.format(max_dt)
+            client.update(refresh_sql)
+
+        def sz_refresh(client):
+            sql = '''select max(UPDATETIMEJZ) as max_dt from hkland_sgelistocks; '''
+            max_dt = client.select_one(sql).get("max_dt")
+            refresh_sql = '''replace into base_table_updatetime (id,TableName, LastUpdateTime,IsValid) values (8, 'hkland_sgelistocks', '{}', 1); '''.format(max_dt)
+            client.update(refresh_sql)
+
+        if self.is_local:
+            cli = self.test_client
+        else:
+            cli = self.product_client
+        sh_refresh(cli)
+        sz_refresh(cli)
+
+    def sync(self):
+        # (1) 服务器同步 spider --> test
+
+        # (2) 模拟同步 dc --> test
+        self.sync_dc2test("hkland_hgelistocks")
+        self.sync_dc2test("hkland_sgelistocks")
 
     def start(self):
         self.run_0615_sh()
 
-        # self.refresh_time()
+        self.refresh_update_time()
 
 
 if __name__ == "__main__":
     dp = DailyUpdate()
-    # dp.sync_dc2test("hkland_hgelistocks")
+
     dp.start()
