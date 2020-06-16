@@ -363,6 +363,42 @@ class DailyUpdate(BaseSpider):
         # ret5 = self._batch_save(self.product_client, items5, sh_table_name, sh_fields)
         # print(ret5)    # 36
 
+        print("* " * 20)
+        items6 = []
+        print(len(sh_recover_134))
+        for code, _dt in sh_remove_134:
+            print()
+            print()
+            sql = base_sql.format(code)
+            # 增加 2
+            ret = self.dc_client.select_all(sql)
+            logger.debug(pprint.pformat(ret))
+            item = dict()
+            item['TradingType'] = 1
+            item['SecuCode'] = code
+            item['InnerCode'], item['SecuAbbr'] = self.get_juyuan_codeinfo(code)
+            item['InDate'] = _dt
+            item['Flag'] = 1
+            item['TargetCategory'] = 2
+            logger.debug("增加 2: {}".format(item))
+            items6.append(item)
+            # 结束 134
+            _to_over1 = None
+            _to_over2 = None
+            _to_over3 = None
+            for r in ret:
+                if r.get("OutDate") is None and r.get("TargetCategory") == 1:
+                    _to_over1 = r
+                elif r.get("OutDate") is None and r.get("TargetCategory") == 3:
+                    _to_over2 = r
+                elif r.get("OutDate") is None and r.get("TargetCategory") == 4:
+                    _to_over3 = r
+            for tov in (_to_over1, _to_over2, _to_over3):
+                if tov:
+                    tov.update({"OutDate": _dt, "Flag": 2})
+                    items6.append(tov)
+        ret6 = self._batch_save(self.product_client, items6, sh_table_name, sh_fields)
+        print(ret6)
 
     def refresh_time(self):
         sh = SHHumanTools()
