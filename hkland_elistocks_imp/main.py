@@ -274,10 +274,50 @@ class DailyUpdate(BaseSpider):
             ret = self.spider_client.select_all(sql)
 
         lst = set([r.get("SSESCode") for r in ret])
-        # select * from hkex_lgt_change_of_sse_securities_lists where SSESCode = '600074' and Time = '2020-06-08' order by EffectiveDate asc\G
-        # select * from hkland_hgelistocks where secucode = '600074';
-        # select Remarks  from hkex_lgt_change_of_sse_securities_lists where Ch_ange = 'Removal';
-        # update hkland_hgelistocks set OutDate = '2020-06-03'
+        print(datas - lst)
+        print(lst - datas)
+
+    def sh_buy_margin_trading_list(self):
+        self._test_init()
+        self._spider_init()
+
+        sql = '''select SecuCode from hkland_hgelistocks where TradingType = 1 and TargetCategory = 3 and Flag = 1; '''
+        if self.is_local:
+            ret = self.test_client.select_all(sql)
+        else:
+            ret = self.product_client.select_all(sql)
+        datas = set([r.get("SecuCode") for r in ret])
+
+        sql = 'select distinct(SSESCode) from {} where Date = (select max(Date) from {});'.format(
+            self.sh_buy_margin_trading_list_table, self.sh_buy_margin_trading_list_table)
+        if self.is_local:
+            ret = self.test_client.select_all(sql)
+        else:
+            ret = self.spider_client.select_all(sql)
+
+        lst = set([r.get("SSESCode") for r in ret])
+        print(datas - lst)
+        print(lst - datas)
+
+    def sh_short_sell_list(self):
+        self._test_init()
+        self._spider_init()
+
+        sql = '''select SecuCode from hkland_hgelistocks where TradingType = 1 and TargetCategory = 4 and Flag = 1; '''
+        if self.is_local:
+            ret = self.test_client.select_all(sql)
+        else:
+            ret = self.product_client.select_all(sql)
+        datas = set([r.get("SecuCode") for r in ret])
+
+        sql = 'select distinct(SSESCode) from {} where Date = (select max(Date) from {});'.format(
+            self.sh_short_sell_list_table, self.sh_short_sell_list_table)
+        if self.is_local:
+            ret = self.test_client.select_all(sql)
+        else:
+            ret = self.spider_client.select_all(sql)
+
+        lst = set([r.get("SSESCode") for r in ret])
         print(datas - lst)
         print(lst - datas)
 
@@ -565,12 +605,15 @@ class DailyUpdate(BaseSpider):
         self.sync_dc2test("hkland_sgelistocks")
 
     def start(self):
-        self.run_0615_sh()
-
+        # self.run_0615_sh()
+        # self.sh_short_sell_list()
+        # self.sh_buy_margin_trading_list()
         # self.sh_only_sell_list()
         # self.sh_buy_and_sell_list()
 
         # self.refresh_update_time()
+
+        pass
 
 
 if __name__ == "__main__":
