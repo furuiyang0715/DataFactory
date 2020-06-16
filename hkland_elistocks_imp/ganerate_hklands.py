@@ -46,8 +46,9 @@ class DailyUpdate(BaseSpider):
         lst = set([r.get("SSESCode") for r in ret])
         assert datas
         assert lst
-        print(datas - lst)
-        print(lst - datas)
+        # print(datas - lst)
+        # print(lst - datas)
+        return (not (datas - lst)) and (not (lst - datas))
 
     def sz_buy_and_sell_list(self):
         self._test_init()
@@ -69,8 +70,9 @@ class DailyUpdate(BaseSpider):
         lst = set([r.get("SSESCode") for r in ret])
         assert datas
         assert lst
-        print(datas - lst)
-        print(lst - datas)
+        # print(datas - lst)
+        # print(lst - datas)
+        return (not (datas - lst)) and (not (lst - datas))
 
     def sh_only_sell_list(self):
         self._test_init()
@@ -93,8 +95,9 @@ class DailyUpdate(BaseSpider):
         lst = set([r.get("SSESCode") for r in ret])
         assert datas
         assert lst
-        print(datas - lst)
-        print(lst - datas)
+        # print(datas - lst)
+        # print(lst - datas)
+        return (not (datas - lst)) and (not (lst - datas))
 
     def sz_only_sell_list(self):
         self._test_init()
@@ -117,8 +120,9 @@ class DailyUpdate(BaseSpider):
         lst = set([r.get("SSESCode") for r in ret])
         assert datas
         assert lst
-        print(datas - lst)
-        print(lst - datas)
+        # print(datas - lst)
+        # print(lst - datas)
+        return (not (datas - lst)) and (not (lst - datas))
 
     def sh_buy_margin_trading_list(self):
         self._test_init()
@@ -141,8 +145,9 @@ class DailyUpdate(BaseSpider):
         lst = set([r.get("SSESCode") for r in ret])
         assert datas
         assert lst
-        print(datas - lst)
-        print(lst - datas)
+        # print(datas - lst)
+        # print(lst - datas)
+        return (not (datas - lst)) and (not (lst - datas))
 
     def sz_buy_margin_trading_list(self):
         self._test_init()
@@ -165,8 +170,9 @@ class DailyUpdate(BaseSpider):
         lst = set([r.get("SSESCode") for r in ret])
         assert lst
         assert datas
-        print(datas - lst)
-        print(lst - datas)
+        # print(datas - lst)
+        # print(lst - datas)
+        return (not (datas - lst)) and (not (lst - datas))
 
     def sh_short_sell_list(self):
         self._test_init()
@@ -189,8 +195,9 @@ class DailyUpdate(BaseSpider):
         lst = set([r.get("SSESCode") for r in ret])
         assert datas
         assert lst
-        print(datas - lst)
-        print(lst - datas)
+        # print(datas - lst)
+        # print(lst - datas)
+        return (not (datas - lst)) and (not (lst - datas))
 
     def sz_short_sell_list(self):
         self._test_init()
@@ -213,8 +220,9 @@ class DailyUpdate(BaseSpider):
         lst = set([r.get("SSESCode") for r in ret])
         assert datas
         assert lst
-        print(datas - lst)
-        print(lst - datas)
+        # print(datas - lst)
+        # print(lst - datas)
+        return (not (datas - lst)) and (not (lst - datas))
 
     def run_0615_sh(self):
         sh_table_name = 'hkland_hgelistocks'

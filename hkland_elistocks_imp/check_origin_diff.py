@@ -7,6 +7,8 @@ import traceback
 
 import schedule
 
+from hkland_elistocks_imp.ganerate_hklands import DailyUpdate
+
 cur_path = os.path.split(os.path.realpath(__file__))[0]
 file_path = os.path.abspath(os.path.join(cur_path, ".."))
 sys.path.insert(0, file_path)
@@ -193,10 +195,21 @@ class OriginChecker(BaseSpider):
                 f.write(pprint.pformat(to_insert))
             count += 1
 
-        # r1, r2 = list_check()
-        # info += "沪股合资格校对的结果是 {}, 深股合资格校对的结果是 {}\n".format(r1, r2)
-        # print(info)
-        # tools.ding_msg(info)
+        dp = DailyUpdate()
+
+        sh1 = dp.sh_short_sell_list()
+        sh2 = dp.sh_buy_margin_trading_list()
+        sh3 = dp.sh_only_sell_list()
+        sh4 = dp.sh_buy_and_sell_list()
+
+        sz1 = dp.sz_short_sell_list()
+        sz2 = dp.sz_buy_margin_trading_list()
+        sz3 = dp.sz_only_sell_list()
+        sz4 = dp.sz_buy_and_sell_list()
+
+        info += "沪股合资格校对的结果是 {}, \n深股合资格校对的结果是 {}\n".format((sh1, sh2, sh3, sh4), (sz1, sz2, sz3, sz4))
+        print(info)
+        self.ding(info)
 
 
 def task():
