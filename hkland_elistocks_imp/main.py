@@ -234,6 +234,12 @@ class DailyUpdate(BaseSpider):
         self.sh_buy_margin_trading_list_table = 'hkex_lgt_special_sse_securities_for_margin_trading'
         self.sh_short_sell_list_table = 'hkex_lgt_special_sse_securities_for_short_selling'
 
+        # sz
+        self.sz_only_sell_list_table = 'hkex_lgt_special_szse_securities'
+        self.sz_buy_and_sell_list_table = 'hkex_lgt_szse_securities'
+        self.sz_buy_margin_trading_list_table = 'hkex_lgt_special_szse_securities_for_margin_trading'
+        self.sz_short_sell_list_table = 'hkex_lgt_special_szse_securities_for_short_selling'
+
     def sh_buy_and_sell_list(self):
         self._test_init()
         self._spider_init()
@@ -299,6 +305,28 @@ class DailyUpdate(BaseSpider):
         print(datas - lst)
         print(lst - datas)
 
+    def sz_buy_margin_trading_list(self):
+        self._test_init()
+        self._spider_init()
+
+        sql = '''select SecuCode from hkland_sgelistocks where TradingType = 3 and TargetCategory = 3 and Flag = 1; '''
+        if self.is_local:
+            ret = self.test_client.select_all(sql)
+        else:
+            ret = self.product_client.select_all(sql)
+        datas = set([r.get("SecuCode") for r in ret])
+
+        sql = 'select distinct(SSESCode) from {} where Date = (select max(Date) from {});'.format(
+            self.sz_buy_margin_trading_list_table, self.sz_buy_margin_trading_list_table)
+        if self.is_local:
+            ret = self.test_client.select_all(sql)
+        else:
+            ret = self.spider_client.select_all(sql)
+
+        lst = set([r.get("SSESCode") for r in ret])
+        print(datas - lst)
+        print(lst - datas)
+
     def sh_short_sell_list(self):
         self._test_init()
         self._spider_init()
@@ -312,6 +340,28 @@ class DailyUpdate(BaseSpider):
 
         sql = 'select distinct(SSESCode) from {} where Date = (select max(Date) from {});'.format(
             self.sh_short_sell_list_table, self.sh_short_sell_list_table)
+        if self.is_local:
+            ret = self.test_client.select_all(sql)
+        else:
+            ret = self.spider_client.select_all(sql)
+
+        lst = set([r.get("SSESCode") for r in ret])
+        print(datas - lst)
+        print(lst - datas)
+
+    def sz_short_sell_list(self):
+        self._test_init()
+        self._spider_init()
+
+        sql = '''select SecuCode from hkland_sgelistocks where TradingType = 3 and TargetCategory = 4 and Flag = 1; '''
+        if self.is_local:
+            ret = self.test_client.select_all(sql)
+        else:
+            ret = self.product_client.select_all(sql)
+        datas = set([r.get("SecuCode") for r in ret])
+
+        sql = 'select distinct(SSESCode) from {} where Date = (select max(Date) from {});'.format(
+            self.sz_short_sell_list_table, self.sz_short_sell_list_table)
         if self.is_local:
             ret = self.test_client.select_all(sql)
         else:
@@ -614,12 +664,12 @@ class DailyUpdate(BaseSpider):
             # 从只可买入名单中移除
             to_removal.update({"OutDate": _dt, "Flag": 2})
             items.append(to_removal)
-
-        if self.is_local:
-            ret = self._batch_save(self.test_client, items, sz_table_name, sz_fields)
-        else:
-            ret = self._batch_save(self.product_client, items, sz_table_name, sz_fields)
-        print(ret)
+        if items:
+            if self.is_local:
+                ret = self._batch_save(self.test_client, items, sz_table_name, sz_fields)
+            else:
+                ret = self._batch_save(self.product_client, items, sz_table_name, sz_fields)
+            print(ret)
 
         print("* " * 20)
         items1 = []
@@ -633,7 +683,7 @@ class DailyUpdate(BaseSpider):
             # 首次新增 1 的在之前的查询中应该为空
             # assert not ret
             item = dict()
-            item['TradingType'] = 1  # 沪股通 1
+            item['TradingType'] = 3  # 深股通 3
             item['TargetCategory'] = 1
             item['SecuCode'] = code
             item['InnerCode'], item['SecuAbbr'] = self.get_juyuan_codeinfo(code)
@@ -661,7 +711,7 @@ class DailyUpdate(BaseSpider):
             # assert not ret
             _item1, _item2, _item3 = dict(), dict(), dict()
             for item in (_item1, _item2, _item3):
-                item['TradingType'] = 1  # 沪股通 1
+                item['TradingType'] = 3  # 深股通 3
                 item['SecuCode'] = code
                 item['InnerCode'], item['SecuAbbr'] = self.get_juyuan_codeinfo(code)
                 item['InDate'] = _dt
@@ -700,7 +750,7 @@ class DailyUpdate(BaseSpider):
                 items3.append(to_over)
             # 增加 1
             item = dict()
-            item['TradingType'] = 1  # 沪股通 1
+            item['TradingType'] = 3   # 深股通 3
             item['TargetCategory'] = 1
             item['SecuCode'] = code
             item['InnerCode'], item['SecuAbbr'] = self.get_juyuan_codeinfo(code)
@@ -736,7 +786,7 @@ class DailyUpdate(BaseSpider):
             # 增加 134
             _item1, _item2, _item3 = dict(), dict(), dict()
             for item in (_item1, _item2, _item3):
-                item['TradingType'] = 1  # 沪股通 1
+                item['TradingType'] = 3  # 深股通 3
                 item['SecuCode'] = code
                 item['InnerCode'], item['SecuAbbr'] = self.get_juyuan_codeinfo(code)
                 item['InDate'] = _dt
@@ -776,7 +826,7 @@ class DailyUpdate(BaseSpider):
                 items5.append(to_over)
             # 增加 2
             item = dict()
-            item['TradingType'] = 1  # 沪股通 1
+            item['TradingType'] = 3  # 深股通 3
             item['SecuCode'] = code
             item['InnerCode'], item['SecuAbbr'] = self.get_juyuan_codeinfo(code)
             item['InDate'] = _dt
@@ -806,7 +856,7 @@ class DailyUpdate(BaseSpider):
                 ret = self.dc_client.select_all(sql)
             logger.debug(pprint.pformat(ret))
             item = dict()
-            item['TradingType'] = 1
+            item['TradingType'] = 3
             item['SecuCode'] = code
             item['InnerCode'], item['SecuAbbr'] = self.get_juyuan_codeinfo(code)
             item['InDate'] = _dt
@@ -872,7 +922,10 @@ class DailyUpdate(BaseSpider):
         # self.sh_only_sell_list()
         # self.sh_buy_and_sell_list()
 
-        self.run_0615_sz()
+        # self.run_0615_sz()
+        self.sz_short_sell_list()
+        self.sz_buy_margin_trading_list()
+
 
         # self.refresh_update_time()
 
