@@ -227,6 +227,32 @@ class DailyUpdate(BaseSpider):
     def __init__(self):
         super(DailyUpdate, self).__init__()
         self.is_local = True
+        # sh
+        self.sh_only_sell_list_table = 'hkex_lgt_special_sse_securities'
+        self.sh_buy_and_sell_list_table = 'hkex_lgt_sse_securities'
+        self.sh_buy_margin_trading_list_table = 'hkex_lgt_special_sse_securities_for_margin_trading'
+        self.sh_short_sell_list_table = 'hkex_lgt_special_sse_securities_for_short_selling'
+
+    def sh_buy_and_sell_list(self):
+        self._test_init()
+        self._spider_init()
+
+        sql = '''select SecuCode from hkland_hgelistocks where TradingType = 1 and TargetCategory = 1 and Flag = 1; '''
+        if self.is_local:
+            ret = self.test_client.select_all(sql)
+        else:
+            ret = self.product_client.select_all(sql)
+        datas = set([r.get("SecuCode") for r in ret])
+
+        sql = 'select distinct(SSESCode) from {} where Date = (select max(Date) from {});'.format(
+            self.sh_buy_and_sell_list_table, self.sh_buy_and_sell_list_table)
+        if self.is_local:
+            ret = self.test_client.select_all(sql)
+        else:
+            ret = self.spider_client.select_all(sql)
+        lst = set([r.get("SSESCode") for r in ret])
+        print(datas - lst)
+        print(lst - datas)
 
     def run_0615_sh(self):
         sh_table_name = 'hkland_hgelistocks'
@@ -487,9 +513,11 @@ class DailyUpdate(BaseSpider):
         self.sync_dc2test("hkland_sgelistocks")
 
     def start(self):
-        self.run_0615_sh()
+        # self.run_0615_sh()
 
-        self.refresh_update_time()
+        self.sh_buy_and_sell_list()
+
+        # self.refresh_update_time()
 
 
 if __name__ == "__main__":
