@@ -5,6 +5,7 @@ import hmac
 import json
 import logging
 import pprint
+import sys
 import time
 import traceback
 import urllib.parse
@@ -254,6 +255,32 @@ class DailyUpdate(BaseSpider):
         print(datas - lst)
         print(lst - datas)
 
+    def sh_only_sell_list(self):
+        self._test_init()
+        self._spider_init()
+
+        sql = '''select SecuCode from hkland_hgelistocks where TradingType = 1 and TargetCategory = 2 and Flag = 1; '''
+        if self.is_local:
+            ret = self.test_client.select_all(sql)
+        else:
+            ret = self.product_client.select_all(sql)
+        datas = set([r.get("SecuCode") for r in ret])
+
+        sql = 'select distinct(SSESCode) from {} where Date = (select max(Date) from {});'.format(
+            self.sh_only_sell_list_table, self.sh_only_sell_list_table)
+        if self.is_local:
+            ret = self.test_client.select_all(sql)
+        else:
+            ret = self.spider_client.select_all(sql)
+
+        lst = set([r.get("SSESCode") for r in ret])
+        # select * from hkex_lgt_change_of_sse_securities_lists where SSESCode = '600074' and Time = '2020-06-08' order by EffectiveDate asc\G
+        # select * from hkland_hgelistocks where secucode = '600074';
+        # select Remarks  from hkex_lgt_change_of_sse_securities_lists where Ch_ange = 'Removal';
+        # update hkland_hgelistocks set OutDate = '2020-06-03'
+        print(datas - lst)
+        print(lst - datas)
+
     def run_0615_sh(self):
         sh_table_name = 'hkland_hgelistocks'
         sh_fields = ["TradingType", "TargetCategory", "InnerCode", "SecuCode", "SecuAbbr", "InDate", "OutDate", "Flag"]
@@ -263,6 +290,7 @@ class DailyUpdate(BaseSpider):
         sh_recover_134 = [('600079', datetime.date(2020, 6, 15)), ('600143', datetime.date(2020, 6, 15)), ('600621', datetime.date(2020, 6, 15)), ('600737', datetime.date(2020, 6, 15)), ('600776', datetime.date(2020, 6, 15)), ('600802', datetime.date(2020, 6, 15)), ('603000', datetime.date(2020, 6, 15))]
         sh_remove_1 = [('600693', datetime.date(2020, 6, 15)), ('603007', datetime.date(2020, 6, 15)), ('603080', datetime.date(2020, 6, 15)), ('603165', datetime.date(2020, 6, 15)), ('603332', datetime.date(2020, 6, 15)), ('603339', datetime.date(2020, 6, 15)), ('603351', datetime.date(2020, 6, 15)), ('603603', datetime.date(2020, 6, 15)), ('603773', datetime.date(2020, 6, 15)), ('603877', datetime.date(2020, 6, 15)), ('603897', datetime.date(2020, 6, 15)), ('603898', datetime.date(2020, 6, 15))]
         sh_remove_134 = [('600123', datetime.date(2020, 6, 15)), ('600230', datetime.date(2020, 6, 15)), ('600231', datetime.date(2020, 6, 15)), ('600239', datetime.date(2020, 6, 15)), ('600297', datetime.date(2020, 6, 15)), ('600398', datetime.date(2020, 6, 15)), ('600418', datetime.date(2020, 6, 15)), ('600499', datetime.date(2020, 6, 15)), ('600528', datetime.date(2020, 6, 15)), ('600535', datetime.date(2020, 6, 15)), ('600623', datetime.date(2020, 6, 15)), ('600661', datetime.date(2020, 6, 15)), ('600664', datetime.date(2020, 6, 15)), ('600771', datetime.date(2020, 6, 15)), ('600826', datetime.date(2020, 6, 15)), ('600986', datetime.date(2020, 6, 15)), ('601002', datetime.date(2020, 6, 15)), ('601222', datetime.date(2020, 6, 15)), ('601997', datetime.date(2020, 6, 15)), ('603959', datetime.date(2020, 6, 15))]
+        sh_removal_2 = [('600074', datetime.date(2020, 6, 3))]
 
         if self.is_local:
             self._test_init()
@@ -273,6 +301,30 @@ class DailyUpdate(BaseSpider):
         select_fields = ' CCASSCode, Flag, InDate, InnerCode, OutDate, ParValue,SecuAbbr, SecuCode, TargetCategory, TradingType '
         base_sql = """select""" + select_fields + """from hkland_hgelistocks where SecuCode = '{}' order by InDate;"""
 
+        items = []
+        for code, _dt in sh_removal_2:
+            sql = base_sql.format(code)
+            logger.debug(sql)
+            if self.is_local:
+                ret = self.test_client.select_all(sql)
+            else:
+                ret = self.dc_client.select_all(sql)
+            to_removal = None
+            for r in ret:
+                if r.get("OutDate") is None and r.get("TargetCategory") == 2 and r.get("Flag") == 1:
+                    to_removal = r
+            print(to_removal)
+            # 从只可买入名单中移除
+            to_removal.update({"OutDate": _dt, "Flag": 2})
+            items.append(to_removal)
+
+        if self.is_local:
+            ret = self._batch_save(self.test_client, items, sh_table_name, sh_fields)
+        else:
+            ret = self._batch_save(self.product_client, items, sh_table_name, sh_fields)
+        print(ret)
+
+        print("* " * 20)
         items1 = []
         for code, _dt in sh_add_1:
             sql = base_sql.format(code)
@@ -513,9 +565,10 @@ class DailyUpdate(BaseSpider):
         self.sync_dc2test("hkland_sgelistocks")
 
     def start(self):
-        # self.run_0615_sh()
+        self.run_0615_sh()
 
-        self.sh_buy_and_sell_list()
+        # self.sh_only_sell_list()
+        # self.sh_buy_and_sell_list()
 
         # self.refresh_update_time()
 
