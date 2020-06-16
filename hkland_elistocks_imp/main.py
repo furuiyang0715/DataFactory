@@ -715,46 +715,82 @@ class DailyUpdate(BaseSpider):
         #     ret3 = self._batch_save(self.product_client, items3, sz_table_name, sz_fields)
         # print(ret3)    # 114
 
-        print("* " * 20)
-        items4 = []
-        for code, _dt in sz_recover_134:
-            sql = base_sql.format(code)
-            if self.is_local:
-                ret = self.test_client.select_all(sql)
-            else:
-                ret = self.dc_client.select_all(sql)
-            # logger.debug(pprint.pformat(ret))
-            # 结束 2
-            to_over = None
-            for r in ret:
-                if r.get("OutDate") is None and r.get("TargetCategory") == 2:
-                    to_over = r
-            if to_over:
-                logger.debug("to over: {}".format(to_over))
-                to_over.update({"OutDate": _dt, "Flag": 2})
-                items4.append(to_over)
-            # 增加 134
-            _item1, _item2, _item3 = dict(), dict(), dict()
-            for item in (_item1, _item2, _item3):
-                item['TradingType'] = 1  # 沪股通 1
-                item['SecuCode'] = code
-                item['InnerCode'], item['SecuAbbr'] = self.get_juyuan_codeinfo(code)
-                item['InDate'] = _dt
-                item['Flag'] = 1
-            _item1['TargetCategory'] = 1
-            _item2['TargetCategory'] = 3
-            _item3['TargetCategory'] = 4
-            logger.debug("增加 1:{}".format(_item1))
-            logger.debug("增加 3:{}".format(_item2))
-            logger.debug("增加 4:{}".format(_item3))
-            items4.extend([_item1, _item2, _item3])
+        # print("* " * 20)
+        # items4 = []
+        # for code, _dt in sz_recover_134:
+        #     sql = base_sql.format(code)
+        #     if self.is_local:
+        #         ret = self.test_client.select_all(sql)
+        #     else:
+        #         ret = self.dc_client.select_all(sql)
+        #     # logger.debug(pprint.pformat(ret))
+        #     # 结束 2
+        #     to_over = None
+        #     for r in ret:
+        #         if r.get("OutDate") is None and r.get("TargetCategory") == 2:
+        #             to_over = r
+        #     if to_over:
+        #         logger.debug("to over: {}".format(to_over))
+        #         to_over.update({"OutDate": _dt, "Flag": 2})
+        #         items4.append(to_over)
+        #     # 增加 134
+        #     _item1, _item2, _item3 = dict(), dict(), dict()
+        #     for item in (_item1, _item2, _item3):
+        #         item['TradingType'] = 1  # 沪股通 1
+        #         item['SecuCode'] = code
+        #         item['InnerCode'], item['SecuAbbr'] = self.get_juyuan_codeinfo(code)
+        #         item['InDate'] = _dt
+        #         item['Flag'] = 1
+        #     _item1['TargetCategory'] = 1
+        #     _item2['TargetCategory'] = 3
+        #     _item3['TargetCategory'] = 4
+        #     logger.debug("增加 1:{}".format(_item1))
+        #     logger.debug("增加 3:{}".format(_item2))
+        #     logger.debug("增加 4:{}".format(_item3))
+        #     items4.extend([_item1, _item2, _item3])
+        #
+        # print(len(items4))   # 108
+        # if self.is_local:
+        #     ret4 = self._batch_save(self.test_client, items4, sz_table_name, sz_fields)
+        # else:
+        #     ret4 = self._batch_save(self.product_client, items4, sz_table_name, sz_fields)
+        # print(ret4)    # 135
 
-        print(len(items4))   # 108
-        if self.is_local:
-            ret4 = self._batch_save(self.test_client, items4, sz_table_name, sz_fields)
-        else:
-            ret4 = self._batch_save(self.product_client, items4, sz_table_name, sz_fields)
-        print(ret4)    # 135
+        # print("* " * 20)
+        # items5 = []
+        # for code, _dt in sz_remove_1:
+        #     # 移除 1
+        #     sql = base_sql.format(code)
+        #     if self.is_local:
+        #         ret = self.test_client.select_all(sql)
+        #     else:
+        #         ret = self.dc_client.select_all(sql)
+        #     # logger.debug(pprint.pformat(ret))
+        #     to_over = None
+        #     for r in ret:
+        #         if r.get("OutDate") is None and r.get("TargetCategory") == 1:
+        #             to_over = r
+        #     if to_over:
+        #         logger.debug("to over: {}".format(to_over))
+        #         to_over.update({"OutDate": _dt, "Flag": 2})
+        #         items5.append(to_over)
+        #     # 增加 2
+        #     item = dict()
+        #     item['TradingType'] = 1  # 沪股通 1
+        #     item['SecuCode'] = code
+        #     item['InnerCode'], item['SecuAbbr'] = self.get_juyuan_codeinfo(code)
+        #     item['InDate'] = _dt
+        #     item['Flag'] = 1
+        #     item['TargetCategory'] = 2
+        #     logger.debug("增加 2: {}".format(item))
+        #     items5.append(item)
+        #
+        # # print(len(items5))    # 24
+        # if self.is_local:
+        #     ret5 = self._batch_save(self.test_client, items5, sz_table_name, sz_fields)
+        # else:
+        #     ret5 = self._batch_save(self.product_client, items5, sz_table_name, sz_fields)
+        # print(ret5)    # 36
 
     def refresh_update_time(self):
         """更新工具表的刷新时间"""
