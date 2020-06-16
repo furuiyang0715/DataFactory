@@ -29,6 +29,7 @@ class DailyUpdate(BaseSpider):
     def sh_buy_and_sell_list(self):
         self._test_init()
         self._spider_init()
+        self._product_init()
 
         sql = '''select SecuCode from hkland_hgelistocks where TradingType = 1 and TargetCategory = 1 and Flag = 1; '''
         if self.is_local:
@@ -53,6 +54,7 @@ class DailyUpdate(BaseSpider):
     def sz_buy_and_sell_list(self):
         self._test_init()
         self._spider_init()
+        self._product_init()
 
         sql = '''select SecuCode from hkland_sgelistocks where TradingType = 3 and TargetCategory = 1 and Flag = 1; '''
         if self.is_local:
@@ -77,6 +79,7 @@ class DailyUpdate(BaseSpider):
     def sh_only_sell_list(self):
         self._test_init()
         self._spider_init()
+        self._product_init()
 
         sql = '''select SecuCode from hkland_hgelistocks where TradingType = 1 and TargetCategory = 2 and Flag = 1; '''
         if self.is_local:
@@ -102,6 +105,7 @@ class DailyUpdate(BaseSpider):
     def sz_only_sell_list(self):
         self._test_init()
         self._spider_init()
+        self._product_init()
 
         sql = '''select SecuCode from hkland_sgelistocks where TradingType = 3 and TargetCategory = 2 and Flag = 1; '''
         if self.is_local:
@@ -127,6 +131,7 @@ class DailyUpdate(BaseSpider):
     def sh_buy_margin_trading_list(self):
         self._test_init()
         self._spider_init()
+        self._product_init()
 
         sql = '''select SecuCode from hkland_hgelistocks where TradingType = 1 and TargetCategory = 3 and Flag = 1; '''
         if self.is_local:
@@ -152,6 +157,7 @@ class DailyUpdate(BaseSpider):
     def sz_buy_margin_trading_list(self):
         self._test_init()
         self._spider_init()
+        self._product_init()
 
         sql = '''select SecuCode from hkland_sgelistocks where TradingType = 3 and TargetCategory = 3 and Flag = 1; '''
         if self.is_local:
@@ -177,6 +183,7 @@ class DailyUpdate(BaseSpider):
     def sh_short_sell_list(self):
         self._test_init()
         self._spider_init()
+        self._product_init()
 
         sql = '''select SecuCode from hkland_hgelistocks where TradingType = 1 and TargetCategory = 4 and Flag = 1; '''
         if self.is_local:
@@ -202,6 +209,7 @@ class DailyUpdate(BaseSpider):
     def sz_short_sell_list(self):
         self._test_init()
         self._spider_init()
+        self._product_init()
 
         sql = '''select SecuCode from hkland_sgelistocks where TradingType = 3 and TargetCategory = 4 and Flag = 1; '''
         if self.is_local:

@@ -3,11 +3,10 @@ import functools
 import os
 import pprint
 import sys
+import time
 import traceback
 
 import schedule
-
-from hkland_elistocks_imp.ganerate_hklands import DailyUpdate
 
 cur_path = os.path.split(os.path.realpath(__file__))[0]
 file_path = os.path.abspath(os.path.join(cur_path, ".."))
@@ -16,6 +15,7 @@ sys.path.insert(0, file_path)
 from hkland_elistocks_imp.const import records_sh, records_sz
 from hkland_elistocks_imp.configs import LOCAL
 from hkland_elistocks_imp.base import logger, BaseSpider
+from hkland_elistocks_imp.ganerate_hklands import DailyUpdate
 
 
 def catch_exceptions(cancel_on_failure=False):
@@ -216,19 +216,29 @@ def task():
     OriginChecker().start()
 
 
-task()
+# task()
 
-# def main():
-#     logger.info("当前时间是{} ".format(datetime.datetime.now()))
-#     task()
-#     schedule.every().day.at("17:00").do(task)
-#
-#     while True:
-#         logger.info("当前调度系统中的任务列表是{}".format(schedule.jobs))
-#         schedule.run_pending()
-#         time.sleep(1800)
-#
-#
-# if __name__ == "__main__":
-#     main()
+def main():
+    logger.info("当前时间是{} ".format(datetime.datetime.now()))
+    task()
+    schedule.every().day.at("17:00").do(task)
 
+    while True:
+        logger.info("当前调度系统中的任务列表是{}".format(schedule.jobs))
+        schedule.run_pending()
+        time.sleep(1800)
+
+
+if __name__ == "__main__":
+    main()
+
+'''
+docker build -t registry.cn-shenzhen.aliyuncs.com/jzdev/dcfactory/kland_scelistocks:v0.0.1 .
+docker push registry.cn-shenzhen.aliyuncs.com/jzdev/dcfactory/kland_scelistocks:v0.0.1
+sudo docker pull registry.cn-shenzhen.aliyuncs.com/jzdev/dcfactory/kland_scelistocks:v0.0.1
+
+sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name scelistocks_imp \
+--env LOCAL=0 \
+registry.cn-shenzhen.aliyuncs.com/jzdev/dcfactory/kland_scelistocks:v0.0.1
+
+'''
