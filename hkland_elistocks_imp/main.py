@@ -4,6 +4,7 @@ import hashlib
 import hmac
 import json
 import logging
+import os
 import pprint
 import sys
 import time
@@ -12,6 +13,10 @@ import urllib.parse
 
 
 import requests
+
+cur_path = os.path.split(os.path.realpath(__file__))[0]
+file_path = os.path.abspath(os.path.join(cur_path, ".."))
+sys.path.insert(0, file_path)
 
 from hkland_elistocks_imp.configs import LOCAL, TARGET_HOST, TARGET_PORT, TARGET_USER, TARGET_PASSWD, TARGET_DB, \
     JUY_HOST, JUY_PORT, JUY_USER, JUY_PASSWD, JUY_DB, DATACENTER_HOST, DATACENTER_PORT, DATACENTER_USER, \
@@ -227,7 +232,7 @@ and ListedSector in (1, 2, 6, 7) and SecuCode = "{}";'.format(secu_code)
 class DailyUpdate(BaseSpider):
     def __init__(self):
         super(DailyUpdate, self).__init__()
-        self.is_local = True
+        self.is_local = LOCAL
         # sh
         self.sh_only_sell_list_table = 'hkex_lgt_special_sse_securities'
         self.sh_buy_and_sell_list_table = 'hkex_lgt_sse_securities'
@@ -258,6 +263,31 @@ class DailyUpdate(BaseSpider):
         else:
             ret = self.spider_client.select_all(sql)
         lst = set([r.get("SSESCode") for r in ret])
+        assert datas
+        assert lst
+        print(datas - lst)
+        print(lst - datas)
+
+    def sz_buy_and_sell_list(self):
+        self._test_init()
+        self._spider_init()
+
+        sql = '''select SecuCode from hkland_sgelistocks where TradingType = 3 and TargetCategory = 1 and Flag = 1; '''
+        if self.is_local:
+            ret = self.test_client.select_all(sql)
+        else:
+            ret = self.product_client.select_all(sql)
+        datas = set([r.get("SecuCode") for r in ret])
+
+        sql = 'select distinct(SSESCode) from {} where Date = (select max(Date) from {});'.format(
+            self.sz_buy_and_sell_list_table, self.sz_buy_and_sell_list_table)
+        if self.is_local:
+            ret = self.test_client.select_all(sql)
+        else:
+            ret = self.spider_client.select_all(sql)
+        lst = set([r.get("SSESCode") for r in ret])
+        assert datas
+        assert lst
         print(datas - lst)
         print(lst - datas)
 
@@ -280,6 +310,32 @@ class DailyUpdate(BaseSpider):
             ret = self.spider_client.select_all(sql)
 
         lst = set([r.get("SSESCode") for r in ret])
+        assert datas
+        assert lst
+        print(datas - lst)
+        print(lst - datas)
+
+    def sz_only_sell_list(self):
+        self._test_init()
+        self._spider_init()
+
+        sql = '''select SecuCode from hkland_sgelistocks where TradingType = 3 and TargetCategory = 2 and Flag = 1; '''
+        if self.is_local:
+            ret = self.test_client.select_all(sql)
+        else:
+            ret = self.product_client.select_all(sql)
+        datas = set([r.get("SecuCode") for r in ret])
+
+        sql = 'select distinct(SSESCode) from {} where Date = (select max(Date) from {});'.format(
+            self.sz_only_sell_list_table, self.sz_only_sell_list_table)
+        if self.is_local:
+            ret = self.test_client.select_all(sql)
+        else:
+            ret = self.spider_client.select_all(sql)
+
+        lst = set([r.get("SSESCode") for r in ret])
+        assert datas
+        assert lst
         print(datas - lst)
         print(lst - datas)
 
@@ -302,6 +358,8 @@ class DailyUpdate(BaseSpider):
             ret = self.spider_client.select_all(sql)
 
         lst = set([r.get("SSESCode") for r in ret])
+        assert datas
+        assert lst
         print(datas - lst)
         print(lst - datas)
 
@@ -324,6 +382,8 @@ class DailyUpdate(BaseSpider):
             ret = self.spider_client.select_all(sql)
 
         lst = set([r.get("SSESCode") for r in ret])
+        assert lst
+        assert datas
         print(datas - lst)
         print(lst - datas)
 
@@ -346,6 +406,8 @@ class DailyUpdate(BaseSpider):
             ret = self.spider_client.select_all(sql)
 
         lst = set([r.get("SSESCode") for r in ret])
+        assert datas
+        assert lst
         print(datas - lst)
         print(lst - datas)
 
@@ -368,6 +430,8 @@ class DailyUpdate(BaseSpider):
             ret = self.spider_client.select_all(sql)
 
         lst = set([r.get("SSESCode") for r in ret])
+        assert datas
+        assert lst
         print(datas - lst)
         print(lst - datas)
 
@@ -404,15 +468,17 @@ class DailyUpdate(BaseSpider):
                 if r.get("OutDate") is None and r.get("TargetCategory") == 2 and r.get("Flag") == 1:
                     to_removal = r
             print(to_removal)
-            # 从只可买入名单中移除
-            to_removal.update({"OutDate": _dt, "Flag": 2})
-            items.append(to_removal)
+            if to_removal:
+                # 从只可买入名单中移除
+                to_removal.update({"OutDate": _dt, "Flag": 2})
+                items.append(to_removal)
 
-        if self.is_local:
-            ret = self._batch_save(self.test_client, items, sh_table_name, sh_fields)
-        else:
-            ret = self._batch_save(self.product_client, items, sh_table_name, sh_fields)
-        print(ret)
+        if items:
+            if self.is_local:
+                ret = self._batch_save(self.test_client, items, sh_table_name, sh_fields)
+            else:
+                ret = self._batch_save(self.product_client, items, sh_table_name, sh_fields)
+            print(ret)
 
         print("* " * 20)
         items1 = []
@@ -438,12 +504,12 @@ class DailyUpdate(BaseSpider):
             # item['CCASSCode'] = None
             # item['ParValue'] = None
             items1.append(item)
-
-        if self.is_local:
-            ret1 = self._batch_save(self.test_client, items1, sh_table_name, sh_fields)
-        else:
-            ret1 = self._batch_save(self.product_client, items1, sh_table_name, sh_fields)
-        print(ret1)
+        if items1:
+            if self.is_local:
+                ret1 = self._batch_save(self.test_client, items1, sh_table_name, sh_fields)
+            else:
+                ret1 = self._batch_save(self.product_client, items1, sh_table_name, sh_fields)
+            print(ret1)
 
         print("* " * 20)
         items2 = []
@@ -470,11 +536,13 @@ class DailyUpdate(BaseSpider):
             logger.debug(_item2)
             logger.debug(_item3)
             items2.extend([_item1, _item2, _item3])
-        if self.is_local:
-            ret2 = self._batch_save(self.test_client, items2, sh_table_name, sh_fields)
-        else:
-            ret2 = self._batch_save(self.product_client, items2, sh_table_name, sh_fields)
-        print(ret2)     # 27
+
+        if items2:
+            if self.is_local:
+                ret2 = self._batch_save(self.test_client, items2, sh_table_name, sh_fields)
+            else:
+                ret2 = self._batch_save(self.product_client, items2, sh_table_name, sh_fields)
+            print(ret2)     # 27
 
         print("* " * 20)
         items3 = []
@@ -504,11 +572,12 @@ class DailyUpdate(BaseSpider):
             item['Flag'] = 1
             items3.append(item)
         # print(pprint.pformat(items3))
-        if self.is_local:
-            ret3 = self._batch_save(self.test_client, items3, sh_table_name, sh_fields)
-        else:
-            ret3 = self._batch_save(self.product_client, items3, sh_table_name, sh_fields)
-        print(ret3)    # 3
+        if items3:
+            if self.is_local:
+                ret3 = self._batch_save(self.test_client, items3, sh_table_name, sh_fields)
+            else:
+                ret3 = self._batch_save(self.product_client, items3, sh_table_name, sh_fields)
+            print(ret3)    # 3
 
         print("* " * 20)
         items4 = []
@@ -543,11 +612,12 @@ class DailyUpdate(BaseSpider):
             logger.debug("增加 3:{}".format(_item2))
             logger.debug("增加 4:{}".format(_item3))
             items4.extend([_item1, _item2, _item3])
-        if self.is_local:
-            ret4 = self._batch_save(self.test_client, items4, sh_table_name, sh_fields)
-        else:
-            ret4 = self._batch_save(self.product_client, items4, sh_table_name, sh_fields)
-        print(ret4)    # 35
+        if items4:
+            if self.is_local:
+                ret4 = self._batch_save(self.test_client, items4, sh_table_name, sh_fields)
+            else:
+                ret4 = self._batch_save(self.product_client, items4, sh_table_name, sh_fields)
+            print(ret4)    # 35
 
         print("* " * 20)
         items5 = []
@@ -577,11 +647,12 @@ class DailyUpdate(BaseSpider):
             item['TargetCategory'] = 2
             logger.debug("增加 2: {}".format(item))
             items5.append(item)
-        if self.is_local:
-            ret5 = self._batch_save(self.test_client, items5, sh_table_name, sh_fields)
-        else:
-            ret5 = self._batch_save(self.product_client, items5, sh_table_name, sh_fields)
-        print(ret5)    # 36
+        if items5:
+            if self.is_local:
+                ret5 = self._batch_save(self.test_client, items5, sh_table_name, sh_fields)
+            else:
+                ret5 = self._batch_save(self.product_client, items5, sh_table_name, sh_fields)
+            print(ret5)    # 36
 
         print("* " * 20)
         items6 = []
@@ -620,11 +691,12 @@ class DailyUpdate(BaseSpider):
                 if tov:
                     tov.update({"OutDate": _dt, "Flag": 2})
                     items6.append(tov)
-        if self.is_local:
-            ret6 = self._batch_save(self.test_client, items6, sh_table_name, sh_fields)
-        else:
-            ret6 = self._batch_save(self.product_client, items6, sh_table_name, sh_fields)
-        print(ret6)     # 140
+        if items6:
+            if self.is_local:
+                ret6 = self._batch_save(self.test_client, items6, sh_table_name, sh_fields)
+            else:
+                ret6 = self._batch_save(self.product_client, items6, sh_table_name, sh_fields)
+            print(ret6)     # 140
 
     def run_0615_sz(self):
         sz_table_name = 'hkland_sgelistocks'
@@ -692,11 +764,12 @@ class DailyUpdate(BaseSpider):
             items1.append(item)
 
         print(len(items1))
-        if self.is_local:
-            ret1 = self._batch_save(self.test_client, items1, sz_table_name, sz_fields)
-        else:
-            ret1 = self._batch_save(self.product_client, items1, sz_table_name, sz_fields)
-        print(ret1)   # 56
+        if items1:
+            if self.is_local:
+                ret1 = self._batch_save(self.test_client, items1, sz_table_name, sz_fields)
+            else:
+                ret1 = self._batch_save(self.product_client, items1, sz_table_name, sz_fields)
+            print(ret1)   # 56
 
         print("* " * 20)
         items2 = []
@@ -724,11 +797,12 @@ class DailyUpdate(BaseSpider):
             logger.debug(_item3)
             items2.extend([_item1, _item2, _item3])
         # print(len(items2))
-        if self.is_local:
-            ret2 = self._batch_save(self.test_client, items2, sz_table_name, sz_fields)
-        else:
-            ret2 = self._batch_save(self.product_client, items2, sz_table_name, sz_fields)
-        print(ret2)    # 18
+        if items2:
+            if self.is_local:
+                ret2 = self._batch_save(self.test_client, items2, sz_table_name, sz_fields)
+            else:
+                ret2 = self._batch_save(self.product_client, items2, sz_table_name, sz_fields)
+            print(ret2)    # 18
 
         print("* " * 20)
         items3 = []
@@ -759,11 +833,12 @@ class DailyUpdate(BaseSpider):
             items3.append(item)
 
         print(len(items3))   # 76
-        if self.is_local:
-            ret3 = self._batch_save(self.test_client, items3, sz_table_name, sz_fields)
-        else:
-            ret3 = self._batch_save(self.product_client, items3, sz_table_name, sz_fields)
-        print(ret3)    # 114
+        if items3:
+            if self.is_local:
+                ret3 = self._batch_save(self.test_client, items3, sz_table_name, sz_fields)
+            else:
+                ret3 = self._batch_save(self.product_client, items3, sz_table_name, sz_fields)
+            print(ret3)    # 114
 
         print("* " * 20)
         items4 = []
@@ -800,11 +875,12 @@ class DailyUpdate(BaseSpider):
             items4.extend([_item1, _item2, _item3])
 
         print(len(items4))   # 108
-        if self.is_local:
-            ret4 = self._batch_save(self.test_client, items4, sz_table_name, sz_fields)
-        else:
-            ret4 = self._batch_save(self.product_client, items4, sz_table_name, sz_fields)
-        print(ret4)    # 135
+        if items4:
+            if self.is_local:
+                ret4 = self._batch_save(self.test_client, items4, sz_table_name, sz_fields)
+            else:
+                ret4 = self._batch_save(self.product_client, items4, sz_table_name, sz_fields)
+            print(ret4)    # 135
 
         print("* " * 20)
         items5 = []
@@ -836,11 +912,12 @@ class DailyUpdate(BaseSpider):
             items5.append(item)
 
         # print(len(items5))    # 24
-        if self.is_local:
-            ret5 = self._batch_save(self.test_client, items5, sz_table_name, sz_fields)
-        else:
-            ret5 = self._batch_save(self.product_client, items5, sz_table_name, sz_fields)
-        print(ret5)    # 36
+        if items5:
+            if self.is_local:
+                ret5 = self._batch_save(self.test_client, items5, sz_table_name, sz_fields)
+            else:
+                ret5 = self._batch_save(self.product_client, items5, sz_table_name, sz_fields)
+            print(ret5)    # 36
 
         print("* " * 20)
         items6 = []
@@ -881,11 +958,12 @@ class DailyUpdate(BaseSpider):
                     items6.append(tov)
 
         print(len(items6))    # 90
-        if self.is_local:
-            ret6 = self._batch_save(self.test_client, items6, sz_table_name, sz_fields)
-        else:
-            ret6 = self._batch_save(self.product_client, items6, sz_table_name, sz_fields)
-        print(ret6)     # 140
+        if items6:
+            if self.is_local:
+                ret6 = self._batch_save(self.test_client, items6, sz_table_name, sz_fields)
+            else:
+                ret6 = self._batch_save(self.product_client, items6, sz_table_name, sz_fields)
+            print(ret6)     # 140
 
     def refresh_update_time(self):
         """更新工具表的刷新时间"""
@@ -916,20 +994,19 @@ class DailyUpdate(BaseSpider):
         self.sync_dc2test("hkland_sgelistocks")
 
     def start(self):
-        # self.run_0615_sh()
-        # self.sh_short_sell_list()
-        # self.sh_buy_margin_trading_list()
-        # self.sh_only_sell_list()
-        # self.sh_buy_and_sell_list()
+        self.run_0615_sh()
+        self.sh_short_sell_list()
+        self.sh_buy_margin_trading_list()
+        self.sh_only_sell_list()
+        self.sh_buy_and_sell_list()
 
-        # self.run_0615_sz()
+        self.run_0615_sz()
         self.sz_short_sell_list()
         self.sz_buy_margin_trading_list()
+        self.sz_only_sell_list()
+        self.sz_buy_and_sell_list()
 
-
-        # self.refresh_update_time()
-
-        pass
+        self.refresh_update_time()
 
 
 if __name__ == "__main__":
