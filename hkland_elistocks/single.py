@@ -15,7 +15,8 @@ import requests
 from hkland_elistocks.configs import (LOCAL, TARGET_HOST, TARGET_PORT, TARGET_USER, TARGET_DB, TARGET_PASSWD,
                                       JUY_HOST, JUY_PORT, JUY_USER, JUY_PASSWD, JUY_DB, SECRET, TOKEN, DATACENTER_HOST,
                                       DATACENTER_PASSWD, DATACENTER_USER, DATACENTER_DB, DATACENTER_PORT, SPIDER_HOST,
-                                      SPIDER_PORT, SPIDER_USER, SPIDER_PASSWD, SPIDER_DB)
+                                      SPIDER_PORT, SPIDER_USER, SPIDER_PASSWD, SPIDER_DB, TEST_HOST, TEST_PORT,
+                                      TEST_USER, TEST_PASSWD, TEST_DB)
 from hkland_elistocks.sql_pool import PyMysqlPoolBase
 from hkland_elistocks.sh_human_gene import SHHumanTools
 from hkland_elistocks.zh_human_gene import ZHHumanTools
@@ -61,11 +62,20 @@ class BaseSpider(object):
         "db": SPIDER_DB,
     }
 
+    test_cfg = {
+        "host": TEST_HOST,
+        "port": TEST_PORT,
+        "user": TEST_USER,
+        "password": TEST_PASSWD,
+        "db": TEST_DB,
+    }
+
     def __init__(self):
         self.juyuan_client = None
         self.product_client = None
         self.dc_client = None
         self.spider_client = None
+        self.test_client = None
 
     def _init_pool(self, cfg: dict):
         pool = PyMysqlPoolBase(**cfg)
@@ -87,6 +97,10 @@ class BaseSpider(object):
         if not self.spider_client:
             self.spider_client = self._init_pool(self.spider_cfg)
 
+    def _test_init(self):
+        if not self.test_client:
+            self.test_client = self._init_pool(self.test_cfg)
+
     def __del__(self):
         if self.juyuan_client:
             self.juyuan_client.dispose()
@@ -96,6 +110,8 @@ class BaseSpider(object):
             self.spider_client.dispose()
         if self.dc_client:
             self.dc_client.dispose()
+        if self.test_client:
+            self.test_client.dispose()
 
     def contract_sql(self, datas, table: str, update_fields: list):
         if not isinstance(datas, list):
@@ -203,6 +219,14 @@ and ListedSector in (1, 2, 6, 7) and SecuCode = "{}";'.format(secu_code)
             pass
         else:
             logger.warning("钉钉消息发送失败")
+
+    def sync_dc2test(self, table_name):
+        """测试使用 将 dc 数据库导出到测试库"""
+        self._dc_init()
+        self._test_init()
+        sql = '''select * from {}; '''.format(table_name)
+        datas = self.dc_client.select_all(sql)
+        self._batch_save(self.test_client, datas, table_name, [])
 
 
 class DailyUpdate(BaseSpider):
@@ -414,4 +438,5 @@ class DailyUpdate(BaseSpider):
 
 if __name__ == "__main__":
     dp = DailyUpdate()
+    # dp.sync_dc2test("hkland_hgelistocks")
     dp.start()
