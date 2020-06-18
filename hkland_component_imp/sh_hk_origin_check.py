@@ -1,4 +1,10 @@
 import datetime
+import os
+import sys
+
+cur_path = os.path.split(os.path.realpath(__file__))[0]
+file_path = os.path.abspath(os.path.join(cur_path, ".."))
+sys.path.insert(0, file_path)
 
 from hkland_component_imp.base import BaseSpider, logger
 from hkland_component_imp.configs import LOCAL
@@ -322,9 +328,9 @@ class SHSCComponent(BaseSpider):
                 info = "沪股成分变更: 存在未知的其他状态 {} \n".format(stats)
                 self.ding_info += info
 
-        # for items in (add_items, recover_items, transfer_items, removal_items):
-        #     if items:
-        #         self._batch_save(client, items, self.target_table_name, self.fields)
+        for items in (add_items, recover_items, transfer_items, removal_items):
+            if items:
+                self._batch_save(client, items, self.target_table_name, self.fields)
 
     def process_hk_changes(self, hk_changes):
         def get_hk_inner_code(secu_code):
@@ -382,9 +388,9 @@ class SHSCComponent(BaseSpider):
                     info = "港股(深)成分变更: 需要新增一条调出记录{}\n".format(record)
                     self.ding_info += info
 
-        # for items in (add_items, delete_items):
-        #     if items:
-        #         self._batch_save(client, items, self.target_table_name, self.fields)
+        for items in (add_items, delete_items):
+            if items:
+                self._batch_save(client, items, self.target_table_name, self.fields)
 
     def start(self):
         to_add, to_delete = self.get_shhk_diff_changes("sh")
