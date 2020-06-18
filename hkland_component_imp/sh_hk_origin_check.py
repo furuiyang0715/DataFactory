@@ -53,12 +53,10 @@ class SHSCComponent(BaseSpider):
         ret = client.select_all(sql)
         times = [r.get("Time") for r in ret]
         # print(times)
-        # [datetime.date(2020, 2, 3), datetime.date(2020, 3, 30), datetime.date(2020, 4, 14),
-        # datetime.date(2020, 5, 4), datetime.date(2020, 5, 27), datetime.date(2020, 6, 8)]
         t1 = times[0]
         t2 = times[-1]
-        print(t1)
-        print(t2)
+        # print(t1)
+        # print(t2)
 
         sql1 = '''select * from {} where Time = '{}' ;'''.format(table_name, t1)
         sql2 = '''select * from {} where Time = '{}' ;'''.format(table_name, t2)
@@ -96,7 +94,6 @@ class SHSCComponent(BaseSpider):
         self.hk_change_table_name = 'lgt_sse_underlying_securities_adjustment'
         self.hk_list_table_name = 'hkex_lgt_sse_list_of_eligible_securities'
 
-        #  不对成分股记录产生影响的状态
         self.stats_todonothing = [
             'Addition to List of Eligible SSE Securities for Margin Trading and List of Eligible SSE Securities for Short Selling',
             'Remove from List of Eligible SSE Securities for Margin Trading and List of Eligible SSE Securities for Short Selling',
@@ -250,7 +247,6 @@ class SHSCComponent(BaseSpider):
             secu_code = change.get("SSESCode")
             effective_date = datetime.datetime.combine(change.get('EffectiveDate'), datetime.datetime.min.time())
 
-            # 加入成分股的
             if stats in self.stats_addition:
                 record = {"CompType": 2, "SecuCode": secu_code, "InDate": effective_date}
                 is_exist = self.check_target_exist(record)
@@ -326,9 +322,9 @@ class SHSCComponent(BaseSpider):
                 info = "沪股成分变更: 存在未知的其他状态 {} \n".format(stats)
                 self.ding_info += info
 
-        for items in (add_items, recover_items, transfer_items, removal_items):
-            if items:
-                self._batch_save(client, items, self.target_table_name, self.fields)
+        # for items in (add_items, recover_items, transfer_items, removal_items):
+        #     if items:
+        #         self._batch_save(client, items, self.target_table_name, self.fields)
 
     def process_hk_changes(self, hk_changes):
         def get_hk_inner_code(secu_code):
@@ -386,9 +382,9 @@ class SHSCComponent(BaseSpider):
                     info = "港股(深)成分变更: 需要新增一条调出记录{}\n".format(record)
                     self.ding_info += info
 
-        for items in (add_items, delete_items):
-            if items:
-                self._batch_save(client, items, self.target_table_name, self.fields)
+        # for items in (add_items, delete_items):
+        #     if items:
+        #         self._batch_save(client, items, self.target_table_name, self.fields)
 
     def start(self):
         to_add, to_delete = self.get_shhk_diff_changes("sh")
