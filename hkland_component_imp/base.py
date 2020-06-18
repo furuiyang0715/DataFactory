@@ -173,6 +173,8 @@ class BaseSpider(object):
 and SecuMarket in (83, 90) \
 and ListedSector in (1, 2, 6, 7) and SecuCode = "{}";'.format(secu_code)
         ret = self.juyuan_client.select_one(sql)
+        if not ret:
+            return None, None
         return ret.get('InnerCode'), ret.get("SecuAbbr")
 
     def ding(self, msg):
@@ -223,5 +225,5 @@ and ListedSector in (1, 2, 6, 7) and SecuCode = "{}";'.format(secu_code)
 if __name__ == "__main__":
     bs = BaseSpider()
     # 将数据同步到测试库
-    bs.sync_dc2test('hkland_hgcomponent')
+    # bs.sync_dc2test('hkland_hgcomponent')
     bs.sync_dc2test('hkland_sgcomponent')
