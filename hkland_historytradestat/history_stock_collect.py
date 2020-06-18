@@ -500,6 +500,8 @@ class HistoryCalSpider(BaseSpider):
             ret = self._batch_save(self.product_client, items, self.table_name, self.fields)
             self.ding("历史数据计算: ret: {}, 沪股通: {}\n深股通: {}\n港股通(沪): {}\n港股通(深):{}\n".format(ret, item_hk_sh, item_hk_sz, item_sh_hk, item_sh_sz))
 
+        self.refresh_update_time()
+
     def start(self):
         try:
             self._start()
