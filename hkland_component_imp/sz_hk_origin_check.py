@@ -4,7 +4,7 @@ from hkland_component_imp.base import BaseSpider, logger
 from hkland_component_imp.configs import LOCAL
 
 
-class ZHSCComponent(BaseSpider):
+class SZSCComponent(BaseSpider):
     # def juyuan_stats(self):
     #     """获取聚源数据库中的数据【聚源库已停止更新】"""
     #     self._juyuan_init()
@@ -74,7 +74,7 @@ class ZHSCComponent(BaseSpider):
         return to_add, to_delete
 
     def __init__(self):
-        super(ZHSCComponent, self).__init__()
+        super(SZSCComponent, self).__init__()
         self.is_local = LOCAL
         self.juyuan_table_name = 'lc_zhsccomponent'
         self.dc_table_name = 'hkland_sgcomponent'
@@ -245,6 +245,10 @@ class ZHSCComponent(BaseSpider):
             # 需要进行填值的字段: CompType | InnerCode | SecuCode | InDate | OutDate | Flag
             if stats in self.stats_addition:
                 record = {"CompType": 3, "SecuCode": secu_code, "InDate": effective_date}
+                is_exist = self.check_target_exist(record)
+                if is_exist:
+                    logger.info("记录已存在")
+                    continue
                 inner_code, secu_abbr = self.get_juyuan_codeinfo(secu_code)
                 record.update({"InnerCode": inner_code, "Flag": 1})
                 logger.info("新增一条记录: {}".format(record))
@@ -254,6 +258,10 @@ class ZHSCComponent(BaseSpider):
 
             elif stats in self.stats_recover:
                 record = {"CompType": 3, "SecuCode": secu_code, "InDate": effective_date}
+                is_exist = self.check_target_exist(record)
+                if is_exist:
+                    logger.info("记录已存在")
+                    continue
                 inner_code, secu_abbr = self.get_juyuan_codeinfo(secu_code)
                 record.update({"InnerCode": inner_code, "Flag": 1})
                 logger.info("新增一条恢复记录{}".format(record))
@@ -263,6 +271,11 @@ class ZHSCComponent(BaseSpider):
 
             elif stats in self.stats_transfer:
                 record = {"CompType": 3, "SecuCode": secu_code, "OutDate": effective_date}
+                # 移除记录要检查之前的移除效果是否存在 因为 OutDate 不是唯一的联合主键
+                is_exist = self.check_target_exist(record)
+                if is_exist:
+                    logger.info("记录已存在")
+                    continue
                 inner_code, secu_abbr = self.get_juyuan_codeinfo(secu_code)
 
                 sql = 'select  InDate from {} where CompType = 3 and SecuCode = {} and Flag = 1; '.format(self.target_table_name, secu_code)
@@ -283,6 +296,11 @@ class ZHSCComponent(BaseSpider):
 
             elif stats in self.stats_removal:
                 record = {"CompType": 3, "SecuCode": secu_code, "OutDate": effective_date}
+                is_exist = self.check_target_exist(record)
+                if is_exist:
+                    logger.info("记录已存在")
+                    continue
+
                 inner_code, secu_abbr = self.get_juyuan_codeinfo(secu_code)
                 sql = 'select  InDate from {} where CompType = 3 and SecuCode = {} and Flag = 1; '.format(self.target_table_name, secu_code)
                 is_exist = client.select_one(sql)
@@ -303,12 +321,9 @@ class ZHSCComponent(BaseSpider):
                 info = "深股成分变更: 存在未知的其他状态 {} \n".format(stats)
                 self.ding_info += info
 
-        # for items in (add_items, recover_items, transfer_items, removal_items):
-        #     if items:
-        #         self._batch_save(client, items, self.target_table_name, self.fields)
-        #         self._batch_save(client, items, self.target_table_name, self.fields)
-        #         self._batch_save(client, items, self.target_table_name, self.fields)
-        #         self._batch_save(client, items, self.target_table_name, self.fields)
+        for items in (add_items, recover_items, transfer_items, removal_items):
+            if items:
+                self._batch_save(client, items, self.target_table_name, self.fields)
 
     def process_hk_changes(self, hk_changes):
         def get_hk_inner_code(secu_code):
@@ -328,7 +343,8 @@ class ZHSCComponent(BaseSpider):
             client = self.test_client
         else:
             client = self.product_client
-
+        add_items = []
+        delete_items = []
         for change in hk_changes:
             secu_code = change.get("SecuCode")
             effective_date = datetime.datetime.combine(change.get('AdjustTime'), datetime.datetime.min.time())
@@ -336,16 +352,24 @@ class ZHSCComponent(BaseSpider):
 
             if stats == '调入':
                 record = {"CompType": 4, "SecuCode": secu_code, "InDate": effective_date}
+                is_exist = self.check_target_exist(record)
+                if is_exist:
+                    logger.info("记录已存在")
+                    continue
                 inner_code = get_hk_inner_code(secu_code)
                 record.update({"InnerCode": inner_code, "Flag": 1})
+                add_items.append(record)
                 logger.info("需要新增一条调入记录 {}".format(record))
                 info = "港股(深)成分变更: 需要新增一条调入记录{}\n".format(record)
                 self.ding_info += info
 
             elif stats == '调出':
                 record = {"CompType": 4, "SecuCode": secu_code, "OutDate": effective_date}
+                is_exist = self.check_target_exist(record)
+                if is_exist:
+                    logger.info("记录已存在")
+                    continue
                 inner_code = get_hk_inner_code(secu_code)
-                # TODO 这里逻辑是与缺陷的需要注意
                 sql = 'select  InDate from {} where CompType = 4 and SecuCode = {} and Flag = 1; '.format(self.target_table_name, secu_code)
                 ret = client.select_one(sql)
                 if not ret:
@@ -354,9 +378,14 @@ class ZHSCComponent(BaseSpider):
                 else:
                     in_date = ret.get("InDate")
                 record.update({"InnerCode": inner_code, "Flag": 2, "InDate": in_date})
+                delete_items.append(record)
                 logger.info("需要新增一条调出记录{}".format(record))
                 info = "港股(深)成分变更: 需要新增一条调出记录{}\n".format(record)
                 self.ding_info += info
+
+        for items in (add_items, delete_items):
+            if items:
+                self._batch_save(client, items, self.target_table_name, self.fields)
 
     def start(self):
         to_add, to_delete = self.get_szhk_diff_changes("sz")
@@ -375,3 +404,8 @@ class ZHSCComponent(BaseSpider):
         self.ding_info += info
 
         # self.ding(self.ding_info)
+
+
+if __name__ == "__main__":
+    sz = SZSCComponent()
+    sz.start()
