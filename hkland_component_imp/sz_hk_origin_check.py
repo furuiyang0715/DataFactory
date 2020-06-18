@@ -405,6 +405,8 @@ class SZSCComponent(BaseSpider):
 
         # self.ding(self.ding_info)
 
+        self.refresh_update_time()
+
 
 if __name__ == "__main__":
     sz = SZSCComponent()
