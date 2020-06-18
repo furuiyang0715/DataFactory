@@ -225,5 +225,5 @@ and ListedSector in (1, 2, 6, 7) and SecuCode = "{}";'.format(secu_code)
 if __name__ == "__main__":
     bs = BaseSpider()
     # 将数据同步到测试库
-    # bs.sync_dc2test('hkland_hgcomponent')
-    bs.sync_dc2test('hkland_sgcomponent')
+    bs.sync_dc2test('hkland_hgcomponent')
+    # bs.sync_dc2test('hkland_sgcomponent')
