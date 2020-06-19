@@ -53,15 +53,14 @@
 `CMFID` bigint(20) NOT NULL COMMENT '来源ID',
 `CMFTime` datetime NOT NULL COMMENT '来源日期',
 '''
-
-
+import datetime
 import pprint
 import time
 import traceback
 
 import requests
 
-from hkland_toptrade.base_spider import BaseSpider
+from hkland_toptrade.base_spider import BaseSpider, logger
 
 
 class ExchangeTop10(BaseSpider):
@@ -71,14 +70,12 @@ class ExchangeTop10(BaseSpider):
         self.web_url = 'https://www.hkex.com.hk/Mutual-Market/Stock-Connect/Statistics/Historical-Daily?sc_lang=zh-HK#select4=1&select5=0&select3=0&select1=16&select2=5'
         self.dt_str = "20200617"
         self.url = 'https://www.hkex.com.hk/chi/csm/DailyStat/data_tab_daily_{}c.js?_={}'.format(self.dt_str, int(time.time()*1000))
+        #  id     | Date       | SecuCode | InnerCode | SecuAbbr     | Close    | ChangePercent | TJME           | TMRJE
+        #  | TCJJE          | CategoryCode | CMFID | CMFTime             | CREATETIMEJZ        | UPDATETIMEJZ
+        self.fields = ['Date', 'SecuCode', 'InnerCode', 'SecuAbbr',
+                       # 'Close', 'ChangePercent',
+                       'TJME', 'TMRJE', 'TCJJE', 'CategoryCode', ]
 
-    def process(self, items):
-        for item in items:
-            item.pop("Rank")
-            item.pop("Stock Name")
-            item.update({"TMRJE": item.get("Buy Turnover")})
-            item.update({})
-        pass
 
     @staticmethod
     def re_money_data(data: str):
@@ -117,17 +114,14 @@ class ExchangeTop10(BaseSpider):
                 "SZSE Southbound": "GGs",
             }
             for direction_data in datas:
+                print()
+                print()
                 items = []
-                # print(pprint.pformat(direction_data))
                 cur_dt = direction_data.get("date")
                 market = direction_data.get("market")
                 is_trading_day = direction_data.get("tradingDay")
                 content = direction_data.get("content")[1].get("table").get("tr")
-                # print(cur_dt)
-                # print(market)
                 category = category_map.get(market)
-                # print(is_trading_day)
-                # print(pprint.pformat(content))
 
                 for row in content:
                     td = row.get("td")[0]
@@ -145,16 +139,39 @@ class ExchangeTop10(BaseSpider):
                     # 成交金额 = 买入金额 + 卖出金额 (即 买入以及卖出金额 (RMB)）
                     item.update({"TCJJE": item.get("Total Turnover")})
 
+                    # 移除不需要的字段
                     item.pop("Rank")
                     item.pop("Stock Name")
                     item.pop("Sell Turnover")
                     item.pop("Buy Turnover")
                     item.pop("Total Turnover")
 
+                    # TODO  增加收盘价以及涨跌幅字段 暂时不做这两个字段 等待东财更新覆盖
+
+                    if category == "SG":  # 要将深股通的证券编码补充为 6 位的
+                        secu_code = "0" * (6 - len(item["Stock Code"])) + item["Stock Code"]
+                        item['SecuCode'] = secu_code
+                        item["InnerCode"], item['SecuAbbr'] = self.get_juyuan_codeinfo(secu_code)
+                    elif category == "HG":     # 沪股通
+                        secu_code = item["Stock Code"]
+                        item['SecuCode'] = secu_code
+                        item["InnerCode"], item['SecuAbbr'] = self.get_juyuan_codeinfo(secu_code)
+                    elif category in ('GGh', 'GGs'):   # 港股
+                        secu_code = item["Stock Code"]
+                        item['SecuCode'] = secu_code
+                        item["InnerCode"], item['SecuAbbr'] = self.get_juyuan_hkcodeinfo(secu_code)
+                    item.pop("Stock Code")
+                    item['CMFID'] = 1
+                    item['CMFTime'] = datetime.datetime.now()
                     print(item)
                     items.append(item)
+
+                self._product_init()
+                self._batch_save(self.product_client, items, self.table_name, self.fields)
+
         else:
             print(resp)
+            logger.warning("{} 当天无十大成交数据".format(self.dt_str))
             # 当天无数据时为 404
 
 

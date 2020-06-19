@@ -211,3 +211,19 @@ class BaseSpider(object):
         '''.format(self.table_name)
         self.product_client.insert(sql)
         self.product_client.end()
+
+    def get_juyuan_codeinfo(self, secu_code):
+        """A 股的聚源内部编码以及证券简称"""
+        self._juyuan_init()
+        sql = 'SELECT SecuCode,InnerCode, SecuAbbr from SecuMain WHERE SecuCategory in (1, 2, 8) \
+and SecuMarket in (83, 90) \
+and ListedSector in (1, 2, 6, 7) and SecuCode = "{}";'.format(secu_code)
+        ret = self.juyuan_client.select_one(sql)
+        return ret.get('InnerCode'), ret.get("SecuAbbr")
+
+    def get_juyuan_hkcodeinfo(self, secu_code):
+        """港股的聚源内部编码以及证券简称"""
+        self._juyuan_init()
+        sql = 'select SecuCode,InnerCode, SecuAbbr  from hk_secumain where SecuCode = "{}";'.format(secu_code)
+        ret = self.juyuan_client.select_one(sql)
+        return ret.get('InnerCode'), ret.get("SecuAbbr")
