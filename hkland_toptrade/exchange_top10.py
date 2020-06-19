@@ -80,6 +80,11 @@ class ExchangeTop10(BaseSpider):
             item.update({})
         pass
 
+    @staticmethod
+    def re_money_data(data: str):
+        data = float(data.replace(",", ""))
+        return data
+
     def start(self):
         print(self.url)
 
@@ -102,14 +107,15 @@ class ExchangeTop10(BaseSpider):
                 'Sell Turnover',  # 卖出金额(RMB)
                 'Total Turnover',  # 买入以及卖出金额 (RMB)
             ]
-            # `CategoryCode` varchar(10) COLLATE utf8_bin DEFAULT NULL COMMENT '类别代码:GGh: 港股通(沪), GGs: 港股通(深), HG: 沪股通, SG: 深股通',
+            # 与钱相关的字段 单独列出是为了将字符串转换为数值
+            money_fields = ['Buy Turnover', 'Sell Turnover', 'Total Turnover']
+            # 类别代码:GGh: 港股通(沪), GGs: 港股通(深), HG: 沪股通, SG: 深股通
             category_map = {
                 "SSE Northbound": "HG",
                 "SSE Southbound": "GGh",
                 "SZSE Northbound": "SG",
                 "SZSE Southbound": "GGs",
             }
-
             for direction_data in datas:
                 items = []
                 # print(pprint.pformat(direction_data))
@@ -126,7 +132,25 @@ class ExchangeTop10(BaseSpider):
                 for row in content:
                     td = row.get("td")[0]
                     item = dict(zip(fields, td))
+
                     item.update({"Date": cur_dt, "CategoryCode": category})
+
+                    for field in money_fields:
+                        item[field] = self.re_money_data(item[field])
+
+                    # 净买额 = 买入金额 - 卖出金额
+                    item['TJME'] = item.get("Buy Turnover") - item.get('Sell Turnover')
+                    # 买入金额
+                    item.update({"TMRJE": item.get("Buy Turnover")})
+                    # 成交金额 = 买入金额 + 卖出金额 (即 买入以及卖出金额 (RMB)）
+                    item.update({"TCJJE": item.get("Total Turnover")})
+
+                    item.pop("Rank")
+                    item.pop("Stock Name")
+                    item.pop("Sell Turnover")
+                    item.pop("Buy Turnover")
+                    item.pop("Total Turnover")
+
                     print(item)
                     items.append(item)
         else:
