@@ -59,6 +59,7 @@ import time
 import traceback
 
 import requests
+import schedule
 
 from hkland_toptrade.base_spider import BaseSpider, logger
 
@@ -68,13 +69,16 @@ class ExchangeTop10(BaseSpider):
     def __init__(self):
         super(ExchangeTop10, self).__init__()
         self.web_url = 'https://www.hkex.com.hk/Mutual-Market/Stock-Connect/Statistics/Historical-Daily?sc_lang=zh-HK#select4=1&select5=0&select3=0&select1=16&select2=5'
-        self.dt_str = "20200617"
+        _today = datetime.datetime.combine(datetime.datetime.today(), datetime.time.min)
+        self.dt_str = _today.strftime("%Y%m%d")
         self.url = 'https://www.hkex.com.hk/chi/csm/DailyStat/data_tab_daily_{}c.js?_={}'.format(self.dt_str, int(time.time()*1000))
         #  id     | Date       | SecuCode | InnerCode | SecuAbbr     | Close    | ChangePercent | TJME           | TMRJE
         #  | TCJJE          | CategoryCode | CMFID | CMFTime             | CREATETIMEJZ        | UPDATETIMEJZ
         self.fields = ['Date', 'SecuCode', 'InnerCode', 'SecuAbbr',
                        # 'Close', 'ChangePercent',
                        'TJME', 'TMRJE', 'TCJJE', 'CategoryCode', ]
+        #  alter table hkland_toptrade modify `Close` decimal(19,3) default  NULL COMMENT '收盘价'
+        #  alter table hkland_toptrade modify `ChangePercent` decimal(19,5) default  NULL COMMENT '涨跌幅'
 
 
     @staticmethod
@@ -171,10 +175,20 @@ class ExchangeTop10(BaseSpider):
 
         else:
             print(resp)
-            logger.warning("{} 当天无十大成交数据".format(self.dt_str))
+            logger.warning("{} 当天尚无十大成交数据".format(self.dt_str))
             # 当天无数据时为 404
 
 
-if __name__ == "__main__":
+def task():
+    # TODO 判断是否在更新时间内
     etop10 = ExchangeTop10()
     etop10.start()
+
+
+if __name__ == "__main__":
+    task()
+    schedule.every(2).minutes.do(task)
+
+    while True:
+        schedule.run_pending()
+        time.sleep(10)
