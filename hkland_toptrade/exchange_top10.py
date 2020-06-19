@@ -53,13 +53,21 @@
 `CMFID` bigint(20) NOT NULL COMMENT '来源ID',
 `CMFTime` datetime NOT NULL COMMENT '来源日期',
 '''
+
 import datetime
+import os
 import pprint
+import sys
 import time
 import traceback
 
 import requests
 import schedule
+
+cur_path = os.path.split(os.path.realpath(__file__))[0]
+file_path = os.path.abspath(os.path.join(cur_path, ".."))
+sys.path.insert(0, file_path)
+
 
 from hkland_toptrade.base_spider import BaseSpider, logger
 
@@ -68,12 +76,14 @@ class ExchangeTop10(BaseSpider):
 
     def __init__(self):
         super(ExchangeTop10, self).__init__()
+        self.info = '交易所十大成交股:\n'
         self.web_url = 'https://www.hkex.com.hk/Mutual-Market/Stock-Connect/Statistics/Historical-Daily?sc_lang=zh-HK#select4=1&select5=0&select3=0&select1=16&select2=5'
         _today = datetime.datetime.combine(datetime.datetime.today(), datetime.time.min)
         self.dt_str = _today.strftime("%Y%m%d")
+        # TODO test
+        # self.dt_str = '20200618'
         self.url = 'https://www.hkex.com.hk/chi/csm/DailyStat/data_tab_daily_{}c.js?_={}'.format(self.dt_str, int(time.time()*1000))
-        #  id     | Date       | SecuCode | InnerCode | SecuAbbr     | Close    | ChangePercent | TJME           | TMRJE
-        #  | TCJJE          | CategoryCode | CMFID | CMFTime             | CREATETIMEJZ        | UPDATETIMEJZ
+        #  id | Date | SecuCode | InnerCode | SecuAbbr | Close | ChangePercent | TJME | TMRJE | TCJJE | CategoryCode | CMFID | CMFTime | CREATETIMEJZ | UPDATETIMEJZ
         self.fields = ['Date', 'SecuCode', 'InnerCode', 'SecuAbbr',
                        # 'Close', 'ChangePercent',
                        'TJME', 'TMRJE', 'TCJJE', 'CategoryCode', ]
@@ -87,7 +97,7 @@ class ExchangeTop10(BaseSpider):
         return data
 
     def start(self):
-        print(self.url)
+        logger.info(self.url)
 
         resp = requests.get(self.url)
 
@@ -171,11 +181,14 @@ class ExchangeTop10(BaseSpider):
                     items.append(item)
 
                 self._product_init()
-                self._batch_save(self.product_client, items, self.table_name, self.fields)
+                count = self._batch_save(self.product_client, items, self.table_name, self.fields)
+                self.info += "{}批量插入{}条\n".format(category, count)
+
+            self.ding(self.info)
 
         else:
             print(resp)
-            logger.warning("{} 当天尚无十大成交数据".format(self.dt_str))
+            logger.warning("{} 当天非交易日或尚无十大成交数据".format(self.dt_str))
             # 当天无数据时为 404
 
 
@@ -194,8 +207,27 @@ def task():
 
 if __name__ == "__main__":
     task()
-    # schedule.every(2).minutes.do(task)
-    #
-    # while True:
-    #     schedule.run_pending()
-    #     time.sleep(10)
+    schedule.every(2).minutes.do(task)
+
+    while True:
+        schedule.run_pending()
+        time.sleep(10)
+
+
+'''
+docker build -f Dockerfile_exchangetop -t registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_toptrade_exchange:v1 .
+docker push registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_toptrade_exchange:v1
+sudo docker pull registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_toptrade_exchange:v1
+
+
+# remote 
+sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name toptrade_exchange \
+--env LOCAL=0 \
+registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_toptrade_exchange:v1
+
+# local
+sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name toptrade_exchange \
+--env LOCAL=1 \
+registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_toptrade_exchange:v1 
+
+'''
