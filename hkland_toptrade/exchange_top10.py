@@ -185,6 +185,7 @@ class ExchangeTop10(BaseSpider):
                 self.info += "{}批量插入{}条\n".format(category, count)
 
             self.ding(self.info)
+            self.refresh_update_time()
 
         else:
             print(resp)
