@@ -180,15 +180,22 @@ class ExchangeTop10(BaseSpider):
 
 
 def task():
-    # TODO 判断是否在更新时间内
+    _now = datetime.datetime.now()
+    _year, _month, _day = _now.year, _now.month, _now.day
+    _start = datetime.datetime(_year, _month, _day, 15, 0, 0)
+    _end = datetime.datetime(_year, _month, _day, 17, 30, 0)
+    if _now < _start or _now > _end:
+        logger.warning("当前时间 {}, 不在正常的更新时间下午 3 点到 5 点半之间".format(_now))
+        return
+
     etop10 = ExchangeTop10()
     etop10.start()
 
 
 if __name__ == "__main__":
     task()
-    schedule.every(2).minutes.do(task)
-
-    while True:
-        schedule.run_pending()
-        time.sleep(10)
+    # schedule.every(2).minutes.do(task)
+    #
+    # while True:
+    #     schedule.run_pending()
+    #     time.sleep(10)
