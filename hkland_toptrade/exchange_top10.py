@@ -194,21 +194,22 @@ class ExchangeTop10(BaseSpider):
 
 
 def task():
+    # ExchangeTop10().start()
+
     _now = datetime.datetime.now()
     _year, _month, _day = _now.year, _now.month, _now.day
-    _start = datetime.datetime(_year, _month, _day, 15, 0, 0)
-    _end = datetime.datetime(_year, _month, _day, 17, 30, 0)
+    _start = datetime.datetime(_year, _month, _day, 16, 0, 0)
+    _end = datetime.datetime(_year, _month, _day, 17, 40, 0)
     if _now < _start or _now > _end:
-        logger.warning("当前时间 {}, 不在正常的更新时间下午 3 点到 5 点半之间".format(_now))
+        logger.warning("当前时间 {}, 不在正常的更新时间下午 4 点到 5 点 40 之间".format(_now))
         return
 
-    etop10 = ExchangeTop10()
-    etop10.start()
+    ExchangeTop10().start()
 
 
 if __name__ == "__main__":
     task()
-    schedule.every(2).minutes.do(task)
+    schedule.every(1).minutes.do(task)
 
     while True:
         schedule.run_pending()
