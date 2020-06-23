@@ -466,6 +466,12 @@ class HistoryCalSpider(BaseSpider):
 
         south_bool = self._check_if_trading_today(1)
         north_bool = self._check_if_trading_today(2)
+
+        item_hk_sh = None
+        item_hk_sz = None
+        item_sh_hk = None
+        item_sh_sz = None
+
         if north_bool:
             if _now < datetime.datetime(_year, _month, _day, 15, 0, 0):
                 logger.info("{} 北向交易未结束".format(_now))
@@ -487,7 +493,7 @@ class HistoryCalSpider(BaseSpider):
                 item_sh_sz = self.sh_sz()
         else:
             logger.warning("今日无南向交易 ")
-
+        # TODO 在无南向交易时报错
         print("沪股通: {}\n深股通: {}\n港股通(沪): {}\n港股通(深):{}\n".format(item_hk_sh, item_hk_sz, item_sh_hk, item_sh_sz))
         items = [item for item in [item_hk_sh, item_hk_sz, item_sh_hk, item_sh_sz] if item is not None]
         for item in items:
