@@ -109,7 +109,7 @@ class ExchangeTop10(BaseSpider):
             except:
                 traceback.print_exc()
                 return
-
+            print(pprint.pformat(datas))
             fields = [
                 'Rank',   # 十大成交排名
                 'Stock Code',   # 证券代码
@@ -133,6 +133,8 @@ class ExchangeTop10(BaseSpider):
                 items = []
                 cur_dt = direction_data.get("date")
                 market = direction_data.get("market")
+                if market not in category_map:
+                    continue
                 is_trading_day = direction_data.get("tradingDay")
                 content = direction_data.get("content")[1].get("table").get("tr")
                 category = category_map.get(market)
@@ -194,14 +196,15 @@ class ExchangeTop10(BaseSpider):
 
 
 def task():
-    # ExchangeTop10().start()
+    ExchangeTop10().start()
 
     _now = datetime.datetime.now()
     _year, _month, _day = _now.year, _now.month, _now.day
     _start = datetime.datetime(_year, _month, _day, 16, 0, 0)
-    _end = datetime.datetime(_year, _month, _day, 17, 40, 0)
+    _end = datetime.datetime(_year, _month, _day, 19, 0, 0)
+
     if _now < _start or _now > _end:
-        logger.warning("当前时间 {}, 不在正常的更新时间下午 4 点到 5 点 40 之间".format(_now))
+        logger.warning("当前时间 {}, 不在正常的更新时间下午 4 点到 7 点之间".format(_now))
         return
 
     ExchangeTop10().start()
@@ -209,11 +212,11 @@ def task():
 
 if __name__ == "__main__":
     task()
-    schedule.every(1).minutes.do(task)
-
-    while True:
-        schedule.run_pending()
-        time.sleep(10)
+    # schedule.every(1).minutes.do(task)
+    #
+    # while True:
+    #     schedule.run_pending()
+    #     time.sleep(10)
 
 
 '''
