@@ -81,7 +81,7 @@ class ExchangeTop10(BaseSpider):
         _today = datetime.datetime.combine(datetime.datetime.today(), datetime.time.min)
         self.dt_str = _today.strftime("%Y%m%d")
         # TODO test
-        # self.dt_str = '20200618'
+        self.dt_str = '20200703'
         self.url = 'https://www.hkex.com.hk/chi/csm/DailyStat/data_tab_daily_{}c.js?_={}'.format(self.dt_str, int(time.time()*1000))
         #  id | Date | SecuCode | InnerCode | SecuAbbr | Close | ChangePercent | TJME | TMRJE | TCJJE | CategoryCode | CMFID | CMFTime | CREATETIMEJZ | UPDATETIMEJZ
         self.fields = ['Date', 'SecuCode', 'InnerCode', 'SecuAbbr',
@@ -96,7 +96,26 @@ class ExchangeTop10(BaseSpider):
         data = float(data.replace(",", ""))
         return data
 
+    def get_al_datas(self):
+        self._dc_init()
+        sql = '''select * from {} where Date = '{}';  '''.format(self.table_name, self.dt_str)
+        al_datas = self.dc_client.select_all(sql)
+        return al_datas
+
     def start(self):
+        # 判断今天的南北向交易日
+
+
+
+        # 在发起请求之前 判断今天的数据 是否已经存在
+        al_datas = self.get_al_datas()
+
+        # print(al_datas)
+        # for data in al_datas:
+        #     print(data)
+        #
+        # print(len(al_datas))
+
         logger.info(self.url)
 
         resp = requests.get(self.url)

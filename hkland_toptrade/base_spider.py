@@ -11,7 +11,7 @@ import requests
 
 from hkland_toptrade.configs import (PRODUCT_MYSQL_HOST, PRODUCT_MYSQL_USER, PRODUCT_MYSQL_PORT, PRODUCT_MYSQL_PASSWORD,
                                      PRODUCT_MYSQL_DB, JUY_HOST, JUY_PORT, JUY_USER, JUY_PASSWD, JUY_DB, SECRET, TOKEN,
-                                     LOCAL)
+                                     LOCAL, DC_HOST, DC_PORT, DC_USER, DC_PASSWD, DC_DB)
 from hkland_toptrade.sql_pool import PyMysqlPoolBase
 
 if LOCAL:
@@ -38,6 +38,15 @@ class BaseSpider(object):
         "db": JUY_DB,
     }
 
+    # 数据中心库
+    dc_cfg = {
+        "host": DC_HOST,
+        "port": DC_PORT,
+        "user": DC_USER,
+        "password": DC_PASSWD,
+        "db": DC_DB,
+    }
+
     def __init__(self):
         self.tool_table_name = 'base_table_updatetime'
         self.table_name = 'hkland_toptrade'
@@ -45,6 +54,7 @@ class BaseSpider(object):
                        'CategoryCode']
         self.juyuan_client = None
         self.product_client = None
+        self.dc_client = None
 
     def _init_pool(self, cfg: dict):
         """
@@ -70,11 +80,14 @@ class BaseSpider(object):
         if not self.product_client:
             self.product_client = self._init_pool(self.product_cfg)
 
+    def _dc_init(self):
+        if not self.dc_client:
+            self.dc_client = self._init_pool(self.dc_cfg)
+
     def __del__(self):
-        if self.juyuan_client:
-            self.juyuan_client.dispose()
-        if self.product_client:
-            self.product_client.dispose()
+        for _client in (self.juyuan_client, self.product_client, self.dc_client):
+            if _client:
+                _client.dispose()
 
     def contract_sql(self, datas, table: str, update_fields: list):
         if not isinstance(datas, list):
