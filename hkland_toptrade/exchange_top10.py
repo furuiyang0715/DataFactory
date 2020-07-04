@@ -81,7 +81,7 @@ class ExchangeTop10(BaseSpider):
         _today = datetime.datetime.combine(datetime.datetime.today(), datetime.time.min)
         self.dt_str = _today.strftime("%Y%m%d")
         # TODO test
-        self.dt_str = '20200630'
+        # self.dt_str = '20200630'
         self.url = 'https://www.hkex.com.hk/chi/csm/DailyStat/data_tab_daily_{}c.js?_={}'.format(self.dt_str, int(time.time()*1000))
         #  id | Date | SecuCode | InnerCode | SecuAbbr | Close | ChangePercent | TJME | TMRJE | TCJJE | CategoryCode | CMFID | CMFTime | CREATETIMEJZ | UPDATETIMEJZ
         self.fields = ['Date', 'SecuCode', 'InnerCode', 'SecuAbbr',
@@ -119,16 +119,16 @@ class ExchangeTop10(BaseSpider):
         return ret
 
     def start(self):
-        # # 在发起请求之前 判断今天的数据 是否已经存在
-        # tra_lst = list()
-        # for catrgory in self.category_map:
-        #     is_trading = self._check_if_trading_today(catrgory)
-        #     tra_lst.append(is_trading)
-        # today_nums = sum(tra_lst) * 10
-        # al_datas = self.get_al_datas()
-        # if len(al_datas) == today_nums:
-        #     logger.info("{} 数据已入库".format(self.dt_str))
-        #     return
+        # 在发起请求之前 判断今天的数据 是否已经存在
+        tra_lst = list()
+        for catrgory in self.category_map:
+            is_trading = self._check_if_trading_today(catrgory)
+            tra_lst.append(is_trading)
+        today_nums = sum(tra_lst) * 10
+        al_datas = self.get_al_datas()
+        if len(al_datas) == today_nums:
+            logger.info("{} 数据已入库".format(self.dt_str))
+            return
 
         logger.info(self.url)
         resp = requests.get(self.url)
@@ -205,7 +205,6 @@ class ExchangeTop10(BaseSpider):
                     items.append(item)
 
                 self._product_init()
-                print(items)
                 count = self._batch_save(self.product_client, items, self.table_name, self.fields)
                 self.info += "{}批量插入{}条\n".format(category, count)
 
