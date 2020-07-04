@@ -81,7 +81,7 @@ class ExchangeTop10(BaseSpider):
         _today = datetime.datetime.combine(datetime.datetime.today(), datetime.time.min)
         self.dt_str = _today.strftime("%Y%m%d")
         # TODO test
-        self.dt_str = '20200703'
+        self.dt_str = '20200630'
         self.url = 'https://www.hkex.com.hk/chi/csm/DailyStat/data_tab_daily_{}c.js?_={}'.format(self.dt_str, int(time.time()*1000))
         #  id | Date | SecuCode | InnerCode | SecuAbbr | Close | ChangePercent | TJME | TMRJE | TCJJE | CategoryCode | CMFID | CMFTime | CREATETIMEJZ | UPDATETIMEJZ
         self.fields = ['Date', 'SecuCode', 'InnerCode', 'SecuAbbr',
@@ -89,6 +89,13 @@ class ExchangeTop10(BaseSpider):
                        'TJME', 'TMRJE', 'TCJJE', 'CategoryCode', ]
         #  alter table hkland_toptrade modify `Close` decimal(19,3) default  NULL COMMENT '收盘价'
         #  alter table hkland_toptrade modify `ChangePercent` decimal(19,5) default  NULL COMMENT '涨跌幅'
+
+        self.category_map = {
+            "SSE Northbound": ("HG", 1),     # 沪股通
+            "SSE Southbound": ("GGh", 2),    # 港股通（沪）
+            "SZSE Northbound": ("SG", 3),    # 深股通
+            "SZSE Southbound": ("GGs", 4),   # 港股通（深）
+        }
 
 
     @staticmethod
@@ -102,24 +109,29 @@ class ExchangeTop10(BaseSpider):
         al_datas = self.dc_client.select_all(sql)
         return al_datas
 
+    def _check_if_trading_today(self, category):
+        """检查下当前方向是否交易"""
+        self._dc_init()
+        tradingtype = self.category_map.get(category)[1]
+        sql = 'select IfTradingDay from hkland_shszhktradingday where TradingType={} and EndDate = "{}";'.format(
+            tradingtype, self.dt_str)
+        ret = True if self.dc_client.select_one(sql).get('IfTradingDay') == 1 else False
+        return ret
+
     def start(self):
-        # 判断今天的南北向交易日
-
-
-
-        # 在发起请求之前 判断今天的数据 是否已经存在
-        al_datas = self.get_al_datas()
-
-        # print(al_datas)
-        # for data in al_datas:
-        #     print(data)
-        #
-        # print(len(al_datas))
+        # # 在发起请求之前 判断今天的数据 是否已经存在
+        # tra_lst = list()
+        # for catrgory in self.category_map:
+        #     is_trading = self._check_if_trading_today(catrgory)
+        #     tra_lst.append(is_trading)
+        # today_nums = sum(tra_lst) * 10
+        # al_datas = self.get_al_datas()
+        # if len(al_datas) == today_nums:
+        #     logger.info("{} 数据已入库".format(self.dt_str))
+        #     return
 
         logger.info(self.url)
-
         resp = requests.get(self.url)
-
         if resp.status_code == 200:
             body = resp.text
             datas_str = body.replace("tabData = ", "")
@@ -128,7 +140,7 @@ class ExchangeTop10(BaseSpider):
             except:
                 traceback.print_exc()
                 return
-            print(pprint.pformat(datas))
+            # print(pprint.pformat(datas))
             fields = [
                 'Rank',   # 十大成交排名
                 'Stock Code',   # 证券代码
@@ -139,31 +151,23 @@ class ExchangeTop10(BaseSpider):
             ]
             # 与钱相关的字段 单独列出是为了将字符串转换为数值
             money_fields = ['Buy Turnover', 'Sell Turnover', 'Total Turnover']
-            # 类别代码:GGh: 港股通(沪), GGs: 港股通(深), HG: 沪股通, SG: 深股通
-            category_map = {
-                "SSE Northbound": "HG",
-                "SSE Southbound": "GGh",
-                "SZSE Northbound": "SG",
-                "SZSE Southbound": "GGs",
-            }
+
             for direction_data in datas:
-                print()
-                print()
                 items = []
                 cur_dt = direction_data.get("date")
                 market = direction_data.get("market")
-                if market not in category_map:
-                    continue
                 is_trading_day = direction_data.get("tradingDay")
-                content = direction_data.get("content")[1].get("table").get("tr")
-                category = category_map.get(market)
+                # print(">> ", is_trading_day)
+                if is_trading_day == 0:
+                    logger.warning("{} 方向无交易".format(market))
+                    continue
 
+                content = direction_data.get("content")[1].get("table").get("tr")
+                category = self.category_map.get(market)[0]
                 for row in content:
                     td = row.get("td")[0]
                     item = dict(zip(fields, td))
-
                     item.update({"Date": cur_dt, "CategoryCode": category})
-
                     for field in money_fields:
                         item[field] = self.re_money_data(item[field])
 
@@ -182,7 +186,6 @@ class ExchangeTop10(BaseSpider):
                     item.pop("Total Turnover")
 
                     # TODO  增加收盘价以及涨跌幅字段 暂时不做这两个字段 等待东财更新覆盖
-
                     if category == "SG":  # 要将深股通的证券编码补充为 6 位的
                         secu_code = "0" * (6 - len(item["Stock Code"])) + item["Stock Code"]
                         item['SecuCode'] = secu_code
@@ -202,6 +205,7 @@ class ExchangeTop10(BaseSpider):
                     items.append(item)
 
                 self._product_init()
+                print(items)
                 count = self._batch_save(self.product_client, items, self.table_name, self.fields)
                 self.info += "{}批量插入{}条\n".format(category, count)
 
@@ -231,11 +235,11 @@ def task():
 
 if __name__ == "__main__":
     task()
-    # schedule.every(1).minutes.do(task)
-    #
-    # while True:
-    #     schedule.run_pending()
-    #     time.sleep(10)
+    schedule.every(1).minutes.do(task)
+
+    while True:
+        schedule.run_pending()
+        time.sleep(10)
 
 
 '''
@@ -253,5 +257,4 @@ registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_toptrade_exchange:v1
 sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name toptrade_exchange \
 --env LOCAL=1 \
 registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_toptrade_exchange:v1 
-
 '''
