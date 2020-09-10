@@ -610,7 +610,7 @@ sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name flow_sha
 --env SPIDER=1 \
 registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_shares:v1 
 ## sync 
-sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name flow_shares_sync0507 \
+sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name flow_shares_sync0428 \
 --env LOCAL=0 \
 --env SYNC=1 \
 --env SPIDER=0 \

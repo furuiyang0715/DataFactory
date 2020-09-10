@@ -350,8 +350,7 @@ class HoldShares(object):
         # (1) 创建爬虫数据库
         self._create_table()
         # (2) 请求网站获取数据
-        # TODO 为网站请求添加超时时间
-        resp = requests.post(self.url, data=self.post_params, timeout=20)
+        resp = requests.post(self.url, data=self.post_params)
         if resp.status_code == 200:
             body = resp.text
             doc = html.fromstring(body)
@@ -414,19 +413,13 @@ class HoldShares(object):
 
 
 def mysql_task():
-    retry = 1
-    while True:
-        try:
-            for _type in ("sh", "sz", "hk"):
-                h = HoldShares(_type)
-                # 默认 offset 为 1 的情况下
-                h.check_update()
-        except:
-            retry += 1
-            while retry > 3:
-                break
-        else:
-            break
+    try:
+        for _type in ("sh", "sz", "hk"):
+            h = HoldShares(_type)
+            # 默认 offset 为 1 的情况下
+            h.check_update()
+    except:
+        pass
 
 
 def spider_task():
@@ -465,12 +458,8 @@ if __name__ == '__main__':
     # 确保重启时可以执行一次
     spider_task()
     mysql_task()
-
-    # TODO 解决 id 相同的任务实例数的最大默认值是 1 的问题
-    scheduler.add_job(spider_task, 'cron', hour='0-3, 3-6', minute='0, 20, 40', max_instances=10, id="spider_task")
-    # scheduler.add_job(spider_task, 'cron', hour='0-3, 3-6', minute='0, 20, 40')
-
-    scheduler.add_job(mysql_task, 'cron', hour='3,6')
+    scheduler.add_job(spider_task, 'cron', hour='0-3, 3-6', minute='0, 20, 40')
+    scheduler.add_job(mysql_task, 'cron', hour='3')
     logger.info('Press Ctrl+{0} to exit'.format('Break' if os.name == 'nt' else 'C'))
     try:
         scheduler.start()
@@ -490,11 +479,9 @@ if __name__ == '__main__':
 
 # 检查沪股中的浦发银行
 # select * from holding_shares_sh where SecuCode = '600000.XSHG' order by Date;
-# select * from hkland_shares where SecuCode = '600000.XSHG' order by Date desc limit 10;
 
 # 检查深股中的平安银行
 # select * from holding_shares_sz where SecuCode = '000001.XSHE' order by Date;
-# select * from hkland_shares where SecuCode = '000001.XSHE' order by Date desc limit 10;
 
 # 检查港股中的长和
 # select * from holding_shares_hk where SecuCode = '00001' order by Date;
