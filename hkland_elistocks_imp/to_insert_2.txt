@@ -1,0 +1,1719 @@
+[{'Ch_ange': 'Removal',
+  'EffectiveDate': datetime.date(2020, 8, 25),
+  'Remarks': 'Change is resulted from the announcement issued on the SZSE '
+             'website on 24 August 2020 by that listed company. For details, '
+             'please refer to '
+             'http://www.szse.cn/disclosure/listed/bulletinDetail/index.html?6c62b9d2-08f0-4759-8ed0-c381261fb9cf '
+             '(Chinese Version Only).',
+  'SSESCode': '300090',
+  'StockName': 'SHENGYUN ENV (DELISTING PREP PERIOD)'},
+ {'Ch_ange': 'Removal',
+  'EffectiveDate': datetime.date(2020, 8, 25),
+  'Remarks': 'Change is resulted from the announcement issued on the SZSE '
+             'website on 24 August 2020 by that listed company. For details, '
+             'please refer to '
+             'http://www.szse.cn/disclosure/listed/bulletinDetail/index.html?9b11c89b-3afd-45b9-a75a-af522b6c3adb '
+             '(Chinese Version Only).',
+  'SSESCode': '300156',
+  'StockName': 'SHENWU ENV TECH (DELISTING PREP PERIOD)'},
+ {'Ch_ange': 'Addition (from List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only))',
+  'EffectiveDate': datetime.date(2020, 8, 17),
+  'Remarks': 'Changes are resulted from the change in SZSE Small/Mid Cap '
+             'Innovation Index as announced on 12 August 2020. For details, '
+             'please refer to '
+             'http://www.szse.cn/disclosure/notice/general/t20200812_580457.html '
+             '(Chinese Version Only). ',
+  'SSESCode': '002685',
+  'StockName': 'WUXI HUADONG HEAVY MACHINERY'},
+ {'Ch_ange': 'Addition',
+  'EffectiveDate': datetime.date(2020, 8, 17),
+  'Remarks': 'Changes are resulted from the change in SZSE Small/Mid Cap '
+             'Innovation Index as announced on 12 August 2020. For details, '
+             'please refer to '
+             'http://www.szse.cn/disclosure/notice/general/t20200812_580457.html '
+             '(Chinese Version Only). ',
+  'SSESCode': '300119',
+  'StockName': 'TIANJIN RINGPU BIO-TECHNOLOGY'},
+ {'Ch_ange': 'Removal',
+  'EffectiveDate': datetime.date(2020, 7, 21),
+  'Remarks': 'Change is resulted from the announcement issued on the SZSE '
+             'website on 17 July 2020 by that listed company. For details, '
+             'please refer to '
+             'http://www.szse.cn/disclosure/listed/bulletinDetail/index.html?be9d5ae7-bf21-45d2-920e-3b95035e5390 '
+             '(Chinese Version Only).',
+  'SSESCode': '300104',
+  'StockName': 'LESHI INTERNET (DELIST PREP PERIOD)'},
+ {'Ch_ange': 'Removal',
+  'EffectiveDate': datetime.date(2020, 7, 20),
+  'Remarks': 'Change is resulted from the announcement issued on the SZSE '
+             'website on 17 July 2020 by that listed company. For details, '
+             'please refer to '
+             'http://www.szse.cn/disclosure/listed/bulletinDetail/index.html?ab285e83-e109-4b66-8545-046a52eed26f '
+             '(Chinese Version Only).',
+  'SSESCode': '002509',
+  'StockName': 'TIANGUANG ZHONGMAO (DELIST PREP PERIOD)'},
+ {'Ch_ange': 'Removal',
+  'EffectiveDate': datetime.date(2020, 7, 15),
+  'Remarks': 'Change is resulted from the announcement issued on the SZSE '
+             'website on 14 July 2020 by that listed company. For details, '
+             'please refer to '
+             'http://www.szse.cn/disclosure/listed/bulletinDetail/index.html?1a68556e-01aa-4d7e-9fbe-ca1de9dbaf2e '
+             '(Chinese Version Only).',
+  'SSESCode': '002604',
+  'StockName': 'LONGLIVE BIO-TECH (DELIST PREP PERIOD)'},
+ {'Ch_ange': 'Addition to List of Eligible SZSE Securities for Margin Trading '
+             'and List of Eligible SZSE Securities for Short Selling',
+  'EffectiveDate': datetime.date(2020, 7, 13),
+  'Remarks': 'Change is resulted from the change in SZSE stock list for margin '
+             'trading and shortselling. For details, please refer to '
+             'http://www.szse.cn/disclosure/margin/business/t20200710_579447.html '
+             '(Chinese Version Only)',
+  'SSESCode': '000903',
+  'StockName': 'KUNMING YUNNEI POWER'},
+ {'Ch_ange': 'Addition to List of Eligible SZSE Securities for Margin Trading '
+             'and List of Eligible SZSE Securities for Short Selling',
+  'EffectiveDate': datetime.date(2020, 7, 13),
+  'Remarks': 'Change is resulted from the change in SZSE stock list for margin '
+             'trading and shortselling. For details, please refer to '
+             'http://www.szse.cn/disclosure/margin/business/t20200710_579447.html '
+             '(Chinese Version Only)',
+  'SSESCode': '002123',
+  'StockName': 'MONTNETS RONGXIN TECHNOLOGY GROUP'},
+ {'Ch_ange': 'Addition to List of Eligible SZSE Securities for Margin Trading '
+             'and List of Eligible SZSE Securities for Short Selling',
+  'EffectiveDate': datetime.date(2020, 7, 13),
+  'Remarks': 'Change is resulted from the change in SZSE stock list for margin '
+             'trading and shortselling. For details, please refer to '
+             'http://www.szse.cn/disclosure/margin/business/t20200710_579447.html '
+             '(Chinese Version Only)',
+  'SSESCode': '002239',
+  'StockName': 'AOTECAR NEW ENERGY TECHNOLOGY'},
+ {'Ch_ange': 'Addition to List of Eligible SZSE Securities for Margin Trading '
+             'and List of Eligible SZSE Securities for Short Selling',
+  'EffectiveDate': datetime.date(2020, 7, 13),
+  'Remarks': 'Change is resulted from the change in SZSE stock list for margin '
+             'trading and shortselling. For details, please refer to '
+             'http://www.szse.cn/disclosure/margin/business/t20200710_579447.html '
+             '(Chinese Version Only)',
+  'SSESCode': '002351',
+  'StockName': 'EDIFIER TECHNOLOGY'},
+ {'Ch_ange': 'Addition to List of Eligible SZSE Securities for Margin Trading '
+             'and List of Eligible SZSE Securities for Short Selling',
+  'EffectiveDate': datetime.date(2020, 7, 13),
+  'Remarks': 'Change is resulted from the change in SZSE stock list for margin '
+             'trading and shortselling. For details, please refer to '
+             'http://www.szse.cn/disclosure/margin/business/t20200710_579447.html '
+             '(Chinese Version Only)',
+  'SSESCode': '002409',
+  'StockName': 'JIANGSU YOKE TECHNOLOGY'},
+ {'Ch_ange': 'Addition to List of Eligible SZSE Securities for Margin Trading '
+             'and List of Eligible SZSE Securities for Short Selling',
+  'EffectiveDate': datetime.date(2020, 7, 13),
+  'Remarks': 'Change is resulted from the change in SZSE stock list for margin '
+             'trading and shortselling. For details, please refer to '
+             'http://www.szse.cn/disclosure/margin/business/t20200710_579447.html '
+             '(Chinese Version Only)',
+  'SSESCode': '002838',
+  'StockName': 'SHANDONG DAWN POLYMER'},
+ {'Ch_ange': 'Addition to List of Eligible SZSE Securities for Margin Trading '
+             'and List of Eligible SZSE Securities for Short Selling',
+  'EffectiveDate': datetime.date(2020, 7, 13),
+  'Remarks': 'Change is resulted from the change in SZSE stock list for margin '
+             'trading and shortselling. For details, please refer to '
+             'http://www.szse.cn/disclosure/margin/business/t20200710_579447.html '
+             '(Chinese Version Only)',
+  'SSESCode': '002841',
+  'StockName': 'GUANGZHOU SHIYUAN ELECTRONIC TECHNOLOGY'},
+ {'Ch_ange': 'Addition to List of Eligible SZSE Securities for Margin Trading '
+             'and List of Eligible SZSE Securities for Short Selling',
+  'EffectiveDate': datetime.date(2020, 7, 13),
+  'Remarks': 'Change is resulted from the change in SZSE stock list for margin '
+             'trading and shortselling. For details, please refer to '
+             'http://www.szse.cn/disclosure/margin/business/t20200710_579447.html '
+             '(Chinese Version Only)',
+  'SSESCode': '300661',
+  'StockName': 'SG MICRO CORP'},
+ {'Ch_ange': 'Addition to List of Eligible SZSE Securities for Margin Trading '
+             'and List of Eligible SZSE Securities for Short Selling',
+  'EffectiveDate': datetime.date(2020, 7, 13),
+  'Remarks': 'Change is resulted from the change in SZSE stock list for margin '
+             'trading and shortselling. For details, please refer to '
+             'http://www.szse.cn/disclosure/margin/business/t20200710_579447.html '
+             '(Chinese Version Only)',
+  'SSESCode': '300748',
+  'StockName': 'JL MAG RARE-EARTH'},
+ {'Ch_ange': 'Addition to List of Eligible SZSE Securities for Margin Trading '
+             'and List of Eligible SZSE Securities for Short Selling',
+  'EffectiveDate': datetime.date(2020, 7, 13),
+  'Remarks': 'Change is resulted from the change in SZSE stock list for margin '
+             'trading and shortselling. For details, please refer to '
+             'http://www.szse.cn/disclosure/margin/business/t20200710_579447.html '
+             '(Chinese Version Only)',
+  'SSESCode': '300759',
+  'StockName': 'PHARMARON BEIJING'},
+ {'Ch_ange': 'Addition to List of Eligible SZSE Securities for Margin Trading '
+             'and List of Eligible SZSE Securities for Short Selling',
+  'EffectiveDate': datetime.date(2020, 7, 13),
+  'Remarks': 'Change is resulted from the change in SZSE stock list for margin '
+             'trading and shortselling. For details, please refer to '
+             'http://www.szse.cn/disclosure/margin/business/t20200710_579447.html '
+             '(Chinese Version Only)',
+  'SSESCode': '300782',
+  'StockName': 'MAXSCEND MICROELECTRONICS'},
+ {'Ch_ange': 'Addition',
+  'EffectiveDate': datetime.date(2020, 7, 13),
+  'Remarks': 'Changes are resulted from the change in SZSE Small/Mid Cap '
+             'Innovation Index as announced on 9 July 2020. For details, '
+             'please refer to '
+             'http://www.szse.cn/disclosure/notice/t20200709_579377.html '
+             '(Chinese Version Only). This stock will also be added to the '
+             'List of Eligible SZSE Securities for Margin Trading and the List '
+             'of Eligible SZSE Securities for Short Selling as it is also '
+             'included in SZSE stock list for margin trading and shortselling. '
+             'For details of SZSE stock list for margin trading and '
+             'shortselling, please refer to '
+             'http://www.szse.cn/disclosure/margin/object/index.html (Chinese '
+             'Version Only).',
+  'SSESCode': '002017',
+  'StockName': 'EASTCOMPEACE TECHNOLOGY'},
+ {'Ch_ange': 'Buy orders suspended',
+  'EffectiveDate': datetime.date(2020, 7, 7),
+  'Remarks': 'Changes are resulted from the notification from SZSE that '
+             'Aggregate Foreign Shareholdings of the stock have gone beyond '
+             '28%. For details, please refer to '
+             'http://www.szse.cn/disclosure/deal/qfii/index.html (Chinese '
+             'Version Only)',
+  'SSESCode': '000333',
+  'StockName': 'MIDEA GROUP'},
+ {'Ch_ange': 'Addition',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the change in SZSE Component Index and '
+             'SZSE Small/Mid Cap Innovation Index as announced on 2 Jun 2020. '
+             'For details, please refer to '
+             'http://www.szse.cn/disclosure/notice/t20200602_578019.html '
+             '(Chinese Version Only).',
+  'SSESCode': '000032',
+  'StockName': 'SHENZHEN SED INDUSTRY'},
+ {'Ch_ange': 'Addition',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the change in SZSE Component Index and '
+             'SZSE Small/Mid Cap Innovation Index as announced on 2 Jun 2020. '
+             'For details, please refer to '
+             'http://www.szse.cn/disclosure/notice/t20200602_578019.html '
+             '(Chinese Version Only).',
+  'SSESCode': '000785',
+  'StockName': 'EASYHOME NEW RETAIL GROUP'},
+ {'Ch_ange': 'Addition',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the change in SZSE Component Index and '
+             'SZSE Small/Mid Cap Innovation Index as announced on 2 Jun 2020. '
+             'For details, please refer to '
+             'http://www.szse.cn/disclosure/notice/t20200602_578019.html '
+             '(Chinese Version Only).',
+  'SSESCode': '002015',
+  'StockName': 'GCL ENERGY TECHNOLOGY'},
+ {'Ch_ange': 'Addition',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the change in SZSE Component Index and '
+             'SZSE Small/Mid Cap Innovation Index as announced on 2 Jun 2020. '
+             'For details, please refer to '
+             'http://www.szse.cn/disclosure/notice/t20200602_578019.html '
+             '(Chinese Version Only).',
+  'SSESCode': '002351',
+  'StockName': 'EDIFIER TECHNOLOGY'},
+ {'Ch_ange': 'Addition',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the change in SZSE Component Index and '
+             'SZSE Small/Mid Cap Innovation Index as announced on 2 Jun 2020. '
+             'For details, please refer to '
+             'http://www.szse.cn/disclosure/notice/t20200602_578019.html '
+             '(Chinese Version Only).',
+  'SSESCode': '002459',
+  'StockName': 'JA SOLAR TECHNOLOGY'},
+ {'Ch_ange': 'Addition',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the change in SZSE Component Index and '
+             'SZSE Small/Mid Cap Innovation Index as announced on 2 Jun 2020. '
+             'For details, please refer to '
+             'http://www.szse.cn/disclosure/notice/t20200602_578019.html '
+             '(Chinese Version Only).',
+  'SSESCode': '002541',
+  'StockName': 'ANHUI HONGLU STEEL CONSTRUCTION(GROUP)'},
+ {'Ch_ange': 'Addition',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the change in SZSE Component Index and '
+             'SZSE Small/Mid Cap Innovation Index as announced on 2 Jun 2020. '
+             'For details, please refer to '
+             'http://www.szse.cn/disclosure/notice/t20200602_578019.html '
+             '(Chinese Version Only).',
+  'SSESCode': '002552',
+  'StockName': 'BAODING TECHNOLOGY'},
+ {'Ch_ange': 'Addition',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the change in SZSE Component Index and '
+             'SZSE Small/Mid Cap Innovation Index as announced on 2 Jun 2020. '
+             'For details, please refer to '
+             'http://www.szse.cn/disclosure/notice/t20200602_578019.html '
+             '(Chinese Version Only).',
+  'SSESCode': '002793',
+  'StockName': 'LUOXIN PHARMACEUTICALS GROUP STOCK'},
+ {'Ch_ange': 'Addition',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the change in SZSE Component Index and '
+             'SZSE Small/Mid Cap Innovation Index as announced on 2 Jun 2020. '
+             'For details, please refer to '
+             'http://www.szse.cn/disclosure/notice/t20200602_578019.html '
+             '(Chinese Version Only).',
+  'SSESCode': '002803',
+  'StockName': 'XIAMEN JIHONG TECHNOLOGY'},
+ {'Ch_ange': 'Addition',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the change in SZSE Component Index and '
+             'SZSE Small/Mid Cap Innovation Index as announced on 2 Jun 2020. '
+             'For details, please refer to '
+             'http://www.szse.cn/disclosure/notice/t20200602_578019.html '
+             '(Chinese Version Only).',
+  'SSESCode': '002837',
+  'StockName': 'SHENZHEN ENVICOOL TECHNOLOGY'},
+ {'Ch_ange': 'Addition',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the change in SZSE Component Index and '
+             'SZSE Small/Mid Cap Innovation Index as announced on 2 Jun 2020. '
+             'For details, please refer to '
+             'http://www.szse.cn/disclosure/notice/t20200602_578019.html '
+             '(Chinese Version Only).',
+  'SSESCode': '002955',
+  'StockName': 'HITEVISION'},
+ {'Ch_ange': 'Addition',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the change in SZSE Component Index and '
+             'SZSE Small/Mid Cap Innovation Index as announced on 2 Jun 2020. '
+             'For details, please refer to '
+             'http://www.szse.cn/disclosure/notice/t20200602_578019.html '
+             '(Chinese Version Only).',
+  'SSESCode': '002959',
+  'StockName': 'BEAR ELECTRIC APPLIANCE'},
+ {'Ch_ange': 'Addition',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the change in SZSE Component Index and '
+             'SZSE Small/Mid Cap Innovation Index as announced on 2 Jun 2020. '
+             'For details, please refer to '
+             'http://www.szse.cn/disclosure/notice/t20200602_578019.html '
+             '(Chinese Version Only).',
+  'SSESCode': '002961',
+  'StockName': 'RUIDA FUTURES'},
+ {'Ch_ange': 'Addition',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the change in SZSE Component Index and '
+             'SZSE Small/Mid Cap Innovation Index as announced on 2 Jun 2020. '
+             'For details, please refer to '
+             'http://www.szse.cn/disclosure/notice/t20200602_578019.html '
+             '(Chinese Version Only).',
+  'SSESCode': '002962',
+  'StockName': 'HUBEI W-OLF PHOTOELECTRIC TECHNOLOGY'},
+ {'Ch_ange': 'Addition',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the change in SZSE Component Index and '
+             'SZSE Small/Mid Cap Innovation Index as announced on 2 Jun 2020. '
+             'For details, please refer to '
+             'http://www.szse.cn/disclosure/notice/t20200602_578019.html '
+             '(Chinese Version Only).',
+  'SSESCode': '002966',
+  'StockName': 'BANK OF SUZHOU'},
+ {'Ch_ange': 'Addition',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the change in SZSE Component Index and '
+             'SZSE Small/Mid Cap Innovation Index as announced on 2 Jun 2020. '
+             'For details, please refer to '
+             'http://www.szse.cn/disclosure/notice/t20200602_578019.html '
+             '(Chinese Version Only).',
+  'SSESCode': '300080',
+  'StockName': 'HENAN YICHENG NEW ENERGY'},
+ {'Ch_ange': 'Addition',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the change in SZSE Component Index and '
+             'SZSE Small/Mid Cap Innovation Index as announced on 2 Jun 2020. '
+             'For details, please refer to '
+             'http://www.szse.cn/disclosure/notice/t20200602_578019.html '
+             '(Chinese Version Only).',
+  'SSESCode': '300455',
+  'StockName': 'BEIJING CTROWELL TECHNOLOGY CORPORATION'},
+ {'Ch_ange': 'Addition',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the change in SZSE Component Index and '
+             'SZSE Small/Mid Cap Innovation Index as announced on 2 Jun 2020. '
+             'For details, please refer to '
+             'http://www.szse.cn/disclosure/notice/t20200602_578019.html '
+             '(Chinese Version Only).',
+  'SSESCode': '300468',
+  'StockName': 'SHENZHEN FORMS SYNTRON INFORMAITON'},
+ {'Ch_ange': 'Addition',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the change in SZSE Component Index and '
+             'SZSE Small/Mid Cap Innovation Index as announced on 2 Jun 2020. '
+             'For details, please refer to '
+             'http://www.szse.cn/disclosure/notice/t20200602_578019.html '
+             '(Chinese Version Only).',
+  'SSESCode': '300552',
+  'StockName': 'VANJEE TECHNOLOGY'},
+ {'Ch_ange': 'Addition',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the change in SZSE Component Index and '
+             'SZSE Small/Mid Cap Innovation Index as announced on 2 Jun 2020. '
+             'For details, please refer to '
+             'http://www.szse.cn/disclosure/notice/t20200602_578019.html '
+             '(Chinese Version Only).',
+  'SSESCode': '300677',
+  'StockName': 'INTCO MEDICAL TECHNOLOGY'},
+ {'Ch_ange': 'Addition',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the change in SZSE Component Index and '
+             'SZSE Small/Mid Cap Innovation Index as announced on 2 Jun 2020. '
+             'For details, please refer to '
+             'http://www.szse.cn/disclosure/notice/t20200602_578019.html '
+             '(Chinese Version Only).',
+  'SSESCode': '300775',
+  'StockName': "XI'AN TRIANGLE DEFENSE"},
+ {'Ch_ange': 'Addition',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the change in SZSE Component Index and '
+             'SZSE Small/Mid Cap Innovation Index as announced on 2 Jun 2020. '
+             'For details, please refer to '
+             'http://www.szse.cn/disclosure/notice/t20200602_578019.html '
+             '(Chinese Version Only).',
+  'SSESCode': '300776',
+  'StockName': 'WUHAN DR LASER TECHNOLOGY'},
+ {'Ch_ange': 'Addition',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the change in SZSE Component Index and '
+             'SZSE Small/Mid Cap Innovation Index as announced on 2 Jun 2020. '
+             'For details, please refer to '
+             'http://www.szse.cn/disclosure/notice/t20200602_578019.html '
+             '(Chinese Version Only).',
+  'SSESCode': '300777',
+  'StockName': 'SINOFIBERS TECHNOLOGY'},
+ {'Ch_ange': 'Addition',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the change in SZSE Component Index and '
+             'SZSE Small/Mid Cap Innovation Index as announced on 2 Jun 2020. '
+             'For details, please refer to '
+             'http://www.szse.cn/disclosure/notice/t20200602_578019.html '
+             '(Chinese Version Only).',
+  'SSESCode': '300782',
+  'StockName': 'MAXSCEND MICROELECTRONICS'},
+ {'Ch_ange': 'Addition',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the change in SZSE Component Index and '
+             'SZSE Small/Mid Cap Innovation Index as announced on 2 Jun 2020. '
+             'For details, please refer to '
+             'http://www.szse.cn/disclosure/notice/t20200602_578019.html '
+             '(Chinese Version Only).',
+  'SSESCode': '300783',
+  'StockName': 'THREE SQUIRRELS'},
+ {'Ch_ange': 'Addition',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the change in SZSE Component Index and '
+             'SZSE Small/Mid Cap Innovation Index as announced on 2 Jun 2020. '
+             'For details, please refer to '
+             'http://www.szse.cn/disclosure/notice/t20200602_578019.html '
+             '(Chinese Version Only).',
+  'SSESCode': '300785',
+  'StockName': 'BEIJING ZHIDEMAI TECHNOLOGY'},
+ {'Ch_ange': 'Addition',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the change in SZSE Component Index and '
+             'SZSE Small/Mid Cap Innovation Index as announced on 2 Jun 2020. '
+             'For details, please refer to '
+             'http://www.szse.cn/disclosure/notice/t20200602_578019.html '
+             '(Chinese Version Only).',
+  'SSESCode': '300788',
+  'StockName': 'CITIC PRESS CORPORATION'},
+ {'Ch_ange': 'Addition',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the change in SZSE Component Index and '
+             'SZSE Small/Mid Cap Innovation Index as announced on 2 Jun 2020. '
+             'For details, please refer to '
+             'http://www.szse.cn/disclosure/notice/t20200602_578019.html '
+             '(Chinese Version Only).',
+  'SSESCode': '300793',
+  'StockName': 'COSONIC INTELLIGENT TECHNOLOGIES'},
+ {'Ch_ange': 'Addition',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the change in SZSE Component Index and '
+             'SZSE Small/Mid Cap Innovation Index as announced on 2 Jun 2020. '
+             'For details, please refer to '
+             'http://www.szse.cn/disclosure/notice/t20200602_578019.html '
+             '(Chinese Version Only).',
+  'SSESCode': '300799',
+  'StockName': 'BEIJING ZUOJIANG TECHNOLOGY'},
+ {'Ch_ange': 'Addition',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the change in SZSE Component Index and '
+             'SZSE Small/Mid Cap Innovation Index as announced on 2 Jun 2020. '
+             'For details, please refer to '
+             'http://www.szse.cn/disclosure/notice/t20200602_578019.html '
+             '(Chinese Version Only). This stock will also be added to the '
+             'List of Eligible SZSE Securities for Margin Trading and the List '
+             'of Eligible SZSE Securities for Short Selling as it is also '
+             'included in SZSE stock list for margin trading and shortselling. '
+             'For details of SZSE stock list for margin trading and '
+             'shortselling, please refer to '
+             'http://www.szse.cn/disclosure/margin/object/index.html (Chinese '
+             'Version Only).',
+  'SSESCode': '000912',
+  'StockName': 'SICHUAN LUTIANHUA'},
+ {'Ch_ange': 'Addition',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the change in SZSE Component Index and '
+             'SZSE Small/Mid Cap Innovation Index as announced on 2 Jun 2020. '
+             'For details, please refer to '
+             'http://www.szse.cn/disclosure/notice/t20200602_578019.html '
+             '(Chinese Version Only). This stock will also be added to the '
+             'List of Eligible SZSE Securities for Margin Trading and the List '
+             'of Eligible SZSE Securities for Short Selling as it is also '
+             'included in SZSE stock list for margin trading and shortselling. '
+             'For details of SZSE stock list for margin trading and '
+             'shortselling, please refer to '
+             'http://www.szse.cn/disclosure/margin/object/index.html (Chinese '
+             'Version Only).',
+  'SSESCode': '002214',
+  'StockName': 'ZHEJIANG DALI TECHNOLOGY'},
+ {'Ch_ange': 'Addition',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the change in SZSE Component Index and '
+             'SZSE Small/Mid Cap Innovation Index as announced on 2 Jun 2020. '
+             'For details, please refer to '
+             'http://www.szse.cn/disclosure/notice/t20200602_578019.html '
+             '(Chinese Version Only). This stock will also be added to the '
+             'List of Eligible SZSE Securities for Margin Trading and the List '
+             'of Eligible SZSE Securities for Short Selling as it is also '
+             'included in SZSE stock list for margin trading and shortselling. '
+             'For details of SZSE stock list for margin trading and '
+             'shortselling, please refer to '
+             'http://www.szse.cn/disclosure/margin/object/index.html (Chinese '
+             'Version Only).',
+  'SSESCode': '300663',
+  'StockName': 'CLIENT SERVICE INTERNATIONAL'},
+ {'Ch_ange': 'Addition',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect.',
+  'SSESCode': '002201',
+  'StockName': 'JIANGSU JIUDING NEW MATERIAL'},
+ {'Ch_ange': 'Addition',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect.',
+  'SSESCode': '002641',
+  'StockName': 'YONGGAO'},
+ {'Ch_ange': 'Addition',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect.',
+  'SSESCode': '002706',
+  'StockName': 'SHANGHAI LIANGXIN ELECTRICAL'},
+ {'Ch_ange': 'Addition',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect.',
+  'SSESCode': '002756',
+  'StockName': 'YONGXING SPECIAL MATERIALS TECHNOLOGY'},
+ {'Ch_ange': 'Addition',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect.',
+  'SSESCode': '002838',
+  'StockName': 'SHANDONG DAWN POLYMER'},
+ {'Ch_ange': 'Addition',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect.',
+  'SSESCode': '002869',
+  'StockName': 'SHENZHEN GENVICT TECHNOLOGIES'},
+ {'Ch_ange': 'Addition',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect.',
+  'SSESCode': '002880',
+  'StockName': 'SHENZHEN WEIGUANG BIOLOGICAL PRODUCTS'},
+ {'Ch_ange': 'Addition',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect.',
+  'SSESCode': '300114',
+  'StockName': 'ZHONGHANG ELECTRONIC MEASURING INST'},
+ {'Ch_ange': 'Addition',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect.',
+  'SSESCode': '300132',
+  'StockName': 'FUJIAN GREEN PINE'},
+ {'Ch_ange': 'Addition',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect.',
+  'SSESCode': '300209',
+  'StockName': 'TIZA INFORMATION INDUSTRY CORPORATION'},
+ {'Ch_ange': 'Addition',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect.',
+  'SSESCode': '300319',
+  'StockName': 'SHENZHEN MICROGATE TECHNOLOGY'},
+ {'Ch_ange': 'Addition',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect.',
+  'SSESCode': '300388',
+  'StockName': 'ANHUI GUOZHEN ENV PROTECTION TECHNOLOGY'},
+ {'Ch_ange': 'Addition',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect.',
+  'SSESCode': '300395',
+  'StockName': 'HUBEI FEILIHUA QUARTZ GLASS'},
+ {'Ch_ange': 'Addition',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect.',
+  'SSESCode': '300448',
+  'StockName': 'HAOYUN TECHNOLOGIES'},
+ {'Ch_ange': 'Addition',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect.',
+  'SSESCode': '300525',
+  'StockName': 'FUJIAN BOSS SOFTWARE CORP'},
+ {'Ch_ange': 'Addition',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect.',
+  'SSESCode': '300526',
+  'StockName': 'CHINA DIVE'},
+ {'Ch_ange': 'Addition',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect.',
+  'SSESCode': '300573',
+  'StockName': 'SHENYANG XINGQI PHARMACEUTICAL'},
+ {'Ch_ange': 'Addition',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect.',
+  'SSESCode': '300579',
+  'StockName': 'BEIJING CERTIFICATE AUTHORITY'},
+ {'Ch_ange': 'Addition',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect.',
+  'SSESCode': '300590',
+  'StockName': 'QUECLINK WIRELESS SOLUTIONS'},
+ {'Ch_ange': 'Addition',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect.',
+  'SSESCode': '300603',
+  'StockName': 'LEON TECHNOLOGY'},
+ {'Ch_ange': 'Addition',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect.',
+  'SSESCode': '300604',
+  'StockName': 'HANGZHOU CHANG CHUAN TECHNOLOGY'},
+ {'Ch_ange': 'Addition',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect.',
+  'SSESCode': '300653',
+  'StockName': 'YANTAI ZHENGHAI BIO-TECH'},
+ {'Ch_ange': 'Addition',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect.',
+  'SSESCode': '300657',
+  'StockName': 'XIAMEN HONGXIN ELECTRON-TECH GROUP'},
+ {'Ch_ange': 'Addition',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect.',
+  'SSESCode': '300659',
+  'StockName': 'ZHONGFU INFORMATION INC.'},
+ {'Ch_ange': 'Addition',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect.',
+  'SSESCode': '300662',
+  'StockName': 'BEIJING CAREER INTERNATIONAL'},
+ {'Ch_ange': 'Addition',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect.',
+  'SSESCode': '300709',
+  'StockName': 'JIANGSU GIAN TECHNOLOGY'},
+ {'Ch_ange': 'Addition',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect.',
+  'SSESCode': '300771',
+  'StockName': 'SHENZHEN ZHILAI SCI AND TECH'},
+ {'Ch_ange': 'Addition',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect. This stock will also be added to the List '
+             'of Eligible SZSE Securities for Margin Trading and the List of '
+             'Eligible SZSE Securities for Short Selling as it is also '
+             'included in SZSE stock list for margin trading and shortselling. '
+             'For details of SZSE stock list for margin trading and '
+             'shortselling, please refer to '
+             'http://www.szse.cn/disclosure/margin/object/index.html (Chinese '
+             'Version Only).',
+  'SSESCode': '002243',
+  'StockName': 'SHENZHEN BEAUTYSTAR'},
+ {'Ch_ange': 'Addition',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect. This stock will also be added to the List '
+             'of Eligible SZSE Securities for Margin Trading and the List of '
+             'Eligible SZSE Securities for Short Selling as it is also '
+             'included in SZSE stock list for margin trading and shortselling. '
+             'For details of SZSE stock list for margin trading and '
+             'shortselling, please refer to '
+             'http://www.szse.cn/disclosure/margin/object/index.html (Chinese '
+             'Version Only).',
+  'SSESCode': '002947',
+  'StockName': 'SUZHOU HENGMINGDA ELECTRONIC TECHNOLOGY'},
+ {'Ch_ange': 'Addition',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect. This stock will also be added to the List '
+             'of Eligible SZSE Securities for Margin Trading and the List of '
+             'Eligible SZSE Securities for Short Selling as it is also '
+             'included in SZSE stock list for margin trading and shortselling. '
+             'For details of SZSE stock list for margin trading and '
+             'shortselling, please refer to '
+             'http://www.szse.cn/disclosure/margin/object/index.html (Chinese '
+             'Version Only).',
+  'SSESCode': '300328',
+  'StockName': 'DONGGUAN EONTEC'},
+ {'Ch_ange': 'Addition (from List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only))',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the change in SZSE Component Index and '
+             'SZSE Small/Mid Cap Innovation Index as announced on 2 Jun 2020. '
+             'For details, please refer to '
+             'http://www.szse.cn/disclosure/notice/t20200602_578019.html '
+             '(Chinese Version Only).',
+  'SSESCode': '000058',
+  'StockName': 'SHENZHEN SEG'},
+ {'Ch_ange': 'Addition (from List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only))',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the change in SZSE Component Index and '
+             'SZSE Small/Mid Cap Innovation Index as announced on 2 Jun 2020. '
+             'For details, please refer to '
+             'http://www.szse.cn/disclosure/notice/t20200602_578019.html '
+             '(Chinese Version Only).',
+  'SSESCode': '002239',
+  'StockName': 'AOTECAR NEW ENERGY TECHNOLOGY'},
+ {'Ch_ange': 'Addition (from List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only))',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the change in SZSE Component Index and '
+             'SZSE Small/Mid Cap Innovation Index as announced on 2 Jun 2020. '
+             'For details, please refer to '
+             'http://www.szse.cn/disclosure/notice/t20200602_578019.html '
+             '(Chinese Version Only).',
+  'SSESCode': '002312',
+  'StockName': 'CHENGDU SANTAI HOLDING GROUP'},
+ {'Ch_ange': 'Addition (from List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only))',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the change in SZSE Component Index and '
+             'SZSE Small/Mid Cap Innovation Index as announced on 2 Jun 2020. '
+             'For details, please refer to '
+             'http://www.szse.cn/disclosure/notice/t20200602_578019.html '
+             '(Chinese Version Only).',
+  'SSESCode': '002605',
+  'StockName': 'SHANGHAI YAOJI TECHNOLOGY'},
+ {'Ch_ange': 'Addition (from List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only))',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the change in SZSE Component Index and '
+             'SZSE Small/Mid Cap Innovation Index as announced on 2 Jun 2020. '
+             'For details, please refer to '
+             'http://www.szse.cn/disclosure/notice/t20200602_578019.html '
+             '(Chinese Version Only).',
+  'SSESCode': '300083',
+  'StockName': 'GUANGDONG JANUS INTELLIGENT GROUP'},
+ {'Ch_ange': 'Addition (from List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only))',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the change in SZSE Component Index and '
+             'SZSE Small/Mid Cap Innovation Index as announced on 2 Jun 2020. '
+             'For details, please refer to '
+             'http://www.szse.cn/disclosure/notice/t20200602_578019.html '
+             '(Chinese Version Only).',
+  'SSESCode': '300376',
+  'StockName': 'EAST GROUP'},
+ {'Ch_ange': 'Addition (from List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only))',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the change in SZSE Component Index and '
+             'SZSE Small/Mid Cap Innovation Index as announced on 2 Jun 2020. '
+             'For details, please refer to '
+             'http://www.szse.cn/disclosure/notice/t20200602_578019.html '
+             '(Chinese Version Only). This stock will also be added to the '
+             'List of Eligible SZSE Securities for Margin Trading and the List '
+             'of Eligible SZSE Securities for Short Selling as it is also '
+             'included in SZSE stock list for margin trading and shortselling. '
+             'For details of SZSE stock list for margin trading and '
+             'shortselling, please refer to '
+             'http://www.szse.cn/disclosure/margin/object/index.html (Chinese '
+             'Version Only).',
+  'SSESCode': '000030',
+  'StockName': 'FAWER AUTOMOTIVE PARTS'},
+ {'Ch_ange': 'Addition (from List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only))',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the change in SZSE Component Index and '
+             'SZSE Small/Mid Cap Innovation Index as announced on 2 Jun 2020. '
+             'For details, please refer to '
+             'http://www.szse.cn/disclosure/notice/t20200602_578019.html '
+             '(Chinese Version Only). This stock will also be added to the '
+             'List of Eligible SZSE Securities for Margin Trading and the List '
+             'of Eligible SZSE Securities for Short Selling as it is also '
+             'included in SZSE stock list for margin trading and shortselling. '
+             'For details of SZSE stock list for margin trading and '
+             'shortselling, please refer to '
+             'http://www.szse.cn/disclosure/margin/object/index.html (Chinese '
+             'Version Only).',
+  'SSESCode': '000519',
+  'StockName': 'NORTH INDUSTRIES GROUP RED ARROW'},
+ {'Ch_ange': 'Addition (from List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only))',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the change in SZSE Component Index and '
+             'SZSE Small/Mid Cap Innovation Index as announced on 2 Jun 2020. '
+             'For details, please refer to '
+             'http://www.szse.cn/disclosure/notice/t20200602_578019.html '
+             '(Chinese Version Only). This stock will also be added to the '
+             'List of Eligible SZSE Securities for Margin Trading and the List '
+             'of Eligible SZSE Securities for Short Selling as it is also '
+             'included in SZSE stock list for margin trading and shortselling. '
+             'For details of SZSE stock list for margin trading and '
+             'shortselling, please refer to '
+             'http://www.szse.cn/disclosure/margin/object/index.html (Chinese '
+             'Version Only).',
+  'SSESCode': '000700',
+  'StockName': 'JIANGNAN MOULD AND PLASTIC TECHNOLOGY'},
+ {'Ch_ange': 'Addition (from List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only))',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the change in SZSE Component Index and '
+             'SZSE Small/Mid Cap Innovation Index as announced on 2 Jun 2020. '
+             'For details, please refer to '
+             'http://www.szse.cn/disclosure/notice/t20200602_578019.html '
+             '(Chinese Version Only). This stock will also be added to the '
+             'List of Eligible SZSE Securities for Margin Trading and the List '
+             'of Eligible SZSE Securities for Short Selling as it is also '
+             'included in SZSE stock list for margin trading and shortselling. '
+             'For details of SZSE stock list for margin trading and '
+             'shortselling, please refer to '
+             'http://www.szse.cn/disclosure/margin/object/index.html (Chinese '
+             'Version Only).',
+  'SSESCode': '000719',
+  'StockName': 'CENTRAL CHINA LAND MEDIA'},
+ {'Ch_ange': 'Addition (from List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only))',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the change in SZSE Component Index and '
+             'SZSE Small/Mid Cap Innovation Index as announced on 2 Jun 2020. '
+             'For details, please refer to '
+             'http://www.szse.cn/disclosure/notice/t20200602_578019.html '
+             '(Chinese Version Only). This stock will also be added to the '
+             'List of Eligible SZSE Securities for Margin Trading and the List '
+             'of Eligible SZSE Securities for Short Selling as it is also '
+             'included in SZSE stock list for margin trading and shortselling. '
+             'For details of SZSE stock list for margin trading and '
+             'shortselling, please refer to '
+             'http://www.szse.cn/disclosure/margin/object/index.html (Chinese '
+             'Version Only).',
+  'SSESCode': '000917',
+  'StockName': 'HUNAN TV AND BROADCAST INTERMEDIARY'},
+ {'Ch_ange': 'Addition (from List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only))',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the change in SZSE Component Index and '
+             'SZSE Small/Mid Cap Innovation Index as announced on 2 Jun 2020. '
+             'For details, please refer to '
+             'http://www.szse.cn/disclosure/notice/t20200602_578019.html '
+             '(Chinese Version Only). This stock will also be added to the '
+             'List of Eligible SZSE Securities for Margin Trading and the List '
+             'of Eligible SZSE Securities for Short Selling as it is also '
+             'included in SZSE stock list for margin trading and shortselling. '
+             'For details of SZSE stock list for margin trading and '
+             'shortselling, please refer to '
+             'http://www.szse.cn/disclosure/margin/object/index.html (Chinese '
+             'Version Only).',
+  'SSESCode': '002169',
+  'StockName': 'GUANGZHOU ZHIGUANG ELECTRIC'},
+ {'Ch_ange': 'Addition (from List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only))',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the change in SZSE Component Index and '
+             'SZSE Small/Mid Cap Innovation Index as announced on 2 Jun 2020. '
+             'For details, please refer to '
+             'http://www.szse.cn/disclosure/notice/t20200602_578019.html '
+             '(Chinese Version Only). This stock will also be added to the '
+             'List of Eligible SZSE Securities for Margin Trading and the List '
+             'of Eligible SZSE Securities for Short Selling as it is also '
+             'included in SZSE stock list for margin trading and shortselling. '
+             'For details of SZSE stock list for margin trading and '
+             'shortselling, please refer to '
+             'http://www.szse.cn/disclosure/margin/object/index.html (Chinese '
+             'Version Only).',
+  'SSESCode': '002250',
+  'StockName': 'LIANHE CHEMICAL TECHNOLOGY'},
+ {'Ch_ange': 'Addition (from List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only))',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the change in SZSE Component Index and '
+             'SZSE Small/Mid Cap Innovation Index as announced on 2 Jun 2020. '
+             'For details, please refer to '
+             'http://www.szse.cn/disclosure/notice/t20200602_578019.html '
+             '(Chinese Version Only). This stock will also be added to the '
+             'List of Eligible SZSE Securities for Margin Trading and the List '
+             'of Eligible SZSE Securities for Short Selling as it is also '
+             'included in SZSE stock list for margin trading and shortselling. '
+             'For details of SZSE stock list for margin trading and '
+             'shortselling, please refer to '
+             'http://www.szse.cn/disclosure/margin/object/index.html (Chinese '
+             'Version Only).',
+  'SSESCode': '002287',
+  'StockName': 'TIBET CHEEZHENG TIBETAN MEDICINE'},
+ {'Ch_ange': 'Addition (from List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only))',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect.',
+  'SSESCode': '002791',
+  'StockName': 'GUANGDONG KINLONG HARDWARE PRODUCTS'},
+ {'Ch_ange': 'Addition (from List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only))',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect.',
+  'SSESCode': '000601',
+  'StockName': 'GUANGDONG SHAONENG GROUP'},
+ {'Ch_ange': 'Addition (from List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only))',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect.',
+  'SSESCode': '000796',
+  'StockName': 'CAISSA TOSUN DEVELOPMENT'},
+ {'Ch_ange': 'Addition (from List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only))',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect.',
+  'SSESCode': '000903',
+  'StockName': 'KUNMING YUNNEI POWER'},
+ {'Ch_ange': 'Addition (from List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only))',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect.',
+  'SSESCode': '002083',
+  'StockName': 'SUNVIM GROUP'},
+ {'Ch_ange': 'Addition (from List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only))',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect.',
+  'SSESCode': '002126',
+  'StockName': 'ZHEJIANG YINLUN MACHINERY'},
+ {'Ch_ange': 'Addition (from List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only))',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect.',
+  'SSESCode': '002135',
+  'StockName': 'ZHEJIANG SOUTHEAST SPACE FRAME'},
+ {'Ch_ange': 'Addition (from List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only))',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect.',
+  'SSESCode': '002324',
+  'StockName': 'SHANGHAI PRET COMPOSITES'},
+ {'Ch_ange': 'Addition (from List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only))',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect.',
+  'SSESCode': '002479',
+  'StockName': 'ZHEJIANG FUCHUNJIANG ENV THERMOELECTRIC'},
+ {'Ch_ange': 'Addition (from List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only))',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect.',
+  'SSESCode': '002484',
+  'StockName': 'NANTONG JIANGHAI CAPACITOR'},
+ {'Ch_ange': 'Addition (from List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only))',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect.',
+  'SSESCode': '002528',
+  'StockName': 'SHENZHEN INFINOVA'},
+ {'Ch_ange': 'Addition (from List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only))',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect.',
+  'SSESCode': '002609',
+  'StockName': 'SHENZHEN JIESHUN SCIENCE AND TECH IND'},
+ {'Ch_ange': 'Addition (from List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only))',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect.',
+  'SSESCode': '002616',
+  'StockName': 'GUANGDONG CHANT GROUP INC.'},
+ {'Ch_ange': 'Addition (from List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only))',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect.',
+  'SSESCode': '002850',
+  'StockName': 'SHENZHEN KEDALI INDUSTRY'},
+ {'Ch_ange': 'Addition (from List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only))',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect.',
+  'SSESCode': '002918',
+  'StockName': 'MONALISA GROUP'},
+ {'Ch_ange': 'Addition (from List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only))',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect.',
+  'SSESCode': '300031',
+  'StockName': 'WUXI BOTON TECHNOLOGY'},
+ {'Ch_ange': 'Addition (from List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only))',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect.',
+  'SSESCode': '300045',
+  'StockName': 'HWA CREATE CORPORATION'},
+ {'Ch_ange': 'Addition (from List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only))',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect.',
+  'SSESCode': '300229',
+  'StockName': 'TRS INFORMATION TECHNOLOGY'},
+ {'Ch_ange': 'Addition (from List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only))',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect.',
+  'SSESCode': '300303',
+  'StockName': 'SHENZHEN JUFEI OPTOELECTRONICS'},
+ {'Ch_ange': 'Addition (from List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only))',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect.',
+  'SSESCode': '300386',
+  'StockName': 'FEITIAN TECHNOLOGIES'},
+ {'Ch_ange': 'Addition (from List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only))',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect.',
+  'SSESCode': '300438',
+  'StockName': 'GUANGZHOU GREAT POWER ENERGY&TECHNOLOGY'},
+ {'Ch_ange': 'Addition (from List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only))',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect.',
+  'SSESCode': '300477',
+  'StockName': 'BEIJING HEZONG SCIENCE&TECHNOLOGY'},
+ {'Ch_ange': 'Addition (from List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only))',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect.',
+  'SSESCode': '300568',
+  'StockName': 'SHENZHEN SENIOR TECHNOLOGY MATERIAL'},
+ {'Ch_ange': 'Addition (from List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only))',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect.',
+  'SSESCode': '300571',
+  'StockName': 'HANGZHOU ANYSOFT INFORMATION TECHNOLOGY'},
+ {'Ch_ange': 'Addition (from List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only))',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect.',
+  'SSESCode': '300607',
+  'StockName': 'GUANGDONG TOPSTAR TECHNOLOGY'},
+ {'Ch_ange': 'Addition (from List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only))',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect.',
+  'SSESCode': '300613',
+  'StockName': 'SHANGHAI FULLHAN MICROELECTRONICS'},
+ {'Ch_ange': 'Addition (from List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only))',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect.',
+  'SSESCode': '300623',
+  'StockName': 'JIANGSU JIEJIE MICROELECTRONICS'},
+ {'Ch_ange': 'Addition (from List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only))',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect.',
+  'SSESCode': '300624',
+  'StockName': 'WONDERSHARE TECHNOLOGY GROUP'},
+ {'Ch_ange': 'Addition (from List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only))',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect.',
+  'SSESCode': '300664',
+  'StockName': 'PENYAO ENVIRONMENTAL PROTECTION'},
+ {'Ch_ange': 'Addition (from List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only))',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect.',
+  'SSESCode': '300672',
+  'StockName': 'HUNAN GOKE MICROELECTRONICS'},
+ {'Ch_ange': 'Addition (from List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only))',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect.',
+  'SSESCode': '300684',
+  'StockName': 'JONES TECH PLC'},
+ {'Ch_ange': 'Addition (from List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only))',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect.',
+  'SSESCode': '300737',
+  'StockName': 'KESHUN WATERPROOF TECHNOLGIES'},
+ {'Ch_ange': 'Addition (from List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only))',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect. This stock will also be added to the List '
+             'of Eligible SZSE Securities for Margin Trading and the List of '
+             'Eligible SZSE Securities for Short Selling as it is also '
+             'included in SZSE stock list for margin trading and shortselling. '
+             'For details of SZSE stock list for margin trading and '
+             'shortselling, please refer to '
+             'http://www.szse.cn/disclosure/margin/object/index.html (Chinese '
+             'Version Only).',
+  'SSESCode': '000652',
+  'StockName': 'TIANJIN TEDA'},
+ {'Ch_ange': 'Addition (from List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only))',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect. This stock will also be added to the List '
+             'of Eligible SZSE Securities for Margin Trading and the List of '
+             'Eligible SZSE Securities for Short Selling as it is also '
+             'included in SZSE stock list for margin trading and shortselling. '
+             'For details of SZSE stock list for margin trading and '
+             'shortselling, please refer to '
+             'http://www.szse.cn/disclosure/margin/object/index.html (Chinese '
+             'Version Only).',
+  'SSESCode': '000823',
+  'StockName': 'GUANGDONG GOWORLD'},
+ {'Ch_ange': 'Addition (from List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only))',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect. This stock will also be added to the List '
+             'of Eligible SZSE Securities for Margin Trading and the List of '
+             'Eligible SZSE Securities for Short Selling as it is also '
+             'included in SZSE stock list for margin trading and shortselling. '
+             'For details of SZSE stock list for margin trading and '
+             'shortselling, please refer to '
+             'http://www.szse.cn/disclosure/margin/object/index.html (Chinese '
+             'Version Only).',
+  'SSESCode': '000829',
+  'StockName': 'TELLING TELECOMMUNICATION HOLDING'},
+ {'Ch_ange': 'Addition (from List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only))',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect. This stock will also be added to the List '
+             'of Eligible SZSE Securities for Margin Trading and the List of '
+             'Eligible SZSE Securities for Short Selling as it is also '
+             'included in SZSE stock list for margin trading and shortselling. '
+             'For details of SZSE stock list for margin trading and '
+             'shortselling, please refer to '
+             'http://www.szse.cn/disclosure/margin/object/index.html (Chinese '
+             'Version Only).',
+  'SSESCode': '002022',
+  'StockName': 'SHANGHAI KEHUA BIO-ENGINEERING'},
+ {'Ch_ange': 'Addition (from List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only))',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect. This stock will also be added to the List '
+             'of Eligible SZSE Securities for Margin Trading and the List of '
+             'Eligible SZSE Securities for Short Selling as it is also '
+             'included in SZSE stock list for margin trading and shortselling. '
+             'For details of SZSE stock list for margin trading and '
+             'shortselling, please refer to '
+             'http://www.szse.cn/disclosure/margin/object/index.html (Chinese '
+             'Version Only).',
+  'SSESCode': '002079',
+  'StockName': 'SUZHOU GOOD-ARK ELECTRONICS'},
+ {'Ch_ange': 'Addition (from List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only))',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect. This stock will also be added to the List '
+             'of Eligible SZSE Securities for Margin Trading and the List of '
+             'Eligible SZSE Securities for Short Selling as it is also '
+             'included in SZSE stock list for margin trading and shortselling. '
+             'For details of SZSE stock list for margin trading and '
+             'shortselling, please refer to '
+             'http://www.szse.cn/disclosure/margin/object/index.html (Chinese '
+             'Version Only).',
+  'SSESCode': '002106',
+  'StockName': 'SHENZHEN LAIBAO HI-TECH'},
+ {'Ch_ange': 'Addition (from List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only))',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect. This stock will also be added to the List '
+             'of Eligible SZSE Securities for Margin Trading and the List of '
+             'Eligible SZSE Securities for Short Selling as it is also '
+             'included in SZSE stock list for margin trading and shortselling. '
+             'For details of SZSE stock list for margin trading and '
+             'shortselling, please refer to '
+             'http://www.szse.cn/disclosure/margin/object/index.html (Chinese '
+             'Version Only).',
+  'SSESCode': '002117',
+  'StockName': 'TUNGKONG INC'},
+ {'Ch_ange': 'Addition (from List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only))',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect. This stock will also be added to the List '
+             'of Eligible SZSE Securities for Margin Trading and the List of '
+             'Eligible SZSE Securities for Short Selling as it is also '
+             'included in SZSE stock list for margin trading and shortselling. '
+             'For details of SZSE stock list for margin trading and '
+             'shortselling, please refer to '
+             'http://www.szse.cn/disclosure/margin/object/index.html (Chinese '
+             'Version Only).',
+  'SSESCode': '002161',
+  'StockName': 'INVENGO INFORMATION TECHNOLOGY'},
+ {'Ch_ange': 'Addition (from List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only))',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect. This stock will also be added to the List '
+             'of Eligible SZSE Securities for Margin Trading and the List of '
+             'Eligible SZSE Securities for Short Selling as it is also '
+             'included in SZSE stock list for margin trading and shortselling. '
+             'For details of SZSE stock list for margin trading and '
+             'shortselling, please refer to '
+             'http://www.szse.cn/disclosure/margin/object/index.html (Chinese '
+             'Version Only).',
+  'SSESCode': '002182',
+  'StockName': 'NANJING YUNHAI SPECIAL METALS'},
+ {'Ch_ange': 'Addition (from List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only))',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect. This stock will also be added to the List '
+             'of Eligible SZSE Securities for Margin Trading and the List of '
+             'Eligible SZSE Securities for Short Selling as it is also '
+             'included in SZSE stock list for margin trading and shortselling. '
+             'For details of SZSE stock list for margin trading and '
+             'shortselling, please refer to '
+             'http://www.szse.cn/disclosure/margin/object/index.html (Chinese '
+             'Version Only).',
+  'SSESCode': '002276',
+  'StockName': 'ZHEJIANG WANMA'},
+ {'Ch_ange': 'Addition (from List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only))',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect. This stock will also be added to the List '
+             'of Eligible SZSE Securities for Margin Trading and the List of '
+             'Eligible SZSE Securities for Short Selling as it is also '
+             'included in SZSE stock list for margin trading and shortselling. '
+             'For details of SZSE stock list for margin trading and '
+             'shortselling, please refer to '
+             'http://www.szse.cn/disclosure/margin/object/index.html (Chinese '
+             'Version Only).',
+  'SSESCode': '002313',
+  'StockName': 'SUNSEA AIOT TECHNOLOGY'},
+ {'Ch_ange': 'Addition (from List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only))',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect. This stock will also be added to the List '
+             'of Eligible SZSE Securities for Margin Trading and the List of '
+             'Eligible SZSE Securities for Short Selling as it is also '
+             'included in SZSE stock list for margin trading and shortselling. '
+             'For details of SZSE stock list for margin trading and '
+             'shortselling, please refer to '
+             'http://www.szse.cn/disclosure/margin/object/index.html (Chinese '
+             'Version Only).',
+  'SSESCode': '002428',
+  'StockName': 'YUNNAN LINCANG XINYUAN GERMANIUM IND'},
+ {'Ch_ange': 'Addition (from List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only))',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect. This stock will also be added to the List '
+             'of Eligible SZSE Securities for Margin Trading and the List of '
+             'Eligible SZSE Securities for Short Selling as it is also '
+             'included in SZSE stock list for margin trading and shortselling. '
+             'For details of SZSE stock list for margin trading and '
+             'shortselling, please refer to '
+             'http://www.szse.cn/disclosure/margin/object/index.html (Chinese '
+             'Version Only).',
+  'SSESCode': '002518',
+  'StockName': 'SHENZHEN KSTAR SCIENCE AND TECHNOLOGY'},
+ {'Ch_ange': 'Addition (from List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only))',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect. This stock will also be added to the List '
+             'of Eligible SZSE Securities for Margin Trading and the List of '
+             'Eligible SZSE Securities for Short Selling as it is also '
+             'included in SZSE stock list for margin trading and shortselling. '
+             'For details of SZSE stock list for margin trading and '
+             'shortselling, please refer to '
+             'http://www.szse.cn/disclosure/margin/object/index.html (Chinese '
+             'Version Only).',
+  'SSESCode': '300020',
+  'StockName': 'ENJOYOR'},
+ {'Ch_ange': 'Addition (from List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only))',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect. This stock will also be added to the List '
+             'of Eligible SZSE Securities for Margin Trading and the List of '
+             'Eligible SZSE Securities for Short Selling as it is also '
+             'included in SZSE stock list for margin trading and shortselling. '
+             'For details of SZSE stock list for margin trading and '
+             'shortselling, please refer to '
+             'http://www.szse.cn/disclosure/margin/object/index.html (Chinese '
+             'Version Only).',
+  'SSESCode': '300177',
+  'StockName': 'GUANGZHOU HI-TARGET NAVIGATION TECH'},
+ {'Ch_ange': 'Addition (from List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only))',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect. This stock will also be added to the List '
+             'of Eligible SZSE Securities for Margin Trading and the List of '
+             'Eligible SZSE Securities for Short Selling as it is also '
+             'included in SZSE stock list for margin trading and shortselling. '
+             'For details of SZSE stock list for margin trading and '
+             'shortselling, please refer to '
+             'http://www.szse.cn/disclosure/margin/object/index.html (Chinese '
+             'Version Only).',
+  'SSESCode': '300202',
+  'StockName': 'JULONG'},
+ {'Ch_ange': 'Addition (from List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only))',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect. This stock will also be added to the List '
+             'of Eligible SZSE Securities for Margin Trading and the List of '
+             'Eligible SZSE Securities for Short Selling as it is also '
+             'included in SZSE stock list for margin trading and shortselling. '
+             'For details of SZSE stock list for margin trading and '
+             'shortselling, please refer to '
+             'http://www.szse.cn/disclosure/margin/object/index.html (Chinese '
+             'Version Only).',
+  'SSESCode': '300256',
+  'StockName': 'ZHEJIANG FIRSTAR PANEL TECHNOLOGY'},
+ {'Ch_ange': 'Addition (from List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only))',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect. This stock will also be added to the List '
+             'of Eligible SZSE Securities for Margin Trading and the List of '
+             'Eligible SZSE Securities for Short Selling as it is also '
+             'included in SZSE stock list for margin trading and shortselling. '
+             'For details of SZSE stock list for margin trading and '
+             'shortselling, please refer to '
+             'http://www.szse.cn/disclosure/margin/object/index.html (Chinese '
+             'Version Only).',
+  'SSESCode': '300287',
+  'StockName': 'BEIJING PHILISENSE TECHNOLOGY'},
+ {'Ch_ange': 'Addition (from List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only))',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect. This stock will also be added to the List '
+             'of Eligible SZSE Securities for Margin Trading and the List of '
+             'Eligible SZSE Securities for Short Selling as it is also '
+             'included in SZSE stock list for margin trading and shortselling. '
+             'For details of SZSE stock list for margin trading and '
+             'shortselling, please refer to '
+             'http://www.szse.cn/disclosure/margin/object/index.html (Chinese '
+             'Version Only).',
+  'SSESCode': '300397',
+  'StockName': "XI'AN TIANHE DEFENSE TECHNOLOGY"},
+ {'Ch_ange': 'Transfer to List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only)',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the change in SZSE Component Index and '
+             'SZSE Small/Mid Cap Innovation Index as announced on 2 Jun 2020. '
+             'For details, please refer to '
+             'http://www.szse.cn/disclosure/notice/t20200602_578019.html '
+             '(Chinese Version Only).',
+  'SSESCode': '000429',
+  'StockName': 'GUANGDONG PROVINCIAL EXPRESSWAY DEV'},
+ {'Ch_ange': 'Transfer to List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only)',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the change in SZSE Component Index and '
+             'SZSE Small/Mid Cap Innovation Index as announced on 2 Jun 2020. '
+             'For details, please refer to '
+             'http://www.szse.cn/disclosure/notice/t20200602_578019.html '
+             '(Chinese Version Only).',
+  'SSESCode': '000863',
+  'StockName': 'SANXIANG IMPRESSION'},
+ {'Ch_ange': 'Transfer to List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only)',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the change in SZSE Component Index and '
+             'SZSE Small/Mid Cap Innovation Index as announced on 2 Jun 2020. '
+             'For details, please refer to '
+             'http://www.szse.cn/disclosure/notice/t20200602_578019.html '
+             '(Chinese Version Only).',
+  'SSESCode': '002314',
+  'StockName': 'SHENZHEN NEW NANSHAN HOLDING'},
+ {'Ch_ange': 'Transfer to List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only)',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the change in SZSE Component Index and '
+             'SZSE Small/Mid Cap Innovation Index as announced on 2 Jun 2020. '
+             'For details, please refer to '
+             'http://www.szse.cn/disclosure/notice/t20200602_578019.html '
+             '(Chinese Version Only). This stock will also be removed from the '
+             'List of Eligible SZSE Securities for Margin Trading and the List '
+             'of Eligible SZSE Securities for Short Selling.',
+  'SSESCode': '000088',
+  'StockName': 'SHENZHEN YAN TIAN PORT HOLDINGS'},
+ {'Ch_ange': 'Transfer to List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only)',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the change in SZSE Component Index and '
+             'SZSE Small/Mid Cap Innovation Index as announced on 2 Jun 2020. '
+             'For details, please refer to '
+             'http://www.szse.cn/disclosure/notice/t20200602_578019.html '
+             '(Chinese Version Only). This stock will also be removed from the '
+             'List of Eligible SZSE Securities for Margin Trading and the List '
+             'of Eligible SZSE Securities for Short Selling.',
+  'SSESCode': '000552',
+  'StockName': 'GANSU JINGYUAN COAL IND AND ELEC POWER'},
+ {'Ch_ange': 'Transfer to List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only)',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the change in SZSE Component Index and '
+             'SZSE Small/Mid Cap Innovation Index as announced on 2 Jun 2020. '
+             'For details, please refer to '
+             'http://www.szse.cn/disclosure/notice/t20200602_578019.html '
+             '(Chinese Version Only). This stock will also be removed from the '
+             'List of Eligible SZSE Securities for Margin Trading and the List '
+             'of Eligible SZSE Securities for Short Selling.',
+  'SSESCode': '002280',
+  'StockName': 'HANGZHOU LIANLUO INTERACTIVE INFO TECH'},
+ {'Ch_ange': 'Transfer to List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only)',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the change in SZSE Component Index and '
+             'SZSE Small/Mid Cap Innovation Index as announced on 2 Jun 2020. '
+             'For details, please refer to '
+             'http://www.szse.cn/disclosure/notice/t20200602_578019.html '
+             '(Chinese Version Only). This stock will also be removed from the '
+             'List of Eligible SZSE Securities for Margin Trading and the List '
+             'of Eligible SZSE Securities for Short Selling.',
+  'SSESCode': '002293',
+  'StockName': 'LUOLAI LIFESTYLE TECHNOLOGY'},
+ {'Ch_ange': 'Transfer to List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only)',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the change in SZSE Component Index and '
+             'SZSE Small/Mid Cap Innovation Index as announced on 2 Jun 2020. '
+             'For details, please refer to '
+             'http://www.szse.cn/disclosure/notice/t20200602_578019.html '
+             '(Chinese Version Only). This stock will also be removed from the '
+             'List of Eligible SZSE Securities for Margin Trading and the List '
+             'of Eligible SZSE Securities for Short Selling.',
+  'SSESCode': '002370',
+  'StockName': 'ZHEJIANG YATAI PHARMACEUTICAL'},
+ {'Ch_ange': 'Transfer to List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only)',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the change in SZSE Component Index and '
+             'SZSE Small/Mid Cap Innovation Index as announced on 2 Jun 2020. '
+             'For details, please refer to '
+             'http://www.szse.cn/disclosure/notice/t20200602_578019.html '
+             '(Chinese Version Only). This stock will also be removed from the '
+             'List of Eligible SZSE Securities for Margin Trading and the List '
+             'of Eligible SZSE Securities for Short Selling.',
+  'SSESCode': '002608',
+  'StockName': 'JIANGSU GUOXIN CORP'},
+ {'Ch_ange': 'Transfer to List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only)',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect.',
+  'SSESCode': '000657',
+  'StockName': 'CHINA TUNGSTEN AND HIGHTECH MATERALS'},
+ {'Ch_ange': 'Transfer to List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only)',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect.',
+  'SSESCode': '000666',
+  'StockName': 'JINGWEI TEXTILE MACHINERY'},
+ {'Ch_ange': 'Transfer to List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only)',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect.',
+  'SSESCode': '000815',
+  'StockName': 'MCC MEILI CLOUD COMPUTING INDUSTRY INV'},
+ {'Ch_ange': 'Transfer to List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only)',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect.',
+  'SSESCode': '000882',
+  'StockName': 'BEIJING HUALIAN DEPARTMENT STORE'},
+ {'Ch_ange': 'Transfer to List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only)',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect.',
+  'SSESCode': '002057',
+  'StockName': 'SINOSTEEL NEW MATERIALS'},
+ {'Ch_ange': 'Transfer to List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only)',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect.',
+  'SSESCode': '002309',
+  'StockName': 'JIANGSU ZHONGLI GROUP'},
+ {'Ch_ange': 'Transfer to List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only)',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect.',
+  'SSESCode': '002550',
+  'StockName': 'CHANGZHOU QIANHONG BIO-PHARMA'},
+ {'Ch_ange': 'Transfer to List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only)',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect.',
+  'SSESCode': '300185',
+  'StockName': 'TONGYU HEAVY INDUSTRY'},
+ {'Ch_ange': 'Transfer to List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only)',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect.',
+  'SSESCode': '300252',
+  'StockName': 'KINGSIGNAL TECHNOLOGY'},
+ {'Ch_ange': 'Transfer to List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only)',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect. This stock will also be removed from the '
+             'List of Eligible SZSE Securities for Margin Trading and the List '
+             'of Eligible SZSE Securities for Short Selling.',
+  'SSESCode': '000040',
+  'StockName': 'TUNGHSU AZURE RENEWABLE ENERGY'},
+ {'Ch_ange': 'Transfer to List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only)',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect. This stock will also be removed from the '
+             'List of Eligible SZSE Securities for Margin Trading and the List '
+             'of Eligible SZSE Securities for Short Selling.',
+  'SSESCode': '000525',
+  'StockName': 'NANJING RED SUN'},
+ {'Ch_ange': 'Transfer to List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only)',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect. This stock will also be removed from the '
+             'List of Eligible SZSE Securities for Margin Trading and the List '
+             'of Eligible SZSE Securities for Short Selling.',
+  'SSESCode': '000980',
+  'StockName': 'ZOTYE AUTOMOBILE'},
+ {'Ch_ange': 'Transfer to List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only)',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect. This stock will also be removed from the '
+             'List of Eligible SZSE Securities for Margin Trading and the List '
+             'of Eligible SZSE Securities for Short Selling.',
+  'SSESCode': '002366',
+  'StockName': 'TAIHAI MANOIR NUCLEAR EQUIPMENT'},
+ {'Ch_ange': 'Transfer to List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only)',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect. This stock will also be removed from the '
+             'List of Eligible SZSE Securities for Margin Trading and the List '
+             'of Eligible SZSE Securities for Short Selling.',
+  'SSESCode': '300367',
+  'StockName': 'NETPOSA TECHNOLOGIES'},
+ {'Ch_ange': 'Transfer to List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only)',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect. This stock will also be removed from the '
+             'List of Eligible SZSE Securities for Margin Trading and the List '
+             'of Eligible SZSE Securities for Short Selling.',
+  'SSESCode': '000036',
+  'StockName': 'CHINA UNION HOLDINGS'},
+ {'Ch_ange': 'Transfer to List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only)',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect. This stock will also be removed from the '
+             'List of Eligible SZSE Securities for Margin Trading and the List '
+             'of Eligible SZSE Securities for Short Selling.',
+  'SSESCode': '000592',
+  'StockName': 'ZHONGFU STRAITS PINGTAN DEVELOPMENT'},
+ {'Ch_ange': 'Transfer to List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only)',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect. This stock will also be removed from the '
+             'List of Eligible SZSE Securities for Margin Trading and the List '
+             'of Eligible SZSE Securities for Short Selling.',
+  'SSESCode': '000861',
+  'StockName': 'GUANGDONG HIGHSUN GROUP'},
+ {'Ch_ange': 'Transfer to List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only)',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect. This stock will also be removed from the '
+             'List of Eligible SZSE Securities for Margin Trading and the List '
+             'of Eligible SZSE Securities for Short Selling.',
+  'SSESCode': '000926',
+  'StockName': 'HUBEI FUXING SCIENCE AND TECHNOLOGY'},
+ {'Ch_ange': 'Transfer to List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only)',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect. This stock will also be removed from the '
+             'List of Eligible SZSE Securities for Margin Trading and the List '
+             'of Eligible SZSE Securities for Short Selling.',
+  'SSESCode': '000928',
+  'StockName': 'SINOSTEEL ENGINEERING AND TECHNOLOGY'},
+ {'Ch_ange': 'Transfer to List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only)',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect. This stock will also be removed from the '
+             'List of Eligible SZSE Securities for Margin Trading and the List '
+             'of Eligible SZSE Securities for Short Selling.',
+  'SSESCode': '002215',
+  'StockName': 'SHENZHEN NOPOSION AGROCHEMICALS'},
+ {'Ch_ange': 'Transfer to List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only)',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect. This stock will also be removed from the '
+             'List of Eligible SZSE Securities for Margin Trading and the List '
+             'of Eligible SZSE Securities for Short Selling.',
+  'SSESCode': '002274',
+  'StockName': 'JIANGSU HUACHANG CHEMICAL'},
+ {'Ch_ange': 'Transfer to List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only)',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect. This stock will also be removed from the '
+             'List of Eligible SZSE Securities for Margin Trading and the List '
+             'of Eligible SZSE Securities for Short Selling.',
+  'SSESCode': '002378',
+  'StockName': 'CHONGYI ZHANGYUAN TUNGSTEN'},
+ {'Ch_ange': 'Transfer to List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only)',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect. This stock will also be removed from the '
+             'List of Eligible SZSE Securities for Margin Trading and the List '
+             'of Eligible SZSE Securities for Short Selling.',
+  'SSESCode': '002639',
+  'StockName': 'FUJIAN SNOWMAN'},
+ {'Ch_ange': 'Transfer to List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only)',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect. This stock will also be removed from the '
+             'List of Eligible SZSE Securities for Margin Trading and the List '
+             'of Eligible SZSE Securities for Short Selling.',
+  'SSESCode': '300266',
+  'StockName': 'XINGYUAN ENVIRONMENT TECHNOLOGY'},
+ {'Ch_ange': 'Transfer to List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only)',
+  'EffectiveDate': datetime.date(2020, 6, 15),
+  'Remarks': 'Changes are resulted from the market capitalization requirement '
+             'of Shenzhen Connect. This stock will also be removed from the '
+             'List of Eligible SZSE Securities for Margin Trading and the List '
+             'of Eligible SZSE Securities for Short Selling.',
+  'SSESCode': '300355',
+  'StockName': 'INNER MONGOLIA M-GRASS ECOLOGY AND ENV'},
+ {'Ch_ange': 'Transfer to List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only)',
+  'EffectiveDate': datetime.date(2020, 5, 6),
+  'Remarks': 'Change is resulted from the announcement issued by the listed '
+             'company on the Shenzhen Stock Exchange website on 30 April 2020. '
+             'The stock is included in the Risk Alert Board. For details, '
+             'please refer to '
+             'http://www.szse.cn/disclosure/listed/bulletinDetail/index.html?78188180-67ae-4ec6-ad73-ea83d6b435f9 '
+             '(Chinese Version Only). This stock will also be removed from the '
+             'List of Eligible SZSE Securities for Margin Trading and the List '
+             'of Eligible SZSE Securities for Short Selling.',
+  'SSESCode': '002681',
+  'StockName': 'SHENZHEN FENDA TECHNOLOGY (*ST)'},
+ {'Ch_ange': 'Transfer to List of Special SZSE Securities/Special China '
+             'Connect Securities (stocks eligible for sell only)',
+  'EffectiveDate': datetime.date(2020, 5, 6),
+  'Remarks': 'Change is resulted from the announcement issued by the listed '
+             'company on the Shenzhen Stock Exchange website on 29 April 2020. '
+             'The stock is included in the Risk Alert Board. For details, '
+             'please refer to '
+             'http://www.szse.cn/disclosure/listed/bulletinDetail/index.html?5862b568-e8cd-47fd-b7d7-0c310acac936 '
+             '(Chinese Version Only). This stock will also be removed from the '
+             'List of Eligible SZSE Securities for Margin Trading and the List '
+             'of Eligible SZSE Securities for Short Selling.',
+  'SSESCode': '002176',
+  'StockName': 'JIANGXI SPECIAL ELECTRIC MOTOR (*ST)'}]
