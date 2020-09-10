@@ -23,7 +23,8 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(level
 logger = logging.getLogger(__name__)
 
 
-class HkexlugutongshishispiderSpider(object):
+class FlowExchangeSpider(object):
+    """陆股通实时数据 交易所爬虫"""
     dc_cfg = {
         "host": DC_HOST,
         "port": DC_PORT,
@@ -46,6 +47,8 @@ class HkexlugutongshishispiderSpider(object):
         }
         self.table_name = 'hkland_flow_exchange'
         self.today = datetime.datetime.today()
+        self.dc_client = None
+        self.spider_client = None
 
     def _init_pool(self, cfg: dict):
         """
@@ -63,6 +66,21 @@ class HkexlugutongshishispiderSpider(object):
         pool = PyMysqlPoolBase(**cfg)
         return pool
 
+    def dc_init(self):
+        if not self.dc_client:
+            self.dc_client = self._init_pool(self.dc_cfg)
+
+    def spider_init(self):
+        if not self.spider_client:
+            self.spider_client = self._init_pool(self.spider_cfg)
+
+    def __del__(self):
+        print("* "*10)
+        if self.dc_client:
+            self.dc_client.dispose()
+        if self.spider_client:
+            self.spider_client.dispose()
+
     @staticmethod
     def re_data(data):
         ret = re.findall("RMB(.*) Mil", data)   # RMB52,000 Mil
@@ -71,20 +89,37 @@ class HkexlugutongshishispiderSpider(object):
             data = data.replace(",", '')
             return int(data) * 100
 
-    def _check_if_trading_period(self):
-        """判断是否是该天的交易时段"""
+    def _check_if_trading_period(self, direction):
+        """判断是否是该天的交易时段
+        北向数据的时间是 9:30-11:30; 13:00-15:00
+        南向数据的时间是 9:00-12:00; 13:00-16:10
+        """
         _now = datetime.datetime.now()
-        if (_now <= datetime.datetime(_now.year, _now.month, _now.day, 8, 0, 0) or
-                _now >= datetime.datetime(_now.year, _now.month, _now.day, 16, 30, 0)):
-            logger.warning("非当天交易时段")
+        if direction == "north":
+            morning_start = datetime.datetime(_now.year, _now.month, _now.day, 9, 30, 0)
+            morning_end = datetime.datetime(_now.year, _now.month, _now.day, 11, 30, 0)
+            afternoon_start = datetime.datetime(_now.year, _now.month, _now.day, 13, 0, 0)
+            # afternoon_end = datetime.datetime(_now.year, _now.month, _now.day, 15, 0, 0)
+            afternoon_end = datetime.datetime(_now.year, _now.month, _now.day, 15, 10, 0)
+
+        elif direction == "sourth":
+            morning_start = datetime.datetime(_now.year, _now.month, _now.day, 9, 0, 0)
+            morning_end = datetime.datetime(_now.year, _now.month, _now.day, 12, 0, 0)
+            afternoon_start = datetime.datetime(_now.year, _now.month, _now.day, 13, 0, 0)
+            # afternoon_end = datetime.datetime(_now.year, _now.month, _now.day, 16, 10, 0)
+            afternoon_end = datetime.datetime(_now.year, _now.month, _now.day, 16, 20, 0)
+        else:
+            raise ValueError("direction is in (north, sourth)")
+
+        if (_now >= morning_start and _now <= morning_end) or (_now >= afternoon_start and _now <= afternoon_end):
+            return True
+        else:
             return False
-        return True
 
     def start(self):
         retry = 1
         while True:
             try:
-                # self._create_table()
                 self._start()
             except Exception as e:
                 retry += 1
@@ -97,7 +132,11 @@ class HkexlugutongshishispiderSpider(object):
             else:
                 break
 
-    def contract_sql(self, to_insert: dict, table: str, update_fields: list):
+    def contract_sql(self, datas, table: str, update_fields: list):
+        if not isinstance(datas, list):
+            datas = [datas, ]
+
+        to_insert = datas[0]
         ks = []
         vs = []
         for k in to_insert:
@@ -106,31 +145,43 @@ class HkexlugutongshishispiderSpider(object):
         fields_str = "(" + ",".join(ks) + ")"
         values_str = "(" + "%s," * (len(vs) - 1) + "%s" + ")"
         base_sql = '''INSERT INTO `{}` '''.format(table) + fields_str + ''' values ''' + values_str
-        on_update_sql = ''' ON DUPLICATE KEY UPDATE '''
-        update_vs = []
-        for update_field in update_fields:
-            on_update_sql += '{}=%s,'.format(update_field)
-            update_vs.append(to_insert.get(update_field))
-        on_update_sql = on_update_sql.rstrip(",")
-        sql = base_sql + on_update_sql + """;"""
-        vs.extend(update_vs)
-        return sql, tuple(vs)
 
-    def _save(self, to_insert, table, update_fields: list):
-        spider = self._init_pool(self.spider_cfg)
+        params = []
+        for data in datas:
+            vs = []
+            for k in ks:
+                vs.append(data.get(k))
+            params.append(vs)
+
+        if update_fields:
+            # https://stackoverflow.com/questions/12825232/python-execute-many-with-on-duplicate-key-update/12825529#12825529
+            # sql = 'insert into A (id, last_date, count) values(%s, %s, %s) on duplicate key update last_date=values(last_date),count=count+values(count)'
+            on_update_sql = ''' ON DUPLICATE KEY UPDATE '''
+            for update_field in update_fields:
+                on_update_sql += '{}=values({}),'.format(update_field, update_field)
+            on_update_sql = on_update_sql.rstrip(",")
+            sql = base_sql + on_update_sql + """;"""
+        else:
+            sql = base_sql + ";"
+        return sql, params
+
+    def _save(self, sql_pool, to_insert, table, update_fields):
         try:
             insert_sql, values = self.contract_sql(to_insert, table, update_fields)
-            count = spider.insert(insert_sql, values)
+            value = values[0]
+            count = sql_pool.insert(insert_sql, value)
         except:
             traceback.print_exc()
             logger.warning("失败")
-            count = None
         else:
-            if count:
-                logger.info("更入新数据 {}".format(to_insert))
-        finally:
-            spider.dispose()
-        return count
+            if count == 1:
+                logger.info("插入新数据 {}".format(to_insert))
+            elif count == 2:
+                logger.info("刷新数据 {}".format(to_insert))
+            else:
+                logger.info("已有数据 {} ".format(to_insert))
+            sql_pool.end()
+            return count
 
     def _create_table(self):
         sql = """
@@ -150,9 +201,8 @@ class HkexlugutongshishispiderSpider(object):
           KEY `DateTime` (`DateTime`) USING BTREE
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='陆港通-实时资金流向-交易所源';
         """.format(self.table_name)
-        spider = self._init_pool(self.spider_cfg)
-        spider.insert(sql)
-        spider.dispose()
+        self.spider_client.insert(sql)
+        self.spider_client.end()
 
     def _north(self):
         # 北向资金
@@ -291,7 +341,7 @@ class HkexlugutongshishispiderSpider(object):
             sh_item['Netinflow'] = sh_item['ShHkFlow'] + sh_item['SzHkFlow']
             print(sh_item)
             update_fields = ['Category', 'DateTime', 'ShHkFlow', 'ShHkBalance', 'SzHkFlow', 'SzHkBalance', 'Netinflow']
-            self._save(sh_item, self.table_name, update_fields)
+            self._save(self.spider_client, sh_item, self.table_name, update_fields)
 
     def _south(self):
         logger.info("开始处理南向数据")
@@ -325,7 +375,7 @@ class HkexlugutongshishispiderSpider(object):
             sh_item['Netinflow'] = sh_item['ShHkFlow'] + sh_item['SzHkFlow']
             print(sh_item)
             update_fields = ['Category', 'DateTime', 'ShHkFlow', 'ShHkBalance', 'SzHkFlow', 'SzHkBalance', 'Netinflow']
-            self._save(sh_item, self.table_name, update_fields)
+            self._save(self.spider_client, sh_item, self.table_name, update_fields)
 
     def _check_if_trading_today(self, category):
         '''
@@ -337,7 +387,6 @@ class HkexlugutongshishispiderSpider(object):
         }
         一般来说 1 3 与 2 4 是一致的
         '''
-        dc = self._init_pool(self.dc_cfg)
         _map = {
             1: (2, 4),
             2: (1, 3),
@@ -345,7 +394,7 @@ class HkexlugutongshishispiderSpider(object):
 
         sql = 'select IfTradingDay from hkland_shszhktradingday where TradingType in {} and EndDate = "{}";'.format(
         _map.get(category), self.today.strftime("%Y-%m-%d"))
-        ret = dc.select_all(sql)
+        ret = self.dc_client.select_all(sql)
         ret = [r.get("IfTradingDay") for r in ret]
         if ret == [2, 2]:
             return False
@@ -353,33 +402,34 @@ class HkexlugutongshishispiderSpider(object):
             return True
 
     def _start(self):
-        is_trading = self._check_if_trading_period()
-        if not is_trading:
-            return
+        self.dc_init()
+        self.spider_init()
 
+        self._create_table()
+
+        sourth_is_trading_period = self._check_if_trading_period("sourth")
         south_bool = self._check_if_trading_today(1)
-        if south_bool:
+        if south_bool and sourth_is_trading_period:
             t1 = threading.Thread(target=self._south,)
             t1.start()
         else:
-            logger.warning("今日无南向交易 ")
+            logger.warning("[交易所]今日无南向交易或不在交易时间段内")
 
+        north_is_trading_period = self._check_if_trading_period("north")
         north_bool = self._check_if_trading_today(2)
-        if north_bool:
+        if north_bool and north_is_trading_period:
             t2 = threading.Thread(target=self._north,)
             t2.start()
         else:
-            logger.warning("今日无北向交易 ")
+            logger.warning("[交易所]今日无北向交易或不在交易时间段内")
 
 
 if __name__ == "__main__":
-    # h = HkexlugutongshishispiderSpider()
-    # h._create_table()
-    # h._north()
-    # h._south()
+    # h = FlowExchangeSpider()
+    # h._start()
 
     while True:
-        h = HkexlugutongshishispiderSpider()
+        h = FlowExchangeSpider()
         h.start()
         time.sleep(3)
         print()
@@ -396,13 +446,4 @@ docker logs -ft --tail 1000  flow_exchange
 
 # local 
 sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name flow_exchange registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_flow_exchange:v1 
-'''
-
-'''
-运行时异常： 
-(1) 2020年4月24日 数据库超时触发钉钉发送消息，钉钉 send_msg 流程未捕获异常。 造成 while True 程序中断。 
-比较奇怪的是 docker 中程序终止, 但是 docker 容器未退出。
-通过定时查看日志 发现程序在前一天已经中断了。 
-
-
 '''

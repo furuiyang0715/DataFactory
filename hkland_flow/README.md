@@ -1,6 +1,7 @@
 ## 陆股通实时数据 
+
 ### 正式数据库 
-    hkland_flow 
+    datacenter.hkland_flow 
 
 ### 正式表字段释义 
     DateTime: 交易时间 datetime 类型，对应于爬虫库中的日期 
@@ -35,11 +36,17 @@
     
 ### 数据源
 #### 东财 
+eastmoney_flow.py
 
 #### 同花顺
+jqka10_flow.py
 
 #### 交易所 
+stock_flow.py
+
+#### 合并程序
+flow_merger.py 
 
 
-### 数据源有限级
-东财 > 同花顺 > 东财
+### 数据源优先级
+东财 > 交易所 > 同花顺

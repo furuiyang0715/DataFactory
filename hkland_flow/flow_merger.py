@@ -6,8 +6,8 @@ import time
 import traceback
 
 import pandas as pd
-sys.path.append("./../")
 
+sys.path.append("./../")
 from hkland_flow.configs import (SPIDER_MYSQL_HOST, SPIDER_MYSQL_PORT, SPIDER_MYSQL_USER,
                                  SPIDER_MYSQL_PASSWORD, SPIDER_MYSQL_DB, PRODUCT_MYSQL_HOST, PRODUCT_MYSQL_PORT,
                                  PRODUCT_MYSQL_USER, PRODUCT_MYSQL_PASSWORD, PRODUCT_MYSQL_DB, DC_HOST, DC_PORT,
@@ -57,25 +57,98 @@ class FlowMerge(object):
         self.product_table_name = 'hkland_flow'
         self.tool_table_name = 'base_table_updatetime'
 
+        self.dc_client = None
+        self.spider_client = None
+        self.product_client = None
+
     def _init_pool(self, cfg: dict):
         pool = PyMysqlPoolBase(**cfg)
         return pool
 
+    def dc_init(self):
+        if not self.dc_client:
+            self.dc_client = self._init_pool(self.dc_cfg)
+
+    def spider_init(self):
+        if not self.spider_client:
+            self.spider_client = self._init_pool(self.spider_cfg)
+
+    def product_init(self):
+        if not self.product_client:
+            self.product_client = self._init_pool(self.product_cfg)
+
+    def __del__(self):
+        logger.info("* "*10)
+        if self.dc_client:
+            self.dc_client.dispose()
+        if self.spider_client:
+            self.spider_client.dispose()
+        if self.product_client:
+            self.product_client.dispose()
+
+    def contract_sql(self, datas, table: str, update_fields: list):
+        if not isinstance(datas, list):
+            datas = [datas, ]
+
+        to_insert = datas[0]
+        ks = []
+        vs = []
+        for k in to_insert:
+            ks.append(k)
+            vs.append(to_insert.get(k))
+        fields_str = "(" + ",".join(ks) + ")"
+        values_str = "(" + "%s," * (len(vs) - 1) + "%s" + ")"
+        base_sql = '''INSERT INTO `{}` '''.format(table) + fields_str + ''' values ''' + values_str
+
+        params = []
+        for data in datas:
+            vs = []
+            for k in ks:
+                vs.append(data.get(k))
+            params.append(vs)
+
+        if update_fields:
+            # https://stackoverflow.com/questions/12825232/python-execute-many-with-on-duplicate-key-update/12825529#12825529
+            # sql = 'insert into A (id, last_date, count) values(%s, %s, %s) on duplicate key update last_date=values(last_date),count=count+values(count)'
+            on_update_sql = ''' ON DUPLICATE KEY UPDATE '''
+            for update_field in update_fields:
+                on_update_sql += '{}=values({}),'.format(update_field, update_field)
+            on_update_sql = on_update_sql.rstrip(",")
+            sql = base_sql + on_update_sql + """;"""
+        else:
+            sql = base_sql + ";"
+        return sql, params
+
+    def save(self, sql_pool, to_insert, table, update_fields):
+        try:
+            insert_sql, values = self.contract_sql(to_insert, table, update_fields)
+            value = values[0]
+            count = sql_pool.insert(insert_sql, value)
+        except Exception as e:
+            print("插入失败: ", e)
+            # traceback.print_exc()
+            logger.warning("失败")
+        else:
+            if count == 1:
+                logger.info("插入新数据 {}".format(to_insert))
+            elif count == 2:
+                logger.info("刷新数据 {}".format(to_insert))
+            else:
+                logger.info("已有数据 {} ".format(to_insert))
+            sql_pool.end()
+            return count
+
     def fetch(self, table_name, start, end, category):
-        spider = self._init_pool(self.spider_cfg)
         sql = '''select * from {} where  Category = {} and DateTime >= '{}' and DateTime <= '{}';'''.format(
             table_name, category, start, end)
-        ret = spider.select_all(sql)
-        spider.dispose()
+        ret = self.spider_client.select_all(sql)
         return ret
 
     def select_already_datas(self, category, start_dt, end_dt):
         """获取已有的南北向数据"""
-        product = self._init_pool(self.product_cfg)
         sql = '''select * from {} where Category = {} and DateTime >= '{}' and DateTime <= '{}';'''.format(
             self.product_table_name, category, start_dt, end_dt)
-        _datas = product.select_all(sql)
-        product.dispose()
+        _datas = self.product_client.select_all(sql)
         for data in _datas:
             data.pop("CREATETIMEJZ")
             data.pop("UPDATETIMEJZ")
@@ -132,10 +205,9 @@ class FlowMerge(object):
         ) ENGINE=InnoDB AUTO_INCREMENT=18063 DEFAULT CHARSET=utf8 COMMENT='每个表的最后更新时间';
         '''.format(self.tool_table_name)
 
-        product = self._init_pool(self.product_cfg)
-        product.insert(sql)
-        product.insert(tool_sql)  # 一般只执行一次
-        product.dispose()
+        self.product_client.insert(sql)
+        self.product_client.insert(tool_sql)  # 一般只执行一次
+        self.product_client.end()
 
     def gen_all_minutes(self, start: datetime.datetime, end: datetime.datetime):
         """
@@ -147,41 +219,6 @@ class FlowMerge(object):
         # res = [dt.strftime("%Y-%m-%d %H:%M:%S") for dt in idx]
         dt_list = [dt.to_pydatetime() for dt in idx]
         return dt_list
-
-    def contract_sql(self, to_insert: dict, table: str, update_fields: list):
-        ks = []
-        vs = []
-        for k in to_insert:
-            ks.append(k)
-            vs.append(to_insert.get(k))
-        fields_str = "(" + ",".join(ks) + ")"
-        values_str = "(" + "%s," * (len(vs) - 1) + "%s" + ")"
-        base_sql = '''INSERT INTO `{}` '''.format(table) + fields_str + ''' values ''' + values_str
-        on_update_sql = ''' ON DUPLICATE KEY UPDATE '''
-        update_vs = []
-        for update_field in update_fields:
-            on_update_sql += '{}=%s,'.format(update_field)
-            update_vs.append(to_insert.get(update_field))
-        on_update_sql = on_update_sql.rstrip(",")
-        sql = base_sql + on_update_sql + """;"""
-        vs.extend(update_vs)
-        return sql, tuple(vs)
-
-    def save(self, to_insert, table, update_fields: list):
-        product = self._init_pool(self.product_cfg)
-        try:
-            insert_sql, values = self.contract_sql(to_insert, table, update_fields)
-            count = product.insert(insert_sql, values)
-        except:
-            traceback.print_exc()
-            logger.warning("失败")
-            count = None
-        else:
-            if count:
-                logger.info("更入新数据 {}".format(to_insert))
-        finally:
-            product.dispose()
-        return count
 
     def north(self):
         """9:30-11:30; 13:00-15:00  (11:30-9:30)*60+1 + (15-13)*60+1 = 242"""
@@ -227,9 +264,13 @@ class FlowMerge(object):
         #     print(k, ">>> ", eastmoney_north_win[k])
 
         # 按照优先级别进行更新
-        north_win = copy.deepcopy(exchange_north_win)
-        north_win.update(jqka_north_win)
+        north_win = copy.deepcopy(jqka_north_win)
+        north_win.update(exchange_north_win)
         north_win.update(eastmoney_north_win)
+
+        # north_win = copy.deepcopy(exchange_north_win)
+        # north_win.update(jqka_north_win)
+        # north_win.update(eastmoney_north_win)
 
         north_df = pd.DataFrame(list(north_win.values()))
         north_df = north_df.set_index("DateTime",
@@ -258,11 +299,13 @@ class FlowMerge(object):
             if not data in already_datas:
                 to_insert.append(data)
 
-        print(to_insert)
+        # print(to_insert)
         print(len(to_insert))
         update_fields = ['DateTime', 'ShHkFlow', 'ShHkBalance', 'SzHkFlow', 'SzHkBalance', 'Netinflow', 'Category']
+        to_insert = [data for data in to_insert if not (data.get("ShHkFlow") is None or data.get("SzHkFlow") is None)]
+        print(len(to_insert))
         for data in to_insert:
-            self.save(data, self.product_table_name, update_fields)
+            self.save(self.product_client, data, self.product_table_name, update_fields)
 
     def south(self):
         """9:00-12:00; 13:00-16:10     (12-9)*60 + (16-13) *60 + 10 + 2 = 372"""
@@ -308,10 +351,15 @@ class FlowMerge(object):
         eastmoney_south = self.fetch(self.eastmoney_table_name, morning_start, this_moment_min, 1)
         eastmoney_south_win = self.process_sql_datas(eastmoney_south)
 
-        # 按照优先级别进行更新
-        south_win = copy.deepcopy(exchange_south_win)
-        south_win.update(jqka_south_win)
+        # 按照优先级别进行更新 有限级别高的最后更入
+        # 2020.06.08 优先级顺序由 东财>同花顺>交易所 变为 东财>交易所>同花顺 另外一个方向同理
+        south_win = copy.deepcopy(jqka_south_win)
+        south_win.update(exchange_south_win)
         south_win.update(eastmoney_south_win)
+
+        # south_win = copy.deepcopy(exchange_south_win)
+        # south_win.update(jqka_south_win)
+        # south_win.update(eastmoney_south_win)
 
         south_df = pd.DataFrame(list(south_win.values()))
         south_df = south_df.set_index("DateTime",
@@ -341,11 +389,13 @@ class FlowMerge(object):
             if not data in already_datas:
                 to_insert.append(data)
 
-        print(to_insert)
+        # print(to_insert)
         print(len(to_insert))
         update_fields = ['DateTime', 'ShHkFlow', 'ShHkBalance', 'SzHkFlow', 'SzHkBalance', 'Netinflow', 'Category']
+        to_insert = [data for data in to_insert if not (data.get("ShHkFlow") is None or data.get("SzHkFlow") is None)]
+        print(len(to_insert))
         for data in to_insert:
-            self.save(data, self.product_table_name, update_fields)
+            self.save(self.product_client, data, self.product_table_name, update_fields)
 
     def _check_if_trading_today(self, category):
         '''
@@ -357,7 +407,6 @@ class FlowMerge(object):
         }
         一般来说 1 3 与 2 4 是一致的
         '''
-        dc = self._init_pool(self.dc_cfg)
         _map = {
             1: (2, 4),
             2: (1, 3),
@@ -365,7 +414,7 @@ class FlowMerge(object):
 
         sql = 'select IfTradingDay from hkland_shszhktradingday where TradingType in {} and EndDate = "{}";'.format(
         _map.get(category), self.today.strftime("%Y-%m-%d"))
-        ret = dc.select_all(sql)
+        ret = self.dc_client.select_all(sql)
         ret = [r.get("IfTradingDay") for r in ret]
         if ret == [2, 2]:
             return False
@@ -377,41 +426,48 @@ class FlowMerge(object):
         if not is_trading:
             return
 
+        self.dc_init()
+        self.spider_init()
+        self.product_init()
+
+        # 加判断是因为在正式库无建表权限
         if LOCAL:
             self._create_table()
+
         # 首先判断今天南北向是否交易
         south_trade_bool = self._check_if_trading_today(1)
         if not south_trade_bool:
-            logger.warning("今天{}南向无交易".format(self.today))
+            logger.warning("[合并程序]今天{}南向无交易".format(self.today))
         else:
             self.south()
 
         north_trade_bool = self._check_if_trading_today(2)
         if not north_trade_bool:
-            logger.warning("今天{}北向无交易".format(self.today))
+            logger.warning("[合并程序]今天{}北向无交易".format(self.today))
         else:
             self.north()
 
-        # 刷新更新时间戳
         self.refresh_update_time()
 
     def refresh_update_time(self):
-        product = self._init_pool(self.product_cfg)
+        """刷新更新时间戳"""
         sql = '''select max(UPDATETIMEJZ) as max_dt from {}; '''.format(self.product_table_name)
-        max_dt = product.select_one(sql).get("max_dt")
-        logger.info("最新的更新时间是{}".format(max_dt))
+        max_dt = self.product_client.select_one(sql).get("max_dt")
+        print("###### ", max_dt)
+        if not max_dt:
+            return
 
         refresh_sql = '''replace into {} (id,TableName, LastUpdateTime,IsValid) values (1, "hkland_flow", '{}', 1); 
         '''.format(self.tool_table_name, max_dt)
-        count = product.update(refresh_sql)
-        logger.info(count)   # 1 首次插入 2 替换插入
-        product.dispose()
+        count = self.product_client.update(refresh_sql)
+        logger.info("最新的更新时间是{}, 是否刷新:{}".format(max_dt, count))
+        self.product_client.end()
 
     def _check_if_trading_period(self):
         """判断是否是该天的交易时段"""
         _now = datetime.datetime.now()
-        if (_now <= datetime.datetime(_now.year, _now.month, _now.day, 8, 0, 0) or
-                _now >= datetime.datetime(_now.year, _now.month, _now.day, 17, 00, 0)):
+        if (_now <= datetime.datetime(_now.year, _now.month, _now.day, 9, 0, 0) or
+                _now >= datetime.datetime(_now.year, _now.month, _now.day, 16, 20, 0)):
             logger.warning("非当天交易时段")
             return False
         return True
@@ -419,20 +475,17 @@ class FlowMerge(object):
     def start(self):
         try:
             self._start()
-        except:
-            traceback.print_exc()
+        except Exception as e:
+            print(e)
+            # traceback.print_exc()
 
 
 if __name__ == "__main__":
-    # flow = FlowMerge()
-    # flow._start()
+    # FlowMerge()._start()
 
-    now = lambda: time.time()
     while True:
-        t1 = now()
         flow = FlowMerge()
         flow.start()
-        logger.info("Time:{}s".format(now() - t1))
         time.sleep(5)
         print()
         print()
@@ -443,7 +496,7 @@ docker build -f Dockerfile_merge -t registry.cn-shenzhen.aliyuncs.com/jzdev/jzda
 docker push registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_flow_merge:v1 
 sudo docker pull registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_flow_merge:v1 
 
-sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name flow_merge \
+sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name flow_merge1 \
 --env LOCAL=0 \
 registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_flow_merge:v1 
 
