@@ -14,6 +14,7 @@ from hkland_toptrade.base_spider import BaseSpider
 
 
 class JqkaTop10(BaseSpider):
+    """十大成交股 同花顺数据源"""
     def __init__(self):
         super(JqkaTop10, self).__init__()
         self.headers = {
@@ -79,10 +80,11 @@ and ListedSector in (1, 2, 6, 7) and SecuCode = "{}";'.format(secu_code)
     def start(self):
         self._juyuan_init()
         self._product_init()
-
-        self._create_table()
+        # 建表 直接入pro库 建表报错; 在首次建表之后此步骤忽略
+        # self._create_table()
 
         # 类别代码:GGh: 港股通(沪), GGs: 港股通(深), HG: 沪股通, SG: 深股通'
+        # value 中的网址也是 web 网址
         category_map = {
             "HG": "http://data.10jqka.com.cn/hgt/hgtb/",
             "GGh": "http://data.10jqka.com.cn/hgt/ggtb/",
@@ -118,11 +120,12 @@ and ListedSector in (1, 2, 6, 7) and SecuCode = "{}";'.format(secu_code)
                 top_str = dt_info
         print(top_str)
         top_dt_str = re.findall("\d{4}-\d{2}-\d{2}", top_str)[0]
+        # 从网页中解析出来的 十大成交股 的最近时间
         top_dt = datetime.datetime.strptime(top_dt_str, "%Y-%m-%d")
         print("{} 的最近更新时间是 {}".format(category, top_dt))
-
         top10_table = doc.xpath(".//table[@class='m-table1']")[0]
 
+        # 爬取到网站中的全部字段
         # table_heads = top10_table.xpath("./thead/tr/th")
         # if table_heads:
         #     table_heads = [table_head.text for table_head in table_heads]
