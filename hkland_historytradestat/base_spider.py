@@ -233,6 +233,8 @@ class BaseSpider(object):
             'ggtbs': ('港股通(深)', 4),
         }
         一般来说 1 3 与 2 4 是一致的
+        category 为 1 时，返回指定时间的南向是否是交易日
+        category 为 2 时，返回指定时间的北向是否是交易日
         '''
         self._dc_init()
         if _today is None:

@@ -40,7 +40,11 @@ class EastMoneyHistory(BaseSpider):
 
         :return:
         """
-        # 检查今天是否是交易日
+        # 检查今天是否是交易日 保证只有在交易日才会更新数据
+        is_trading_day = self._check_if_trading_today(2)
+        if not is_trading_day:
+            print("非交易日")
+            return
 
         self._product_init()
 
@@ -182,7 +186,8 @@ def task():
 
 
 def main():
-    EastMoneyHistory().start()      # 确保临时重启时能运行一遍
+    EastMoneyHistory().start()      # 确保临时重启时能无论时间运行一遍
+
     task()
     schedule.every(1).minutes.do(task)
 

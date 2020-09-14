@@ -184,12 +184,13 @@ def schedule_task():
 
     day_str = t_day.strftime("%Y-%m-%d")
     print("今天:", day_str)  # 今天的时间字符串 如果当前还未出 "十大成交股"数据 返回空列表
-    top10 = EastMoneyTop10(day_str)
-    top10.start()
+    EastMoneyTop10(day_str).start()
 
 
 def main():
+    # TODO first, 在容器启动时,无论时间, 进行一次重启.
     EastMoneyTop10(datetime.datetime.today().strftime("%Y-%m-%d")).start()
+
     schedule_task()
     schedule.every(2).minutes.do(schedule_task)
     while True:
