@@ -4,6 +4,7 @@ import traceback
 from hkland_flow_sub.configs import (SPIDER_MYSQL_HOST, SPIDER_MYSQL_PORT, SPIDER_MYSQL_USER,
                                      SPIDER_MYSQL_PASSWORD, SPIDER_MYSQL_DB,
                                      )
+from hkland_flow_sub.sql_pool import PyMysqlPoolBase
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -17,6 +18,9 @@ class FlowBase(object):
         "password": SPIDER_MYSQL_PASSWORD,
         "db": SPIDER_MYSQL_DB,
     }
+
+    def __init__(self):
+        self.spider_client = None
 
     def contract_sql(self, datas, table: str, update_fields: list):
         if not isinstance(datas, list):
@@ -92,6 +96,3 @@ class FlowBase(object):
     def __del__(self):
         if self.spider_client:
             self.spider_client.dispose()
-
-
-    pass
