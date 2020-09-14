@@ -1,11 +1,17 @@
 import datetime
 import json
+import os
 import re
+import sys
 import time
 import traceback
 
 from decimal import Decimal
 import requests as req
+
+cur_path = os.path.split(os.path.realpath(__file__))[0]
+file_path = os.path.abspath(os.path.join(cur_path, ".."))
+sys.path.insert(0, file_path)
 
 from hkland_flow_sub.configs import LOCAL
 from hkland_flow_sub.flow_base import FlowBase, logger
@@ -286,3 +292,7 @@ class EastMoneyFlowNetIn(FlowBase):
 
 if __name__ == "__main__":
     EastMoneyFlowNetIn().start()
+
+    while True:
+        EastMoneyFlowNetIn().start()
+        time.sleep(3)
