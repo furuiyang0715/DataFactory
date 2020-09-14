@@ -46,6 +46,10 @@ class EastMoneyTop10(BaseSpider):
         return info
 
     def _start(self):
+        # 检查当前是否是交易日
+        is_trading_day = self._check_if_trading_today(2)
+        print("当日是否交易日 : {} ".format(is_trading_day))
+
         self._juyuan_init()
         self._product_init()
 
@@ -182,11 +186,8 @@ def schedule_task():
 
 def main():
     EastMoneyTop10(datetime.datetime.today().strftime("%Y-%m-%d")).start()
-
     schedule_task()
-
     schedule.every(2).minutes.do(schedule_task)
-
     while True:
         schedule.run_pending()
         time.sleep(10)
