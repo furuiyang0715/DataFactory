@@ -46,15 +46,6 @@ class EastMoneyFlowNetIn(FlowBase):
         datas = py_data.get("data")
         return datas
 
-    def _check_if_trading_period(self):
-        """判断是否是该天的交易时段"""
-        _now = datetime.datetime.now()
-        if (_now <= datetime.datetime(_now.year, _now.month, _now.day, 9, 0, 0) or
-                _now >= datetime.datetime(_now.year, _now.month, _now.day, 16, 30, 0)):
-            logger.warning("非当天交易时段")
-            return False
-        return True
-
     def select_n2s_datas(self):
         """获取已有的南向数据"""
         start_dt = datetime.datetime.combine(datetime.datetime.now(), datetime.time.min)

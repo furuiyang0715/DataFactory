@@ -1,3 +1,4 @@
+import datetime
 import logging
 import traceback
 
@@ -96,3 +97,12 @@ class FlowBase(object):
     def __del__(self):
         if self.spider_client:
             self.spider_client.dispose()
+
+    def _check_if_trading_period(self):
+        """判断是否是该天的交易时段"""
+        _now = datetime.datetime.now()
+        if (_now <= datetime.datetime(_now.year, _now.month, _now.day, 9, 0, 0) or
+                _now >= datetime.datetime(_now.year, _now.month, _now.day, 16, 30, 0)):
+            logger.warning("非当天交易时段")
+            return False
+        return True
