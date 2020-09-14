@@ -20,6 +20,7 @@ self.hk_list_table_name = 'hkex_lgt_sse_list_of_eligible_securities'
     - 港股通标的证券调整： http://www.szse.cn/szhk/hkbussiness/underlyadjust/index.html
 
 '''
+import requests
 
 
 class ComponentSpider(object):
@@ -30,5 +31,20 @@ class ComponentSpider(object):
         self.hk_change_table_name = 'lgt_sse_underlying_securities_adjustment'
         self.hk_list_table_name = 'hkex_lgt_sse_list_of_eligible_securities'
 
+        self.sh_change_url = 'https://www.hkex.com.hk/-/media/HKEX-Market/Mutual-Market/Stock-Connect/Eligible-Stocks/View-All-Eligible-Securities_xls/SSE_Securities.xls?la=en'
+
+    def get_sh_change(self):
+        resp = requests.get(self.sh_change_url)
+        if resp.status_code == 200:
+            content = resp.content
+            with open("sh_change.xls", 'wb') as f:
+                f.write(content)
+        else:
+            raise
+
     def start(self):
-        pass
+        self.get_sh_change()
+
+
+if __name__ == '__main__':
+    ComponentSpider().start()
