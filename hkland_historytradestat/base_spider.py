@@ -1,4 +1,5 @@
 import base64
+import datetime
 import hashlib
 import hmac
 import json
@@ -222,3 +223,33 @@ class BaseSpider(object):
         '''.format(self.table_name)
         self.product_client.insert(sql)
         self.product_client.end()
+
+    def _check_if_trading_today(self, category, _today=None):
+        '''
+        self.category_map = {
+            'hgtb': ('沪股通', 1),
+            'ggtb': ('港股通(沪)', 2),
+            'sgtb': ('深股通', 3),
+            'ggtbs': ('港股通(深)', 4),
+        }
+        一般来说 1 3 与 2 4 是一致的
+        '''
+        self._dc_init()
+        if _today is None:
+            _today = datetime.datetime.combine(datetime.datetime.now(), datetime.time.min)
+        if isinstance(_today, datetime.datetime):
+            _today = _today.strftime("%Y-%m-%d")
+
+        _map = {
+            1: (2, 4),   # 南向
+            2: (1, 3),   # 北向
+        }
+        sql = 'select IfTradingDay from hkland_shszhktradingday where TradingType in {} and EndDate = "{}";'.format(
+        _map.get(category), _today)
+        print(sql)
+        ret = self.dc_client.select_all(sql)
+        ret = [r.get("IfTradingDay") for r in ret]
+        if ret == [2, 2]:
+            return False
+        else:
+            return True

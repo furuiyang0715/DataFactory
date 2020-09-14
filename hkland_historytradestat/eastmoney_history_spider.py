@@ -40,6 +40,8 @@ class EastMoneyHistory(BaseSpider):
 
         :return:
         """
+        # 检查今天是否是交易日
+
         self._product_init()
 
         if LOCAL:
