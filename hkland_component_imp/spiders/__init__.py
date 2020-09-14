@@ -33,14 +33,17 @@ class ComponentSpider(object):
 
         self.sh_change_url = 'https://www.hkex.com.hk/-/media/HKEX-Market/Mutual-Market/Stock-Connect/Eligible-Stocks/View-All-Eligible-Securities_xls/SSE_Securities.xls?la=en'
 
-    def get_sh_change(self):
-        resp = requests.get(self.sh_change_url)
+    def get_xls_file(self, link, file_path):
+        resp = requests.get(link)
         if resp.status_code == 200:
             content = resp.content
-            with open("sh_change.xls", 'wb') as f:
+            with open(file_path, 'wb') as f:
                 f.write(content)
         else:
-            raise
+            return None
+
+    def get_sh_change(self):
+        self.get_xls_file(self.sh_change_url, "sh_change.xls")
 
     def start(self):
         self.get_sh_change()
