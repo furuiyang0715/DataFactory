@@ -183,5 +183,4 @@ and ListedSector in (1, 2, 6, 7) and SecuCode = "{}";'.format(secu_code)
 
 
 if __name__ == "__main__":
-    jqka = JqkaTop10()
-    jqka.start()
+    JqkaTop10().start()

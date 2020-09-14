@@ -1,66 +1,8 @@
-# import json
-# import pprint
-# import sys
-#
-# import requests
-#
-# # url = 'https://www.hkex.com.hk/Mutual-Market/Stock-Connect/Statistics/Historical-Daily?sc_lang=zh-HK#select4=1&select5=0&select3=0&select1=16&select2=5'
-# url = 'https://www.hkex.com.hk/chi/csm/DailyStat/data_tab_daily_20200617c.js?_=1592465188627'
-# # url = 'https://www.hkex.com.hk/chi/csm/DailyStat/data_tab_daily_20200501c.js?_=1592465188627'
-#
-# resp = requests.get(url)
-#
-# if resp.status_code == 200:
-#     body = resp.text
-#     # print(body)
-#     # print(type(body))
-#     datas_str = body.replace("tabData = ", "")
-#     try:
-#         datas = eval(datas_str)
-#     except:
-#         sys.exit(0)
-#     # datas = json.loads(datas_str)
-#     # print(datas)
-#     # print(type(datas))
-#     # print(pprint.pformat(datas))
-#     for direction_data in datas:
-#         cur_dt = direction_data.get("date")
-#         market = direction_data.get("market")
-#         is_trading_day = direction_data.get("tradingDay")
-#         content = direction_data.get("content")[1].get("table")
-#         print(cur_dt)
-#         print(market)
-#         print(is_trading_day)
-#         print(pprint.pformat(content))
-#
-#         print()
-#         print()
-#
-# else:
-#     print(resp)
-
-'''
-`Date` date NOT NULL COMMENT '时间',
-`SecuCode` varchar(10) COLLATE utf8_bin NOT NULL COMMENT '证券代码',
-`InnerCode` int(11) NOT NULL COMMENT '内部编码',
-`SecuAbbr` varchar(20) COLLATE utf8_bin NOT NULL COMMENT '股票简称',
-`Close` decimal(19,3) NOT NULL COMMENT '收盘价',
-`ChangePercent` decimal(19,5) NOT NULL COMMENT '涨跌幅',
-`TJME` decimal(19,3) NOT NULL COMMENT '净买额（元/港元）',
-`TMRJE` decimal(19,3) NOT NULL COMMENT '买入金额（元/港元）',
-`TCJJE` decimal(19,3) NOT NULL COMMENT '成交金额（元/港元）',
-`CategoryCode` varchar(10) COLLATE utf8_bin DEFAULT NULL COMMENT '类别代码:GGh: 港股通(沪), GGs: 港股通(深), HG: 沪股通, SG: 深股通',
-`CMFID` bigint(20) NOT NULL COMMENT '来源ID',
-`CMFTime` datetime NOT NULL COMMENT '来源日期',
-'''
-
 import datetime
 import os
-import pprint
 import sys
 import time
 import traceback
-
 import requests
 import schedule
 
@@ -68,12 +10,11 @@ cur_path = os.path.split(os.path.realpath(__file__))[0]
 file_path = os.path.abspath(os.path.join(cur_path, ".."))
 sys.path.insert(0, file_path)
 
-
 from hkland_toptrade.base_spider import BaseSpider, logger
 
 
 class ExchangeTop10(BaseSpider):
-
+    """十大成交股交易所数据源"""
     def __init__(self):
         super(ExchangeTop10, self).__init__()
         self.info = '交易所十大成交股:\n'
@@ -140,7 +81,7 @@ class ExchangeTop10(BaseSpider):
             except:
                 traceback.print_exc()
                 return
-            # print(pprint.pformat(datas))
+
             fields = [
                 'Rank',   # 十大成交排名
                 'Stock Code',   # 证券代码
