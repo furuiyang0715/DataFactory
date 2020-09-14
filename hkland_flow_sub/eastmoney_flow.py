@@ -23,8 +23,21 @@ class EastMoneyFlow(FlowBase):
         self.url = '''http://push2.eastmoney.com/api/qt/kamtbs.rtmin/get?fields1=f1,f2,f3,f4&fields2=f51,f54,f52,f58,f53,f62,f56,f57,f60,f61\
 &ut=b2884a393a59ad64002292a3e90d46a5&cb=jQuery183041256596489447617_{}&_={}
         '''.format(int(time.time() * 1000), int(time.time() * 1000))
-        self.table_name = 'hkland_flow_new'
+        self.table_name = 'hkland_flow_sub'
         self.today = datetime.datetime.today().strftime("%Y-%m-%d")
+        self.update_fields = [
+            'DateTime',
+            'ShHkNetBuyAmount',  # '沪股通/港股通(沪)净买额（万）',
+            'ShHkBuyAmount',  # '沪股通/港股通(沪) 买入额（万）',
+            'ShHkSellAmount',  # '沪股通/港股通(沪) 卖出额（万）',
+            'SzHkNetBuyAmount',  # '深股通/港股通(深)净买额（万）',
+            'SzHkBuyAmount',  # '深股通/港股通(深) 买入额（万）',
+            'SzHkSellAmount',  # '深股通/港股通(深) 卖出额（万）',
+            'TotalNetBuyAmount',  # '北向/南向净买额（万）',
+            'TotalBuyAmount',  # '北向/南向买入额（万）',
+            'TotalSellAmount',  # '北向/南向卖出额（万）',
+            'Category',
+        ]
 
     def get_response_data(self):
         page = req.get(self.url).text
@@ -139,9 +152,9 @@ class EastMoneyFlow(FlowBase):
         '''
         for data_str in s2n:
             data = data_str.split(",")
-            print(data)
             item = dict()
             dt_moment = s2n_date + " " + data[0]
+            item['Category'] = 2
             # 分钟时间点
             item['DateTime'] = datetime.datetime.strptime(dt_moment + ":00", "%Y-%m-%d %H:%M:%S")
             # （1） `ShHkNetBuyAmount` DECIMAL(19,4) COMMENT '沪股通/港股通(沪)净买额（万）',
@@ -176,12 +189,10 @@ class EastMoneyFlow(FlowBase):
         # for r in items:
         #     if not r in already_north_datas:
         #         to_insert.append(r)
-        #
-        # update_fields = ['DateTime', 'ShHkFlow', 'ShHkBalance', 'SzHkFlow', 'SzHkBalance', 'Netinflow', 'Category']
         # print(len(to_insert))
-        #
-        # for item in to_insert:
-        #     self._save(self.spider_client, item, self.table_name, update_fields)
+
+        for item in items:
+            self._save(self.spider_client, item, self.table_name, self.update_fields)
 
     def _create_table(self):
         # sql = '''
@@ -237,10 +248,26 @@ class EastMoneyFlow(FlowBase):
         # '''.format(self.table_name)
 
         sql = '''
-        
-        
-        '''
-
+         CREATE TABLE IF NOT EXISTS `{}` (
+          `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+          `DateTime` datetime NOT NULL COMMENT '交易时间',
+          `ShHkNetBuyAmount` DECIMAL(19,4) COMMENT '沪股通/港股通(沪)净买额（万）',
+          `ShHkBuyAmount` DECIMAL(19,4) COMMENT '沪股通/港股通(沪) 买入额（万）',
+          `ShHkSellAmount` DECIMAL(19,4) COMMENT '沪股通/港股通(沪) 卖出额（万）',
+          `SzHkNetBuyAmount` DECIMAL(19,4) COMMENT '深股通/港股通(深)净买额（万）',
+          `SzHkBuyAmount` DECIMAL(19,4) COMMENT '深股通/港股通(深) 买入额（万）',
+          `SzHkSellAmount` DECIMAL(19,4) COMMENT '深股通/港股通(深) 卖出额（万）',
+          `TotalNetBuyAmount` DECIMAL(19,4) COMMENT '北向/南向净买额（万）',
+          `TotalBuyAmount` DECIMAL(19,4) COMMENT '北向/南向买入额（万）',
+          `TotalSellAmount` DECIMAL(19,4) COMMENT '北向/南向卖出额（万）',
+          `Category` tinyint(4) NOT NULL COMMENT '类别:1 南向, 2 北向',
+          `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
+          `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          PRIMARY KEY (`id`),
+          UNIQUE KEY `unique_key2` (`DateTime`,`Category`),
+          KEY `DateTime` (`DateTime`) USING BTREE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='陆港通-实时资金净买额-东财数据源';
+        '''.format(self.table_name)
         self.spider_client.insert(sql)
         self.spider_client.end()
 
@@ -250,7 +277,6 @@ class EastMoneyFlow(FlowBase):
         #     return
 
         self.spider_init()
-
         if LOCAL:
             self._create_table()
 
