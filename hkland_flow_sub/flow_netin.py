@@ -23,7 +23,7 @@ class EastMoneyFlowNetIn(FlowBase):
         self.url = '''http://push2.eastmoney.com/api/qt/kamtbs.rtmin/get?fields1=f1,f2,f3,f4&fields2=f51,f54,f52,f58,f53,f62,f56,f57,f60,f61\
 &ut=b2884a393a59ad64002292a3e90d46a5&cb=jQuery183041256596489447617_{}&_={}
         '''.format(int(time.time() * 1000), int(time.time() * 1000))
-        self.table_name = 'hkland_flow_sub'
+        self.table_name = 'hkland_flow_netin'
         self.today = datetime.datetime.today().strftime("%Y-%m-%d")
         self.update_fields = [
             'DateTime',
