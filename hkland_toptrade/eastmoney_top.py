@@ -47,8 +47,9 @@ class EastMoneyTop10(BaseSpider):
 
     def _start(self):
         # 检查当前是否是交易日
-        is_trading_day = self._check_if_trading_today(2)
+        is_trading_day = self._check_if_trading_today(2, self.day)
         print("{} 是否交易日 : {} ".format(self.day, is_trading_day))
+
         if not is_trading_day:
             print("{} 非交易日 ".format(self.day))
             return

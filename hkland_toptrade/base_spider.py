@@ -255,12 +255,15 @@ and ListedSector in (1, 2, 6, 7) and SecuCode = "{}";'.format(secu_code)
         self._dc_init()
         if _today is None:
             _today = datetime.datetime.combine(datetime.datetime.now(), datetime.time.min)
+        if isinstance(_today, datetime.datetime):
+            _today = _today.strftime("%Y-%m-%d")
+
         _map = {
             1: (2, 4),   # 南向
             2: (1, 3),   # 北向
         }
         sql = 'select IfTradingDay from hkland_shszhktradingday where TradingType in {} and EndDate = "{}";'.format(
-        _map.get(category), _today.strftime("%Y-%m-%d"))
+        _map.get(category), _today)
         print(sql)
         ret = self.dc_client.select_all(sql)
         ret = [r.get("IfTradingDay") for r in ret]
