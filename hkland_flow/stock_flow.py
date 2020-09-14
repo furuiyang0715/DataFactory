@@ -49,6 +49,7 @@ class FlowExchangeSpider(object):
         self.today = datetime.datetime.today()
         self.dc_client = None
         self.spider_client = None
+        self.web_url = 'https://sc.hkex.com.hk/TuniS/www.hkex.com.hk/Mutual-Market/Stock-Connect?sc_lang=zh-CN'
 
     def _init_pool(self, cfg: dict):
         """

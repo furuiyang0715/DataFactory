@@ -11,10 +11,10 @@ from hkland_flow_sub.configs import LOCAL
 from hkland_flow_sub.flow_base import FlowBase, logger
 
 
-class EastMoneyFlow(FlowBase):
-    """陆股通实时数据(东财数据源) """
+class EastMoneyFlowNetIn(FlowBase):
+    """陆股通资金净流入(东财数据源) """
     def __init__(self):
-        super(EastMoneyFlow, self).__init__()
+        super(EastMoneyFlowNetIn, self).__init__()
         # 资金净流入: http://push2.eastmoney.com/api/qt/kamt.rtmin/get?fields1=f1,f2,f3,f4&fields2=f51,f52,f53,f54,f55,f56&ut=b2884a393a59ad64002292a3e90d46a5&cb=jQuery183041256596489447617_1600069691969&_=1600069692968
         # 资金净买额: http://push2.eastmoney.com/api/qt/kamtbs.rtmin/get?fields1=f1,f2,f3,f4&fields2=f51,f54,f52,f58,f53,f62,f56,f57,f60,f61&ut=b2884a393a59ad64002292a3e90d46a5&cb=jQuery183041256596489447617_1600069691970&_=1600069692969
         # self.url = '''
@@ -294,4 +294,4 @@ class EastMoneyFlow(FlowBase):
 
 
 if __name__ == "__main__":
-    EastMoneyFlow().start()
+    EastMoneyFlowNetIn().start()
