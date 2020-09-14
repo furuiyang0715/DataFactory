@@ -21,23 +21,15 @@ class ExchangeTop10(BaseSpider):
         self.web_url = 'https://www.hkex.com.hk/Mutual-Market/Stock-Connect/Statistics/Historical-Daily?sc_lang=zh-HK#select4=1&select5=0&select3=0&select1=16&select2=5'
         _today = datetime.datetime.combine(datetime.datetime.today(), datetime.time.min)
         self.dt_str = _today.strftime("%Y%m%d")
-        # TODO test
-        # self.dt_str = '20200630'
         self.url = 'https://www.hkex.com.hk/chi/csm/DailyStat/data_tab_daily_{}c.js?_={}'.format(self.dt_str, int(time.time()*1000))
-        #  id | Date | SecuCode | InnerCode | SecuAbbr | Close | ChangePercent | TJME | TMRJE | TCJJE | CategoryCode | CMFID | CMFTime | CREATETIMEJZ | UPDATETIMEJZ
         self.fields = ['Date', 'SecuCode', 'InnerCode', 'SecuAbbr',
-                       # 'Close', 'ChangePercent',
                        'TJME', 'TMRJE', 'TCJJE', 'CategoryCode', ]
-        #  alter table hkland_toptrade modify `Close` decimal(19,3) default  NULL COMMENT '收盘价'
-        #  alter table hkland_toptrade modify `ChangePercent` decimal(19,5) default  NULL COMMENT '涨跌幅'
-
         self.category_map = {
             "SSE Northbound": ("HG", 1),     # 沪股通
             "SSE Southbound": ("GGh", 2),    # 港股通（沪）
             "SZSE Northbound": ("SG", 3),    # 深股通
             "SZSE Southbound": ("GGs", 4),   # 港股通（深）
         }
-
 
     @staticmethod
     def re_money_data(data: str):
@@ -148,10 +140,8 @@ class ExchangeTop10(BaseSpider):
                 self._product_init()
                 count = self._batch_save(self.product_client, items, self.table_name, self.fields)
                 self.info += "{}批量插入{}条\n".format(category, count)
-
             self.ding(self.info)
             self.refresh_update_time()
-
         else:
             print(resp)
             logger.warning("{} 当天非交易日或尚无十大成交数据".format(self.dt_str))
@@ -160,22 +150,19 @@ class ExchangeTop10(BaseSpider):
 
 def task():
     ExchangeTop10().start()
-
     _now = datetime.datetime.now()
     _year, _month, _day = _now.year, _now.month, _now.day
     _start = datetime.datetime(_year, _month, _day, 16, 0, 0)
     _end = datetime.datetime(_year, _month, _day, 19, 0, 0)
-
     if _now < _start or _now > _end:
         logger.warning("当前时间 {}, 不在正常的更新时间下午 4 点到 7 点之间".format(_now))
         return
-
     ExchangeTop10().start()
 
 
 if __name__ == "__main__":
     task()
-    schedule.every(1).minutes.do(task)
+    schedule.every(5).minutes.do(task)
 
     while True:
         schedule.run_pending()
@@ -186,7 +173,6 @@ if __name__ == "__main__":
 docker build -f Dockerfile_exchangetop -t registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_toptrade_exchange:v1 .
 docker push registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_toptrade_exchange:v1
 sudo docker pull registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_toptrade_exchange:v1
-
 
 # remote 
 sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name toptrade_exchange \
