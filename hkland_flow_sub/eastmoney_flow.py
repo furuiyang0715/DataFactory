@@ -83,32 +83,58 @@ class EastMoneyFlow(FlowBase):
         """处理陆港通南向数据"""
         n2s = py_data.get("n2s")
         n2s_date = py_data.get("n2sDate")
-        _cur_year = datetime.datetime.now().year   # FIXME
-        _cur_moment_str = str(_cur_year) + "-" + n2s_date
-        logger.info("获取到的南向数据的时间是 {}".format(_cur_moment_str))
-        if _cur_moment_str != self.today:
+        logger.info("获取到的南向数据的时间是 {}".format(n2s_date))
+        if n2s_date != self.today:
             logger.warning("今天无南向数据 ")
             return
 
-        # items = []
+        items = []
+        '''370: "16:10,
+        330128.90,    # 港股通(沪)净买额
+        699372.74,    # 港股通(沪)买入额
+        194224.89,    # 港股通(深)净买额
+        369243.84,    # 港股通(沪)卖出额
+        524353.79,    # 南向资金净买额
+        551395.58,    # 港股通(深)买入额
+        357170.69,    # 港股通(深)卖出额 
+        1250768.32,   # 南向资金买入额 
+        726414.53,    # 南向资金卖出额
+        "
+        
+        '''
         for data_str in n2s:
             data = data_str.split(",")
             print(data)
 
-        #     item = dict()
-        #     dt_moment = _cur_moment_str + " " + data[0]
-        #     item['DateTime'] = datetime.datetime.strptime(dt_moment, "%Y-%m-%d %H:%M")  # 时间点 补全当天的完整时间
-        #     item['ShHkFlow'] = Decimal(data[1]) if data[1] != '-' else 0  # 港股通（沪）南向资金流
-        #     item['ShHkBalance'] = Decimal(data[2]) if data[2] != "-" else 0  # 港股通(沪) 当日资金余额
-        #     item['SzHkFlow'] = Decimal(data[3]) if data[3] != "-" else 0  # 港股通(深) 南向资金流
-        #     item['SzHkBalance'] = Decimal(data[4]) if data[4] != "-" else 0  # 港股通(深) 当日资金余额
-        #     item['Netinflow'] = Decimal(data[5]) if data[5] != "-" else 0  # 南向资金
-        #     item['Category'] = 1
-        #     items.append(item)
-        #
+            item = dict()
+            dt_moment = n2s_date + " " + data[0]
+            item['DateTime'] = datetime.datetime.strptime(dt_moment, "%Y-%m-%d %H:%M")  # 时间点 补全当天的完整时间
+
+            # （1） `ShHkNetBuyAmount` DECIMAL(19,4) COMMENT '沪股通/港股通(沪)净买额（万）',
+            item['ShHkNetBuyAmount'] = Decimal(data[1]) if data[1] != "-" else 0
+            # （2） `ShHkBuyAmount` DECIMAL(19,4) COMMENT '沪股通/港股通(沪) 买入额（万）',
+            item['ShHkBuyAmount'] = Decimal(data[2]) if data[2] != "-" else 0
+            # （3） `SzHkNetBuyAmount` DECIMAL(19,4) COMMENT '深股通/港股通(深)净买额（万）',
+            item['SzHkNetBuyAmount'] = Decimal(data[3]) if data[3] != '-' else 0
+            # （4） `ShHkSellAmount` DECIMAL(19,4) COMMENT '沪股通/港股通(沪) 卖出额（万）',
+            item['ShHkSellAmount'] = Decimal(data[4]) if data[4] != '-' else 0
+            # （5） `TotalNetBuyAmount` DECIMAL(19,4) COMMENT '北向/南向净买额（万）',
+            item['TotalNetBuyAmount'] = Decimal(data[5]) if data[5] != '-' else 0
+            # （6） `SzHkBuyAmount` DECIMAL(19,4) COMMENT '深股通/港股通(深) 买入额（万）',
+            item['SzHkBuyAmount'] = Decimal(data[6]) if data[6] != '-' else 0
+            # （7） `SzHkSellAmount` DECIMAL(19,4) COMMENT '深股通/港股通(深) 卖出额（万）',
+            item['SzHkSellAmount'] = Decimal(data[7]) if data[7] != '-' else 0
+            # （8） `TotalBuyAmount` DECIMAL(19,4) COMMENT '北向/南向买入额（万）',
+            item['TotalBuyAmount'] = Decimal(data[8]) if data[8] != '-' else 0
+            # （9）`TotalSellAmount` DECIMAL(19,4) COMMENT '北向/南向卖出额（万）',
+            item['TotalSellAmount'] = Decimal(data[9]) if data[9] != '-' else 0
+
+            item['Category'] = 1
+            print(item)
+            items.append(item)
+
         # to_delete = []
         # to_insert = []
-        #
         # already_sourth_datas = self.select_n2s_datas()
         # for r in already_sourth_datas:
         #     d_id = r.pop("id")
@@ -118,14 +144,9 @@ class EastMoneyFlow(FlowBase):
         # for r in items:
         #     if not r in already_sourth_datas:
         #         to_insert.append(r)
-        #
-        # update_fields = ['DateTime', 'ShHkFlow', 'ShHkBalance', 'SzHkFlow', 'SzHkBalance', 'Netinflow', 'Category']
-        # # print(items)
-        # # print(already_sourth_datas)
-        # print(len(to_insert))
-        #
-        # for item in to_insert:
-        #     self._save(self.spider_client, item,  self.table_name, update_fields)
+
+        for item in items:
+            self._save(self.spider_client, item,  self.table_name, self.update_fields)
 
     def process_s2n(self, py_data):
         """处理陆港通北向数据"""
@@ -280,13 +301,13 @@ class EastMoneyFlow(FlowBase):
         if LOCAL:
             self._create_table()
 
-        # 请求并插入数据
         py_data = self.get_response_data()
-        logger.info("开始处理陆港通北向数据")
-        self.process_s2n(py_data)
 
-        # logger.info("开始处理陆港通南向数据")
-        # self.process_n2s(py_data)
+        # logger.info("开始处理陆港通北向数据")
+        # self.process_s2n(py_data)
+
+        logger.info("开始处理陆港通南向数据")
+        self.process_n2s(py_data)
 
     # def start(self):
     #     try:
