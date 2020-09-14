@@ -14,6 +14,7 @@ file_path = os.path.abspath(os.path.join(cur_path, ".."))
 sys.path.insert(0, file_path)
 
 from hkland_flow_sub.flow_base import FlowBase, logger
+from hkland_flow_sub.configs import LOCAL
 
 
 class EastMoneyFlowNetBuy(FlowBase):
@@ -145,26 +146,26 @@ class EastMoneyFlowNetBuy(FlowBase):
         for item in to_insert:
             self._save(self.spider_client, item, self.table_name, self.update_fields)
 
-    def _create_table(self):
-        sql = '''
-         CREATE TABLE IF NOT EXISTS `{}` (
-          `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-          `DateTime` datetime NOT NULL COMMENT '交易时间',
-          `ShHkFlow` decimal(19,4) NOT NULL COMMENT '沪股通/港股通(沪)当日资金流向(万）',
-          `ShHkBalance` decimal(19,4) NOT NULL COMMENT '沪股通/港股通(沪)当日资金余额（万）',
-          `SzHkFlow` decimal(19,4) NOT NULL COMMENT '深股通/港股通(深)当日资金流向(万）',
-          `SzHkBalance` decimal(19,4) NOT NULL COMMENT '深股通/港股通(深)当日资金余额（万）',
-          `Netinflow` decimal(19,4) NOT NULL COMMENT '南北向资金,当日净流入',
-          `Category` tinyint(4) NOT NULL COMMENT '类别:1 南向, 2 北向',
-          `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
-          `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-          PRIMARY KEY (`id`),
-          UNIQUE KEY `unique_key2` (`DateTime`,`Category`),
-          KEY `DateTime` (`DateTime`) USING BTREE
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='陆港通-实时资金流向-东财数据源';
-        '''.format(self.table_name)
-        self.spider_client.insert(sql)
-        self.spider_client.end()
+    # def _create_table(self):
+    #     sql = '''
+    #      CREATE TABLE IF NOT EXISTS `{}` (
+    #       `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+    #       `DateTime` datetime NOT NULL COMMENT '交易时间',
+    #       `ShHkFlow` decimal(19,4) NOT NULL COMMENT '沪股通/港股通(沪)当日资金流向(万）',
+    #       `ShHkBalance` decimal(19,4) NOT NULL COMMENT '沪股通/港股通(沪)当日资金余额（万）',
+    #       `SzHkFlow` decimal(19,4) NOT NULL COMMENT '深股通/港股通(深)当日资金流向(万）',
+    #       `SzHkBalance` decimal(19,4) NOT NULL COMMENT '深股通/港股通(深)当日资金余额（万）',
+    #       `Netinflow` decimal(19,4) NOT NULL COMMENT '南北向资金,当日净流入',
+    #       `Category` tinyint(4) NOT NULL COMMENT '类别:1 南向, 2 北向',
+    #       `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
+    #       `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    #       PRIMARY KEY (`id`),
+    #       UNIQUE KEY `unique_key2` (`DateTime`,`Category`),
+    #       KEY `DateTime` (`DateTime`) USING BTREE
+    #     ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='陆港通-实时资金流向-东财数据源';
+    #     '''.format(self.table_name)
+    #     self.spider_client.insert(sql)
+    #     self.spider_client.end()
 
     def _start(self):
         is_trading = self._check_if_trading_period()
@@ -172,7 +173,8 @@ class EastMoneyFlowNetBuy(FlowBase):
             return
 
         self.spider_init()
-        self._create_table()
+        if LOCAL:
+            self._create_table()
 
         py_data = self.get_response_data()
         logger.info("开始处理陆港通北向数据")
