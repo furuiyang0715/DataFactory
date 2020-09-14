@@ -55,29 +55,29 @@ class EastMoneyFlow(FlowBase):
             return False
         return True
 
-    # def select_n2s_datas(self):
-    #     """获取已有的南向数据"""
-    #     start_dt = datetime.datetime.combine(datetime.datetime.now(), datetime.time.min)
-    #     end_dt = datetime.datetime.combine(datetime.datetime.now(), datetime.time.max)
-    #     sql = '''select * from {} where Category = 1 and DateTime >= '{}' and DateTime <= '{}';'''.format(
-    #         self.table_name, start_dt, end_dt)
-    #     south_datas = self.spider_client.select_all(sql)
-    #     for data in south_datas:
-    #         data.pop("CREATETIMEJZ")
-    #         data.pop("UPDATETIMEJZ")
-    #     return south_datas
-    #
-    # def select_s2n_datas(self):
-    #     """获取已有的北向数据"""
-    #     start_dt = datetime.datetime.combine(datetime.datetime.now(), datetime.time.min)
-    #     end_dt = datetime.datetime.combine(datetime.datetime.now(), datetime.time.max)
-    #     sql = '''select * from {} where Category = 2 and DateTime >= '{}' and DateTime <= '{}';'''.format(
-    #         self.table_name, start_dt, end_dt)
-    #     north_datas = self.spider_client.select_all(sql)
-    #     for data in north_datas:
-    #         data.pop("CREATETIMEJZ")
-    #         data.pop("UPDATETIMEJZ")
-    #     return north_datas
+    def select_n2s_datas(self):
+        """获取已有的南向数据"""
+        start_dt = datetime.datetime.combine(datetime.datetime.now(), datetime.time.min)
+        end_dt = datetime.datetime.combine(datetime.datetime.now(), datetime.time.max)
+        sql = '''select * from {} where Category = 1 and DateTime >= '{}' and DateTime <= '{}';'''.format(
+            self.table_name, start_dt, end_dt)
+        south_datas = self.spider_client.select_all(sql)
+        for data in south_datas:
+            data.pop("CREATETIMEJZ")
+            data.pop("UPDATETIMEJZ")
+        return south_datas
+
+    def select_s2n_datas(self):
+        """获取已有的北向数据"""
+        start_dt = datetime.datetime.combine(datetime.datetime.now(), datetime.time.min)
+        end_dt = datetime.datetime.combine(datetime.datetime.now(), datetime.time.max)
+        sql = '''select * from {} where Category = 2 and DateTime >= '{}' and DateTime <= '{}';'''.format(
+            self.table_name, start_dt, end_dt)
+        north_datas = self.spider_client.select_all(sql)
+        for data in north_datas:
+            data.pop("CREATETIMEJZ")
+            data.pop("UPDATETIMEJZ")
+        return north_datas
 
     def process_n2s(self, py_data):
         """处理陆港通南向数据"""
@@ -104,8 +104,6 @@ class EastMoneyFlow(FlowBase):
         '''
         for data_str in n2s:
             data = data_str.split(",")
-            print(data)
-
             item = dict()
             dt_moment = n2s_date + " " + data[0]
             item['DateTime'] = datetime.datetime.strptime(dt_moment, "%Y-%m-%d %H:%M")  # 时间点 补全当天的完整时间
@@ -128,24 +126,23 @@ class EastMoneyFlow(FlowBase):
             item['TotalBuyAmount'] = Decimal(data[8]) if data[8] != '-' else 0
             # （9）`TotalSellAmount` DECIMAL(19,4) COMMENT '北向/南向卖出额（万）',
             item['TotalSellAmount'] = Decimal(data[9]) if data[9] != '-' else 0
-
             item['Category'] = 1
-            print(item)
             items.append(item)
 
-        # to_delete = []
-        # to_insert = []
-        # already_sourth_datas = self.select_n2s_datas()
-        # for r in already_sourth_datas:
-        #     d_id = r.pop("id")
-        #     if not r in items:
-        #         to_delete.append(d_id)
-        #
-        # for r in items:
-        #     if not r in already_sourth_datas:
-        #         to_insert.append(r)
+        to_delete = []
+        to_insert = []
+        already_sourth_datas = self.select_n2s_datas()
+        for r in already_sourth_datas:
+            d_id = r.pop("id")
+            if not r in items:
+                to_delete.append(d_id)
 
-        for item in items:
+        for r in items:
+            if not r in already_sourth_datas:
+                to_insert.append(r)
+
+        print(len(to_insert))
+        for item in to_insert:
             self._save(self.spider_client, item,  self.table_name, self.update_fields)
 
     def process_s2n(self, py_data):
@@ -198,42 +195,24 @@ class EastMoneyFlow(FlowBase):
             item['TotalSellAmount'] = Decimal(data[9]) if data[9] != '-' else 0
             items.append(item)
 
-        # to_delete = []
-        # to_insert = []
-        #
-        # already_north_datas = self.select_s2n_datas()
-        # for r in already_north_datas:
-        #     d_id = r.pop("id")
-        #     if not r in items:
-        #         to_delete.append(d_id)
-        #
-        # for r in items:
-        #     if not r in already_north_datas:
-        #         to_insert.append(r)
-        # print(len(to_insert))
+        to_delete = []
+        to_insert = []
 
-        for item in items:
+        already_north_datas = self.select_s2n_datas()
+        for r in already_north_datas:
+            d_id = r.pop("id")
+            if not r in items:
+                to_delete.append(d_id)
+
+        for r in items:
+            if not r in already_north_datas:
+                to_insert.append(r)
+
+        print(len(to_insert))
+        for item in to_insert:
             self._save(self.spider_client, item, self.table_name, self.update_fields)
 
     def _create_table(self):
-        # sql = '''
-        #  CREATE TABLE IF NOT EXISTS `{}` (
-        #   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-        #   `DateTime` datetime NOT NULL COMMENT '交易时间',
-        #   `ShHkFlow` decimal(19,4) NOT NULL COMMENT '沪股通/港股通(沪)当日资金流向(万）',
-        #   `ShHkBalance` decimal(19,4) NOT NULL COMMENT '沪股通/港股通(沪)当日资金余额（万）',
-        #   `SzHkFlow` decimal(19,4) NOT NULL COMMENT '深股通/港股通(深)当日资金流向(万）',
-        #   `SzHkBalance` decimal(19,4) NOT NULL COMMENT '深股通/港股通(深)当日资金余额（万）',
-        #   `Netinflow` decimal(19,4) NOT NULL COMMENT '南北向资金,当日净流入',
-        #   `Category` tinyint(4) NOT NULL COMMENT '类别:1 南向, 2 北向',
-        #   `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
-        #   `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        #   PRIMARY KEY (`id`),
-        #   UNIQUE KEY `unique_key2` (`DateTime`,`Category`),
-        #   KEY `DateTime` (`DateTime`) USING BTREE
-        # ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='陆港通-实时资金流向-东财数据源';
-        # '''.format(self.table_name)
-
         # sql = '''
         # CREATE TABLE IF NOT EXISTS `{}` (
         #   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
@@ -243,7 +222,6 @@ class EastMoneyFlow(FlowBase):
         #   `SzHkFlow` decimal(19,4) NOT NULL COMMENT '深股通/港股通(深)当日资金流向(万）',
         #   `SzHkBalance` decimal(19,4) NOT NULL COMMENT '深股通/港股通(深)当日资金余额（万）',
         #   `Netinflow` decimal(19,4) NOT NULL COMMENT '南北向资金,当日净流入（万）',
-
         #   `ShHkNetBuyAmount` DECIMAL(19,4) COMMENT '沪股通/港股通(沪)净买额（万）',
         #   `ShHkBuyAmount` DECIMAL(19,4) COMMENT '沪股通/港股通(沪) 买入额（万）',
         #   `ShHkSellAmount` DECIMAL(19,4) COMMENT '沪股通/港股通(沪) 卖出额（万）',
@@ -253,7 +231,6 @@ class EastMoneyFlow(FlowBase):
         #   `TotalNetBuyAmount` DECIMAL(19,4) COMMENT '北向/南向净买额（万）',
         #   `TotalBuyAmount` DECIMAL(19,4) COMMENT '北向/南向买入额（万）',
         #   `TotalSellAmount` DECIMAL(19,4) COMMENT '北向/南向卖出额（万）',
-
         #   `Category` tinyint(4) NOT NULL COMMENT '类别:1 南向, 2 北向',
         #   `HashID` varchar(50) COLLATE utf8_bin DEFAULT NULL COMMENT '哈希ID',
         #   `CMFID` bigint(20) unsigned DEFAULT NULL COMMENT '源表来源ID',
@@ -292,10 +269,10 @@ class EastMoneyFlow(FlowBase):
         self.spider_client.insert(sql)
         self.spider_client.end()
 
-    def start(self):
-        # is_trading = self._check_if_trading_period()
-        # if not is_trading:
-        #     return
+    def _start(self):
+        is_trading = self._check_if_trading_period()
+        if not is_trading:
+            return
 
         self.spider_init()
         if LOCAL:
@@ -303,17 +280,17 @@ class EastMoneyFlow(FlowBase):
 
         py_data = self.get_response_data()
 
-        # logger.info("开始处理陆港通北向数据")
-        # self.process_s2n(py_data)
+        logger.info("开始处理陆港通北向数据")
+        self.process_s2n(py_data)
 
         logger.info("开始处理陆港通南向数据")
         self.process_n2s(py_data)
 
-    # def start(self):
-    #     try:
-    #         self._start()
-    #     except:
-    #         traceback.print_exc()
+    def start(self):
+        try:
+            self._start()
+        except:
+            traceback.print_exc()
 
 
 if __name__ == "__main__":
