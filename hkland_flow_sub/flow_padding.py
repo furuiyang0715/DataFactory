@@ -135,6 +135,26 @@ class FlowPadding(FlowBase):
             raise
         return dt_list
 
+    def select_already_datas(self, category, dt_list):
+        """
+        获取数据库中的已入库数据
+        category = 1 南向
+        category = 2 北向
+        """
+        self.product_init()
+        sql = '''select * from {} where Category = {} and DateTime >= '{}' and DateTime <= '{}';'''.format(
+            self.final_table_name, category, dt_list[0], dt_list[-1])
+        print(sql)
+        _datas = self.product_client.select_all(sql)
+        for data in _datas:
+            data.pop("CREATETIMEJZ")
+            data.pop("UPDATETIMEJZ")
+            data.pop("id")
+            data.pop("HashID")
+            data.pop("CMFID")
+            data.pop("CMFTime")
+        return _datas
+
     def get_flow_netbuy_datas(self, category):
         """
         category:1 南向数据
@@ -189,8 +209,18 @@ class FlowPadding(FlowBase):
         for data in datas:
             data.update({"DateTime": data.get("DateTime").to_pydatetime()})
 
+        # 插入前程序判断是否已经存在
+        already_datas = self.select_already_datas(2, dt_list)
+        to_insert_lst = []
         for data in datas:
-            self._save(self.spider_client, data, self.final_table_name, self.merge_fields)
+            if not data in already_datas:
+                to_insert_lst.append(data)
+
+        print(len(to_insert_lst))
+
+        self.product_init()
+        for data in to_insert_lst:
+            self._save(self.product_client, data, self.final_table_name, self.merge_fields)
 
 
 if __name__ == '__main__':

@@ -3,8 +3,9 @@ import logging
 import traceback
 
 from hkland_flow_sub.configs import (SPIDER_MYSQL_HOST, SPIDER_MYSQL_PORT, SPIDER_MYSQL_USER,
-                                     SPIDER_MYSQL_PASSWORD, SPIDER_MYSQL_DB,
-                                     )
+                                     SPIDER_MYSQL_PASSWORD, SPIDER_MYSQL_DB, PRODUCT_MYSQL_HOST,
+                                     PRODUCT_MYSQL_PORT, PRODUCT_MYSQL_USER, PRODUCT_MYSQL_PASSWORD,
+                                     PRODUCT_MYSQL_DB)
 from hkland_flow_sub.sql_pool import PyMysqlPoolBase
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -20,8 +21,17 @@ class FlowBase(object):
         "db": SPIDER_MYSQL_DB,
     }
 
+    product_cfg = {
+        "host": PRODUCT_MYSQL_HOST,
+        "port": PRODUCT_MYSQL_PORT,
+        "user": PRODUCT_MYSQL_USER,
+        "password": PRODUCT_MYSQL_PASSWORD,
+        "db": PRODUCT_MYSQL_DB,
+    }
+
     def __init__(self):
         self.spider_client = None
+        self.product_client = None
 
     def contract_sql(self, datas, table: str, update_fields: list):
         if not isinstance(datas, list):
@@ -94,9 +104,15 @@ class FlowBase(object):
         if not self.spider_client:
             self.spider_client = self._init_pool(self.spider_cfg)
 
+    def product_init(self):
+        if not self.product_client:
+            self.product_client = self._init_pool(self.product_cfg)
+
     def __del__(self):
         if self.spider_client:
             self.spider_client.dispose()
+        if self.product_client:
+            self.product_client.dispose()
 
     def _check_if_trading_period(self):
         """判断是否是该天的交易时段"""
