@@ -244,8 +244,9 @@ class FlowPadding(FlowBase):
             north_df = north_df.set_index("DateTime")
             dt_list = self.get_dt_list(category)
             need_north_df = north_df.reindex(index=dt_list)
-            need_north_df.replace({0: None}, inplace=True)
-            need_north_df.fillna(method="ffill", inplace=True)
+            # TODO 数据不超前
+            # need_north_df.replace({0: None}, inplace=True)
+            # need_north_df.fillna(method="ffill", inplace=True)
             need_north_df.reset_index("DateTime", inplace=True)
             need_north_df.sort_values(by="DateTime", ascending=True, inplace=True)
             datas = need_north_df.to_dict(orient='records')
