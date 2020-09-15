@@ -1,3 +1,5 @@
+import pprint
+
 from hkland_flow_sub.flow_base import FlowBase
 
 
@@ -31,6 +33,7 @@ class FlowPadding(FlowBase):
         ]
 
     def _create_table(self):
+        self.spider_init()
         sql = '''
         CREATE TABLE IF NOT EXISTS `{}` (
           `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
@@ -65,22 +68,37 @@ class FlowPadding(FlowBase):
         self.spider_client.insert(sql)
         self.spider_client.end()
 
-    def get_flow_netbuy_datas(self):
-
+    def get_flow_netbuy_datas(self, category):
+        """
+        category:1 南向数据
+                 2 北向数据
+        """
+        self.spider_init()
+        sql = '''select * from {} where Category = {}; '''.format(self.netbuy_table, category)
+        ret = self.spider_client.select_all(sql)
+        # 转换为以时间为key的字典
         netbuy_datas = {}
+        for r in ret:
+            netbuy_datas.update({r.get("DateTime"): r})
         return netbuy_datas
 
-    def get_flow_netin_datas(self):
-
+    def get_flow_netin_datas(self, category):
+        self.spider_init()
+        sql = '''select * from {} where Category = {};'''.format(self.netin_table, category)
+        ret = self.spider_client.select_all(sql)
         netin_datas = {}
+        for r in ret:
+            netin_datas.update({r.get("DateTime"): r})
         return netin_datas
 
     def start(self):
         # 建表
         self._create_table()
 
-        # 合成数据 数据以分钟线为 key
-        part_datas1 = self.get_flow_netbuy_datas()
-        part_datas2 = self.get_flow_netin_datas()
+        # 合成北向数据 合成数据数据以分钟线为 key
+        part_datas1 = self.get_flow_netbuy_datas(category=2)
+        part_datas2 = self.get_flow_netin_datas(category=2)
 
 
+if __name__ == '__main__':
+    FlowPadding().start()
