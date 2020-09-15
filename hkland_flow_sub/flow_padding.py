@@ -1,4 +1,6 @@
+import copy
 import pprint
+import pandas as pd
 
 from hkland_flow_sub.flow_base import FlowBase
 
@@ -74,12 +76,14 @@ class FlowPadding(FlowBase):
                  2 北向数据
         """
         self.spider_init()
-        sql = '''select * from {} where Category = {}; '''.format(self.netbuy_table, category)
+        select_fields = ",".join(self.netbuy_fields)
+        sql = '''select {} from {} where Category = {}; '''.format(select_fields, self.netbuy_table, category)
         ret = self.spider_client.select_all(sql)
-        # 转换为以时间为key的字典
+        # 转换为以时间为 key 的字典
         netbuy_datas = {}
         for r in ret:
             netbuy_datas.update({r.get("DateTime"): r})
+        # print(netbuy_datas)
         return netbuy_datas
 
     def get_flow_netin_datas(self, category):
@@ -98,6 +102,21 @@ class FlowPadding(FlowBase):
         # 合成北向数据 合成数据数据以分钟线为 key
         part_datas1 = self.get_flow_netbuy_datas(category=2)
         part_datas2 = self.get_flow_netin_datas(category=2)
+        merge_datas = {}
+        for _min, v1 in part_datas1.items():
+            if _min in part_datas2:
+                _val = copy.deepcopy(v1)
+                _val.update(part_datas2.get(_min))
+                merge_datas[_min] = _val
+
+        # for k, v in merge_datas.items():
+        #     print(k, v)
+
+        # 转换为 df 结构去重
+        north_df = pd.DataFrame(list(part_datas1.values()))
+        # 以分钟时间为索引
+        north_df = north_df.set_index("DateTime")
+        print(north_df)
 
 
 if __name__ == '__main__':
