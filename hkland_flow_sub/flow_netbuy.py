@@ -27,7 +27,15 @@ class EastMoneyFlowNetBuy(FlowBase):
         # 资金净买额: http://push2.eastmoney.com/api/qt/kamtbs.rtmin/get?fields1=f1,f2,f3,f4&fields2=f51,f54,f52,f58,f53,f62,f56,f57,f60,f61&ut=b2884a393a59ad64002292a3e90d46a5&cb=jQuery183041256596489447617_1600069691970&_=1600069692969
         self.table_name = 'hkland_flow_netbuy'
         self.today = datetime.datetime.today().strftime("%Y-%m-%d")
-        self.update_fields = ['DateTime', 'ShHkFlow', 'ShHkBalance', 'SzHkFlow', 'SzHkBalance', 'Netinflow', 'Category']
+        self.update_fields = [
+            'DateTime',
+            'Category',
+            'ShHkFlow',
+            'ShHkBalance',
+            'SzHkFlow',
+            'SzHkBalance',
+            'Netinflow',
+        ]
 
     def get_response_data(self):
         page = req.get(self.url).text

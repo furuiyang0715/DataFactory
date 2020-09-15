@@ -7,9 +7,28 @@ class FlowPadding(FlowBase):
         self.final_table_name = 'hkland_flow_new'
         self.netin_table = 'hkland_flow_netin'
         self.netin_fields = [
-
+            'DateTime',
+            'Category',
+            'ShHkNetBuyAmount',  # '沪股通/港股通(沪)净买额（万）',
+            'ShHkBuyAmount',  # '沪股通/港股通(沪) 买入额（万）',
+            'ShHkSellAmount',  # '沪股通/港股通(沪) 卖出额（万）',
+            'SzHkNetBuyAmount',  # '深股通/港股通(深)净买额（万）',
+            'SzHkBuyAmount',  # '深股通/港股通(深) 买入额（万）',
+            'SzHkSellAmount',  # '深股通/港股通(深) 卖出额（万）',
+            'TotalNetBuyAmount',  # '北向/南向净买额（万）',
+            'TotalBuyAmount',  # '北向/南向买入额（万）',
+            'TotalSellAmount',  # '北向/南向卖出额（万）',
         ]
         self.netbuy_table = 'hkland_flow_netbuy'
+        self.netbuy_fields = [
+            'DateTime',
+            'Category',
+            'ShHkFlow',
+            'ShHkBalance',
+            'SzHkFlow',
+            'SzHkBalance',
+            'Netinflow',
+        ]
 
     def _create_table(self):
         sql = '''
