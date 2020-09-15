@@ -33,6 +33,7 @@ class EastMoneyFlowNetIn(FlowBase):
         self.today = datetime.datetime.today().strftime("%Y-%m-%d")
         self.update_fields = [
             'DateTime',
+            'Category',
             'ShHkNetBuyAmount',  # '沪股通/港股通(沪)净买额（万）',
             'ShHkBuyAmount',  # '沪股通/港股通(沪) 买入额（万）',
             'ShHkSellAmount',  # '沪股通/港股通(沪) 卖出额（万）',
@@ -42,7 +43,6 @@ class EastMoneyFlowNetIn(FlowBase):
             'TotalNetBuyAmount',  # '北向/南向净买额（万）',
             'TotalBuyAmount',  # '北向/南向买入额（万）',
             'TotalSellAmount',  # '北向/南向卖出额（万）',
-            'Category',
         ]
 
     def get_response_data(self):
