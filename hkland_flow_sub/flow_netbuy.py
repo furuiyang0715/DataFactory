@@ -22,7 +22,7 @@ class EastMoneyFlowNetBuy(FlowBase):
     def __init__(self):
         super(EastMoneyFlowNetBuy, self).__init__()
         self.url = '''http://push2.eastmoney.com/api/qt/kamt.rtmin/get?fields1=f1,f2,f3,f4&fields2=f51,f52,f53,f54,f55,f56\
-&ut=b2884a393a59ad64002292a3e90d46a5&cb=jQuery18306854619522421488_1566280636697&_=1566284477196'''
+&ut=b2884a393a59ad64002292a3e90d46a5&cb=jQuery18306854619522421488_{}&_={}'''.format(int(time.time()*1000), int(time.time()*1000))
         self.table_name = 'hkland_flow_netbuy'
         self.today = datetime.datetime.today().strftime("%Y-%m-%d")
         self.update_fields = [
