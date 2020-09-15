@@ -1,6 +1,8 @@
 import copy
 import datetime
 import pprint
+import time
+
 import pandas as pd
 
 from hkland_flow_sub.flow_base import FlowBase, logger
@@ -28,6 +30,26 @@ class FlowPadding(FlowBase):
         self.netbuy_fields = [
             'DateTime',
             'Category',
+            'ShHkFlow',
+            'ShHkBalance',
+            'SzHkFlow',
+            'SzHkBalance',
+            'Netinflow',
+        ]
+
+        self.merge_fields = [
+            'DateTime',
+            'Category',
+            'ShHkNetBuyAmount',  # '沪股通/港股通(沪)净买额（万）',
+            'ShHkBuyAmount',  # '沪股通/港股通(沪) 买入额（万）',
+            'ShHkSellAmount',  # '沪股通/港股通(沪) 卖出额（万）',
+            'SzHkNetBuyAmount',  # '深股通/港股通(深)净买额（万）',
+            'SzHkBuyAmount',  # '深股通/港股通(深) 买入额（万）',
+            'SzHkSellAmount',  # '深股通/港股通(深) 卖出额（万）',
+            'TotalNetBuyAmount',  # '北向/南向净买额（万）',
+            'TotalBuyAmount',  # '北向/南向买入额（万）',
+            'TotalSellAmount',  # '北向/南向卖出额（万）',
+
             'ShHkFlow',
             'ShHkBalance',
             'SzHkFlow',
@@ -153,9 +175,6 @@ class FlowPadding(FlowBase):
                 _val.update(part_datas2.get(_min))
                 merge_datas[_min] = _val
 
-        # for k, v in merge_datas.items():
-        #     print(k, v)
-
         north_df = pd.DataFrame(list(part_datas1.values()))
         # 以分钟时间为索引
         north_df = north_df.set_index("DateTime")
@@ -166,9 +185,18 @@ class FlowPadding(FlowBase):
         need_north_df.reset_index("DateTime", inplace=True)
         need_north_df.sort_values(by="DateTime", ascending=True, inplace=True)
         datas = need_north_df.to_dict(orient='records')
+        # 转换分钟线的时间类型
         for data in datas:
-            print(data)
+            data.update({"DateTime": data.get("DateTime").to_pydatetime()})
+
+        for data in datas:
+            self._save(self.spider_client, data, self.final_table_name, self.merge_fields)
 
 
 if __name__ == '__main__':
     FlowPadding().start()
+
+    while True:
+        FlowPadding().start()
+        time.sleep(3)
+
