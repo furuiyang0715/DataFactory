@@ -224,7 +224,7 @@ class EastMoneyFlowNetIn(FlowBase):
           PRIMARY KEY (`id`),
           UNIQUE KEY `unique_key2` (`DateTime`,`Category`),
           KEY `DateTime` (`DateTime`) USING BTREE
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='陆港通-实时资金净买额-东财数据源';
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='陆港通实时资金净买额-东财数据源';
         '''.format(self.table_name)
         self.spider_client.insert(sql)
         self.spider_client.end()
@@ -235,8 +235,7 @@ class EastMoneyFlowNetIn(FlowBase):
             return
 
         self.spider_init()
-        if LOCAL:
-            self._create_table()
+        self._create_table()
 
         py_data = self.get_response_data()
 
