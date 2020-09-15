@@ -36,7 +36,7 @@ class EastMoneyFlowNetBuy(FlowBase):
         ]
 
     def get_response_data(self):
-        page = req.get(self.url).text
+        page = req.get(self.url, headers=self.headers).text
         data = re.findall(r"jQuery\d{20}_\d{13}\((.*)\)", page)[0]
         py_data = json.loads(data).get('data')
         return py_data

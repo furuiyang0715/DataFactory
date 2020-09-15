@@ -1,7 +1,13 @@
 import copy
 import datetime
+import os
+import sys
 import time
 import pandas as pd
+
+cur_path = os.path.split(os.path.realpath(__file__))[0]
+file_path = os.path.abspath(os.path.join(cur_path, ".."))
+sys.path.insert(0, file_path)
 
 from hkland_flow_sub.flow_base import FlowBase, logger
 

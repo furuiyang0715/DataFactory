@@ -32,6 +32,9 @@ class FlowBase(object):
     def __init__(self):
         self.spider_client = None
         self.product_client = None
+        self.headers = {
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.125 Safari/537.36',
+        }
 
     def contract_sql(self, datas, table: str, update_fields: list):
         if not isinstance(datas, list):
