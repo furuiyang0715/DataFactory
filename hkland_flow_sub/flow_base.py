@@ -55,8 +55,6 @@ class FlowBase(object):
             params.append(vs)
 
         if update_fields:
-            # https://stackoverflow.com/questions/12825232/python-execute-many-with-on-duplicate-key-update/12825529#12825529
-            # sql = 'insert into A (id, last_date, count) values(%s, %s, %s) on duplicate key update last_date=values(last_date),count=count+values(count)'
             on_update_sql = ''' ON DUPLICATE KEY UPDATE '''
             for update_field in update_fields:
                 on_update_sql += '{}=values({}),'.format(update_field, update_field)
