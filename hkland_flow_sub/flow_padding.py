@@ -279,3 +279,11 @@ if __name__ == '__main__':
         schedule_start()
         time.sleep(3)
 
+
+'''
+docker build -f Dockerfile -t registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_flow_sub:v1 .
+docker push registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_flow_sub:v1 
+sudo docker pull registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_flow_sub:v1 
+sudo docker run --log-opt max-size=10m --log-opt max-file=3 \
+-itd --name flow_sub --env LOCAL=0 registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_flow_sub:v1
+'''
