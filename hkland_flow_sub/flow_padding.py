@@ -41,3 +41,22 @@ class FlowPadding(FlowBase):
         self.spider_client.insert(sql)
         self.spider_client.end()
 
+    def get_flow_netbuy_datas(self):
+
+        netbuy_datas = {}
+        return netbuy_datas
+
+    def get_flow_netin_datas(self):
+
+        netin_datas = {}
+        return netin_datas
+
+    def start(self):
+        # 建表
+        self._create_table()
+
+        # 合成数据 数据以分钟线为 key
+        part_datas1 = self.get_flow_netbuy_datas()
+        part_datas2 = self.get_flow_netin_datas()
+
+
