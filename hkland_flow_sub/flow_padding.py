@@ -1,8 +1,9 @@
 import copy
+import datetime
 import pprint
 import pandas as pd
 
-from hkland_flow_sub.flow_base import FlowBase
+from hkland_flow_sub.flow_base import FlowBase, logger
 
 
 class FlowPadding(FlowBase):
@@ -33,6 +34,12 @@ class FlowPadding(FlowBase):
             'SzHkBalance',
             'Netinflow',
         ]
+
+        self.today = datetime.datetime.today()
+        self.year = self.today.year
+        self.month = self.today.month
+        self.day = self.today.day
+        self.offset = 0
 
     def _create_table(self):
         self.spider_init()
@@ -70,6 +77,42 @@ class FlowPadding(FlowBase):
         self.spider_client.insert(sql)
         self.spider_client.end()
 
+    def gen_all_minutes(self, start: datetime.datetime, end: datetime.datetime):
+        """
+        生成 start 和 end 之间全部分钟时间点列表 包含前后时间点
+        """
+        idx = pd.date_range(start=start, end=end, freq="min")
+        dt_list = [dt.to_pydatetime() for dt in idx]
+        return dt_list
+
+    def get_north_dt_list(self):
+        """9:30-11:30; 13:00-15:00  (11:30-9:30)*60+1 + (15-13)*60+1 = 242"""
+        morning_start = datetime.datetime(self.year, self.month, self.day, 9, 30, 0)
+        morning_end = datetime.datetime(self.year, self.month, self.day, 11, 30, 0)
+        afternoon_start = datetime.datetime(self.year, self.month, self.day, 13, 1, 0)
+        afternoon_end = datetime.datetime(self.year, self.month, self.day, 15, 0, 0)
+        this_moment = datetime.datetime.now()
+        this_moment_min = datetime.datetime(this_moment.year, this_moment.month, this_moment.day,
+                                            this_moment.hour, this_moment.minute, 0) + datetime.timedelta(
+            minutes=self.offset)
+
+        if this_moment_min < morning_start:
+            logger.info("北向未开盘")
+            return
+        elif this_moment_min <= morning_end:
+            dt_list = self.gen_all_minutes(morning_start, this_moment_min)
+        elif this_moment_min < afternoon_start:
+            dt_list = self.gen_all_minutes(morning_start, morning_end)
+        elif this_moment_min <= afternoon_end:
+            dt_list = self.gen_all_minutes(morning_start, morning_end)
+            dt_list.extend(self.gen_all_minutes(afternoon_start, this_moment_min))
+        elif this_moment_min > afternoon_end:
+            dt_list = self.gen_all_minutes(morning_start, morning_end)
+            dt_list.extend(self.gen_all_minutes(afternoon_start, afternoon_end))
+        else:
+            raise
+        return dt_list
+
     def get_flow_netbuy_datas(self, category):
         """
         category:1 南向数据
@@ -88,7 +131,8 @@ class FlowPadding(FlowBase):
 
     def get_flow_netin_datas(self, category):
         self.spider_init()
-        sql = '''select * from {} where Category = {};'''.format(self.netin_table, category)
+        select_fields = ','.join(self.netin_fields)
+        sql = '''select {} from {} where Category = {};'''.format(select_fields, self.netin_table, category)
         ret = self.spider_client.select_all(sql)
         netin_datas = {}
         for r in ret:
@@ -112,11 +156,18 @@ class FlowPadding(FlowBase):
         # for k, v in merge_datas.items():
         #     print(k, v)
 
-        # 转换为 df 结构去重
         north_df = pd.DataFrame(list(part_datas1.values()))
         # 以分钟时间为索引
         north_df = north_df.set_index("DateTime")
-        print(north_df)
+        dt_list = self.get_north_dt_list()
+        need_north_df = north_df.reindex(index=dt_list)
+        need_north_df.replace({0: None}, inplace=True)
+        need_north_df.fillna(method="ffill", inplace=True)
+        need_north_df.reset_index("DateTime", inplace=True)
+        need_north_df.sort_values(by="DateTime", ascending=True, inplace=True)
+        datas = need_north_df.to_dict(orient='records')
+        for data in datas:
+            print(data)
 
 
 if __name__ == '__main__':
