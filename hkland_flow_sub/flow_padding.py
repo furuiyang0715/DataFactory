@@ -10,6 +10,7 @@ cur_path = os.path.split(os.path.realpath(__file__))[0]
 file_path = os.path.abspath(os.path.join(cur_path, ".."))
 sys.path.insert(0, file_path)
 
+from hkland_flow_sub.configs import LOCAL
 from hkland_flow_sub.flow_base import FlowBase, logger
 from hkland_flow_sub.flow_netbuy import EastMoneyFlowNetBuy
 from hkland_flow_sub.flow_netin import EastMoneyFlowNetIn
@@ -224,9 +225,10 @@ class FlowPadding(FlowBase):
             netin_datas.update({r.get("DateTime"): r})
         return netin_datas
 
-    def start(self):
+    def _start(self):
         # 建表
-        self._create_table()
+        if LOCAL:
+            self._create_table()
 
         for category in (1, 2):
             # 合成北向数据 合成数据数据以分钟线为 key

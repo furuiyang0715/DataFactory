@@ -4,7 +4,6 @@ import os
 import re
 import sys
 import time
-import traceback
 
 from decimal import Decimal
 import requests as req
@@ -13,7 +12,6 @@ cur_path = os.path.split(os.path.realpath(__file__))[0]
 file_path = os.path.abspath(os.path.join(cur_path, ".."))
 sys.path.insert(0, file_path)
 
-from hkland_flow_sub.configs import LOCAL
 from hkland_flow_sub.flow_base import FlowBase, logger
 
 
@@ -244,12 +242,6 @@ class EastMoneyFlowNetIn(FlowBase):
 
         logger.info("开始处理陆港通南向数据")
         self.process_n2s(py_data)
-
-    def start(self):
-        try:
-            self._start()
-        except:
-            traceback.print_exc()
 
 
 if __name__ == "__main__":
