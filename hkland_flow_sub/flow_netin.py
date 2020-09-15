@@ -235,9 +235,9 @@ class EastMoneyFlowNetIn(FlowBase):
         self.spider_client.end()
 
     def _start(self):
-        # is_trading = self._check_if_trading_period()
-        # if not is_trading:
-        #     return
+        is_trading = self._check_if_trading_period()
+        if not is_trading:
+            return
 
         self.spider_init()
         if LOCAL:

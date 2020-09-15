@@ -21,10 +21,8 @@ class EastMoneyFlowNetBuy(FlowBase):
     """陆股通资金净买额(东财数据源) """
     def __init__(self):
         super(EastMoneyFlowNetBuy, self).__init__()
-        self.url = '''
-        http://push2.eastmoney.com/api/qt/kamt.rtmin/get?fields1=f1,f2,f3,f4&fields2=f51,f52,f53,f54,f55,f56&ut=b2884a393a59ad64002292a3e90d46a5&cb=jQuery18306854619522421488_1566280636697&_=1566284477196'''
-        # 资金净流入: http://push2.eastmoney.com/api/qt/kamt.rtmin/get?fields1=f1,f2,f3,f4&fields2=f51,f52,f53,f54,f55,f56&ut=b2884a393a59ad64002292a3e90d46a5&cb=jQuery183041256596489447617_1600069691969&_=1600069692968
-        # 资金净买额: http://push2.eastmoney.com/api/qt/kamtbs.rtmin/get?fields1=f1,f2,f3,f4&fields2=f51,f54,f52,f58,f53,f62,f56,f57,f60,f61&ut=b2884a393a59ad64002292a3e90d46a5&cb=jQuery183041256596489447617_1600069691970&_=1600069692969
+        self.url = '''http://push2.eastmoney.com/api/qt/kamt.rtmin/get?fields1=f1,f2,f3,f4&fields2=f51,f52,f53,f54,f55,f56\
+&ut=b2884a393a59ad64002292a3e90d46a5&cb=jQuery18306854619522421488_1566280636697&_=1566284477196'''
         self.table_name = 'hkland_flow_netbuy'
         self.today = datetime.datetime.today().strftime("%Y-%m-%d")
         self.update_fields = [
@@ -170,15 +168,15 @@ class EastMoneyFlowNetBuy(FlowBase):
           PRIMARY KEY (`id`),
           UNIQUE KEY `unique_key2` (`DateTime`,`Category`),
           KEY `DateTime` (`DateTime`) USING BTREE
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='陆港通-实时资金流向-东财数据源';
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='陆股通资金净流入-东财数据源';
         '''.format(self.table_name)
         self.spider_client.insert(sql)
         self.spider_client.end()
 
     def _start(self):
-        # is_trading = self._check_if_trading_period()
-        # if not is_trading:
-        #     return
+        is_trading = self._check_if_trading_period()
+        if not is_trading:
+            return
 
         self.spider_init()
         if LOCAL:

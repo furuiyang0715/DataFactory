@@ -10,6 +10,7 @@
     - SzHkFlow    # 深股通/港股通(深) 当日净流入
     - SzHkBalance # 深股通/港股通(深) 当日余额
     - Netinflow   # 北/南向资金当日净流入
+- 所在中间表: hkland_flow_netbuy
 
 资金净买额模块 
 - json api: http://push2.eastmoney.com/api/qt/kamtbs.rtmin/get?fields1=f1,f2,f3,f4&fields2=f51,f54,f52,f58,f53,f62,f56,f57,f60,f61&ut=b2884a393a59ad64002292a3e90d46a5&cb=jQuery183041256596489447617_1600069691970&_=1600069692969
@@ -23,4 +24,4 @@
     - TotalNetBuyAmount   # '北向/南向净买额（万）
     - TotalBuyAmount      # '北向/南向买入额（万）
     - TotalSellAmount     # '北向/南向卖出额（万）
-
+- 所在中间表: hkland_flow_netin
