@@ -1,8 +1,6 @@
 import copy
 import datetime
-import pprint
 import time
-
 import pandas as pd
 
 from hkland_flow_sub.flow_base import FlowBase, logger
@@ -107,33 +105,69 @@ class FlowPadding(FlowBase):
         dt_list = [dt.to_pydatetime() for dt in idx]
         return dt_list
 
-    def get_north_dt_list(self):
-        """9:30-11:30; 13:00-15:00  (11:30-9:30)*60+1 + (15-13)*60+1 = 242"""
-        morning_start = datetime.datetime(self.year, self.month, self.day, 9, 30, 0)
-        morning_end = datetime.datetime(self.year, self.month, self.day, 11, 30, 0)
-        afternoon_start = datetime.datetime(self.year, self.month, self.day, 13, 1, 0)
-        afternoon_end = datetime.datetime(self.year, self.month, self.day, 15, 0, 0)
-        this_moment = datetime.datetime.now()
-        this_moment_min = datetime.datetime(this_moment.year, this_moment.month, this_moment.day,
-                                            this_moment.hour, this_moment.minute, 0) + datetime.timedelta(
-            minutes=self.offset)
+    def get_dt_list(self, category):
+        if category == 2:    # 北向
+            """9:30-11:30; 13:00-15:00  (11:30-9:30)*60+1 + (15-13)*60+1 = 242"""
+            morning_start = datetime.datetime(self.year, self.month, self.day, 9, 30, 0)
+            morning_end = datetime.datetime(self.year, self.month, self.day, 11, 30, 0)
+            afternoon_start = datetime.datetime(self.year, self.month, self.day, 13, 1, 0)
+            afternoon_end = datetime.datetime(self.year, self.month, self.day, 15, 0, 0)
+            this_moment = datetime.datetime.now()
+            this_moment_min = datetime.datetime(this_moment.year, this_moment.month, this_moment.day,
+                                                this_moment.hour, this_moment.minute, 0) + datetime.timedelta(
+                minutes=self.offset)
 
-        if this_moment_min < morning_start:
-            logger.info("北向未开盘")
-            return
-        elif this_moment_min <= morning_end:
-            dt_list = self.gen_all_minutes(morning_start, this_moment_min)
-        elif this_moment_min < afternoon_start:
-            dt_list = self.gen_all_minutes(morning_start, morning_end)
-        elif this_moment_min <= afternoon_end:
-            dt_list = self.gen_all_minutes(morning_start, morning_end)
-            dt_list.extend(self.gen_all_minutes(afternoon_start, this_moment_min))
-        elif this_moment_min > afternoon_end:
-            dt_list = self.gen_all_minutes(morning_start, morning_end)
-            dt_list.extend(self.gen_all_minutes(afternoon_start, afternoon_end))
-        else:
-            raise
-        return dt_list
+            if this_moment_min < morning_start:
+                logger.info("北向未开盘")
+                return
+            elif this_moment_min <= morning_end:
+                dt_list = self.gen_all_minutes(morning_start, this_moment_min)
+            elif this_moment_min < afternoon_start:
+                dt_list = self.gen_all_minutes(morning_start, morning_end)
+            elif this_moment_min <= afternoon_end:
+                dt_list = self.gen_all_minutes(morning_start, morning_end)
+                dt_list.extend(self.gen_all_minutes(afternoon_start, this_moment_min))
+            elif this_moment_min > afternoon_end:
+                dt_list = self.gen_all_minutes(morning_start, morning_end)
+                dt_list.extend(self.gen_all_minutes(afternoon_start, afternoon_end))
+            else:
+                raise
+            return dt_list
+
+        elif category == 1:   # 南向
+            """9:00-12:00; 13:00-16:10     (12-9)*60 + (16-13) *60 + 10 + 2 = 372"""
+            morning_start = datetime.datetime(self.year, self.month, self.day, 9, 0, 0)
+            morning_end = datetime.datetime(self.year, self.month, self.day, 12, 0, 0)
+            """
+            软件上，早晨第一根 K 线是 09:30--09:31,
+            中午最后一根 K 线是 11:29--11:30/13:00,   
+            下午第一根 K 线是 13:00--13:01,
+            下午最后一根 K 线是 14:59--15:00
+
+            北向同理 
+            """
+            afternoon_start = datetime.datetime(self.year, self.month, self.day, 13, 1, 0)
+            afternoon_end = datetime.datetime(self.year, self.month, self.day, 16, 10, 0)
+            this_moment = datetime.datetime.now()
+            this_moment_min = datetime.datetime(this_moment.year, this_moment.month, this_moment.day,
+                                                this_moment.hour, this_moment.minute, 0) + datetime.timedelta(
+                minutes=self.offset)
+            if this_moment_min < morning_start:
+                logger.info("南向未开盘")
+                return
+            elif this_moment_min <= morning_end:
+                dt_list = self.gen_all_minutes(morning_start, this_moment_min)
+            elif this_moment_min < afternoon_start:
+                dt_list = self.gen_all_minutes(morning_start, morning_end)
+            elif this_moment_min <= afternoon_end:
+                dt_list = self.gen_all_minutes(morning_start, morning_end)
+                dt_list.extend(self.gen_all_minutes(afternoon_start, this_moment_min))
+            elif this_moment_min > afternoon_end:
+                dt_list = self.gen_all_minutes(morning_start, morning_end)
+                dt_list.extend(self.gen_all_minutes(afternoon_start, afternoon_end))
+            else:
+                raise
+            return dt_list
 
     def select_already_datas(self, category, dt_list):
         """
@@ -185,42 +219,42 @@ class FlowPadding(FlowBase):
         # 建表
         self._create_table()
 
-        # 合成北向数据 合成数据数据以分钟线为 key
-        part_datas1 = self.get_flow_netbuy_datas(category=2)
-        part_datas2 = self.get_flow_netin_datas(category=2)
-        merge_datas = {}
-        for _min, v1 in part_datas1.items():
-            if _min in part_datas2:
-                _val = copy.deepcopy(v1)
-                _val.update(part_datas2.get(_min))
-                merge_datas[_min] = _val
+        for category in (1, 2):
+            # 合成北向数据 合成数据数据以分钟线为 key
+            part_datas1 = self.get_flow_netbuy_datas(category)
+            part_datas2 = self.get_flow_netin_datas(category)
+            merge_datas = {}
+            for _min, v1 in part_datas1.items():
+                if _min in part_datas2:
+                    _val = copy.deepcopy(v1)
+                    _val.update(part_datas2.get(_min))
+                    merge_datas[_min] = _val
 
-        north_df = pd.DataFrame(list(part_datas1.values()))
-        # 以分钟时间为索引
-        north_df = north_df.set_index("DateTime")
-        dt_list = self.get_north_dt_list()
-        need_north_df = north_df.reindex(index=dt_list)
-        need_north_df.replace({0: None}, inplace=True)
-        need_north_df.fillna(method="ffill", inplace=True)
-        need_north_df.reset_index("DateTime", inplace=True)
-        need_north_df.sort_values(by="DateTime", ascending=True, inplace=True)
-        datas = need_north_df.to_dict(orient='records')
-        # 转换分钟线的时间类型
-        for data in datas:
-            data.update({"DateTime": data.get("DateTime").to_pydatetime()})
+            north_df = pd.DataFrame(list(merge_datas.values()))
+            # 以分钟时间为索引
+            north_df = north_df.set_index("DateTime")
+            dt_list = self.get_dt_list(category)
+            need_north_df = north_df.reindex(index=dt_list)
+            need_north_df.replace({0: None}, inplace=True)
+            need_north_df.fillna(method="ffill", inplace=True)
+            need_north_df.reset_index("DateTime", inplace=True)
+            need_north_df.sort_values(by="DateTime", ascending=True, inplace=True)
+            datas = need_north_df.to_dict(orient='records')
+            # 转换分钟线的时间类型
+            for data in datas:
+                data.update({"DateTime": data.get("DateTime").to_pydatetime()})
 
-        # 插入前程序判断是否已经存在
-        already_datas = self.select_already_datas(2, dt_list)
-        to_insert_lst = []
-        for data in datas:
-            if not data in already_datas:
-                to_insert_lst.append(data)
+            # 插入前程序判断是否已经存在
+            already_datas = self.select_already_datas(category, dt_list)
+            to_insert_lst = []
+            for data in datas:
+                if not data in already_datas:
+                    to_insert_lst.append(data)
 
-        print(len(to_insert_lst))
-
-        self.product_init()
-        for data in to_insert_lst:
-            self._save(self.product_client, data, self.final_table_name, self.merge_fields)
+            print(category, len(to_insert_lst))
+            self.product_init()
+            for data in to_insert_lst:
+                self._save(self.product_client, data, self.final_table_name, self.merge_fields)
 
 
 if __name__ == '__main__':
