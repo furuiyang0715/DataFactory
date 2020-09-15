@@ -2,6 +2,7 @@ import copy
 import datetime
 import os
 import sys
+import threading
 import time
 import pandas as pd
 
@@ -10,6 +11,8 @@ file_path = os.path.abspath(os.path.join(cur_path, ".."))
 sys.path.insert(0, file_path)
 
 from hkland_flow_sub.flow_base import FlowBase, logger
+from hkland_flow_sub.flow_netbuy import EastMoneyFlowNetBuy
+from hkland_flow_sub.flow_netin import EastMoneyFlowNetIn
 
 
 class FlowPadding(FlowBase):
@@ -263,10 +266,16 @@ class FlowPadding(FlowBase):
                 self._save(self.product_client, data, self.final_table_name, self.merge_fields)
 
 
+def schedule_start():
+    threading.Thread(target=FlowPadding().start).start()
+    threading.Thread(target=EastMoneyFlowNetBuy().start).start()
+    threading.Thread(target=EastMoneyFlowNetIn().start).start()
+
+
 if __name__ == '__main__':
-    FlowPadding().start()
+    schedule_start()
 
     while True:
-        FlowPadding().start()
+        schedule_start()
         time.sleep(3)
 
