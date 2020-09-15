@@ -260,8 +260,8 @@ class FlowPadding(FlowBase):
             for data in datas:
                 if not data in already_datas:
                     to_insert_lst.append(data)
-
-            print(category, len(to_insert_lst))
+            category_info = "北向" if category == 2 else "南向"
+            print(category_info, len(to_insert_lst))
             self.product_init()
             for data in to_insert_lst:
                 self._save(self.product_client, data, self.final_table_name, self.merge_fields)
