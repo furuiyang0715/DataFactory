@@ -19,7 +19,9 @@ from hkland_flow_sub.flow_netin import EastMoneyFlowNetIn
 class FlowPadding(FlowBase):
     def __init__(self):
         super(FlowPadding, self).__init__()
-        self.final_table_name = 'hkland_flow_new'
+        # self.final_table_name = 'hkland_flow_new'
+        self.final_table_name = 'hkland_flow_v2'
+
         self.netin_table = 'hkland_flow_netin'
         self.netin_fields = [
             'DateTime',
