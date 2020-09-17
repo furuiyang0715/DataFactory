@@ -1,5 +1,6 @@
 import copy
 import datetime
+import multiprocessing
 import os
 import sys
 import threading
@@ -272,9 +273,15 @@ class FlowPadding(FlowBase):
 
 
 def schedule_start():
-    threading.Thread(target=FlowPadding().start).start()
-    threading.Thread(target=EastMoneyFlowNetBuy().start).start()
-    threading.Thread(target=EastMoneyFlowNetIn().start).start()
+    # threading.Thread(target=FlowPadding().start).start()
+    # threading.Thread(target=EastMoneyFlowNetBuy().start).start()
+    # threading.Thread(target=EastMoneyFlowNetIn().start).start()
+
+    multiprocessing.Process(target=FlowPadding().start).start()
+    multiprocessing.Process(target=EastMoneyFlowNetBuy().start).start()
+    multiprocessing.Process(target=EastMoneyFlowNetIn().start).start()
+
+    pass
 
 
 if __name__ == '__main__':
