@@ -229,11 +229,22 @@ class FlowPadding(FlowBase):
         return netin_datas
 
     def _start(self):
+        is_trading = self._check_if_trading_period()
+        if not is_trading:
+            logger.info("非交易时段")
+            return
+
         # 建表
         if LOCAL:
             self._create_table()
 
         for category in (1, 2):
+            category_info = "北向" if category == 2 else "南向"
+            # 判断是否交易日
+            is_trading_day = self._check_if_trading_today(category)
+            if not is_trading_day:
+                logger.info("今日 {} 非交易日 ".format(category_info))
+
             # 合成北向数据 合成数据数据以分钟线为 key
             part_datas1 = self.get_flow_netbuy_datas(category)
             part_datas2 = self.get_flow_netin_datas(category)
@@ -248,6 +259,11 @@ class FlowPadding(FlowBase):
             # 以分钟时间为索引
             north_df = north_df.set_index("DateTime")
             dt_list = self.get_dt_list(category)
+
+            if dt_list is None:
+                logger.info("未开盘")
+                return
+
             need_north_df = north_df.reindex(index=dt_list)
             # TODO 数据不超前
             # need_north_df.replace({0: None}, inplace=True)
@@ -265,7 +281,6 @@ class FlowPadding(FlowBase):
             for data in datas:
                 if not data in already_datas:
                     to_insert_lst.append(data)
-            category_info = "北向" if category == 2 else "南向"
             print(category_info, len(to_insert_lst))
             self.product_init()
             for data in to_insert_lst:
@@ -289,7 +304,7 @@ if __name__ == '__main__':
 
     while True:
         schedule_start()
-        time.sleep(3)
+        time.sleep(5)
 
 
 '''
