@@ -13,7 +13,8 @@ import requests
 from hkland_flow_sub.configs import (SPIDER_MYSQL_HOST, SPIDER_MYSQL_PORT, SPIDER_MYSQL_USER,
                                      SPIDER_MYSQL_PASSWORD, SPIDER_MYSQL_DB, PRODUCT_MYSQL_HOST,
                                      PRODUCT_MYSQL_PORT, PRODUCT_MYSQL_USER, PRODUCT_MYSQL_PASSWORD,
-                                     PRODUCT_MYSQL_DB, SECRET, TOKEN)
+                                     PRODUCT_MYSQL_DB, SECRET, TOKEN, DC_HOST, DC_PORT, DC_USER,
+                                     DC_PASSWD, DC_DB)
 from hkland_flow_sub.sql_pool import PyMysqlPoolBase
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -37,9 +38,19 @@ class FlowBase(object):
         "db": PRODUCT_MYSQL_DB,
     }
 
+    # 数据中心库
+    dc_cfg = {
+        "host": DC_HOST,
+        "port": DC_PORT,
+        "user": DC_USER,
+        "password": DC_PASSWD,
+        "db": DC_DB,
+    }
+
     def __init__(self):
         self.spider_client = None
         self.product_client = None
+        self.dc_client = None
         self.headers = {
             'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.125 Safari/537.36',
         }
@@ -117,11 +128,17 @@ class FlowBase(object):
         if not self.product_client:
             self.product_client = self._init_pool(self.product_cfg)
 
+    def _dc_init(self):
+        if not self.dc_client:
+            self.dc_client = self._init_pool(self.dc_cfg)
+
     def __del__(self):
         if self.spider_client:
             self.spider_client.dispose()
         if self.product_client:
             self.product_client.dispose()
+        if self.dc_client:
+            self.dc_client.dispose()
 
     def _check_if_trading_period(self):
         """判断是否是该天的交易时段"""
@@ -131,6 +148,36 @@ class FlowBase(object):
             logger.warning("非当天交易时段")
             return False
         return True
+
+    def _check_if_trading_today(self, category, _today=None):
+        '''
+        self.category_map = {
+            'hgtb': ('沪股通', 1),
+            'ggtb': ('港股通(沪)', 2),
+            'sgtb': ('深股通', 3),
+            'ggtbs': ('港股通(深)', 4),
+        }
+        一般来说 1 3 与 2 4 是一致的
+        '''
+        self._dc_init()
+        if _today is None:
+            _today = datetime.datetime.combine(datetime.datetime.now(), datetime.time.min)
+        if isinstance(_today, datetime.datetime):
+            _today = _today.strftime("%Y-%m-%d")
+
+        _map = {
+            1: (2, 4),   # 南向
+            2: (1, 3),   # 北向
+        }
+        sql = 'select IfTradingDay from hkland_shszhktradingday where TradingType in {} and EndDate = "{}";'.format(
+        _map.get(category), _today)
+        print(sql)
+        ret = self.dc_client.select_all(sql)
+        ret = [r.get("IfTradingDay") for r in ret]
+        if ret == [2, 2]:
+            return False
+        else:
+            return True
 
     def ding(self, msg):
         def get_url():

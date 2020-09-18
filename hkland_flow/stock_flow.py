@@ -403,6 +403,7 @@ class FlowExchangeSpider(object):
             return True
 
     def _start(self):
+        # TODO 使用时再连接 避免空连
         self.dc_init()
         self.spider_init()
 
