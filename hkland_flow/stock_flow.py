@@ -2,19 +2,22 @@
 import datetime
 import json
 import logging
+import multiprocessing
+import os
 import re
-import sys
-import threading
 import time
 import traceback
 import requests
 import sys
 
-sys.path.append("./../")
+cur_path = os.path.split(os.path.realpath(__file__))[0]
+file_path = os.path.abspath(os.path.join(cur_path, ".."))
+sys.path.insert(0, file_path)
+
 from hkland_flow import tools
 from hkland_flow.configs import (SPIDER_MYSQL_HOST, SPIDER_MYSQL_PORT, SPIDER_MYSQL_USER,
-                                 SPIDER_MYSQL_PASSWORD, SPIDER_MYSQL_DB, DC_HOST, DC_PORT, DC_USER,
-                                 DC_PASSWD, DC_DB)
+                                 SPIDER_MYSQL_PASSWORD, SPIDER_MYSQL_DB, DC_HOST, DC_PORT,
+                                 DC_USER, DC_PASSWD, DC_DB)
 from hkland_flow.sql_pool import PyMysqlPoolBase
 from hkland_flow.stock_hu_ontime import SSEStatsOnTime
 from hkland_flow.stock_shen_ontime import SZSEStatsOnTime
@@ -342,6 +345,7 @@ class FlowExchangeSpider(object):
             sh_item['Netinflow'] = sh_item['ShHkFlow'] + sh_item['SzHkFlow']
             print(sh_item)
             update_fields = ['Category', 'DateTime', 'ShHkFlow', 'ShHkBalance', 'SzHkFlow', 'SzHkBalance', 'Netinflow']
+            self.spider_init()
             self._save(self.spider_client, sh_item, self.table_name, update_fields)
 
     def _south(self):
@@ -376,9 +380,11 @@ class FlowExchangeSpider(object):
             sh_item['Netinflow'] = sh_item['ShHkFlow'] + sh_item['SzHkFlow']
             print(sh_item)
             update_fields = ['Category', 'DateTime', 'ShHkFlow', 'ShHkBalance', 'SzHkFlow', 'SzHkBalance', 'Netinflow']
+            self.spider_init()
             self._save(self.spider_client, sh_item, self.table_name, update_fields)
 
     def _check_if_trading_today(self, category):
+        self.dc_init()
         '''
         self.category_map = {
             'hgtb': ('沪股通', 1),
@@ -403,36 +409,31 @@ class FlowExchangeSpider(object):
             return True
 
     def _start(self):
-        # TODO 使用时再连接 避免空连
-        self.dc_init()
-        self.spider_init()
-
+        # 建表
         self._create_table()
 
         sourth_is_trading_period = self._check_if_trading_period("sourth")
         south_bool = self._check_if_trading_today(1)
         if south_bool and sourth_is_trading_period:
-            t1 = threading.Thread(target=self._south,)
-            t1.start()
+            p1 = multiprocessing.Process(target=self._south,)
+            p1.start()
         else:
             logger.warning("[交易所]今日无南向交易或不在交易时间段内")
 
         north_is_trading_period = self._check_if_trading_period("north")
         north_bool = self._check_if_trading_today(2)
         if north_bool and north_is_trading_period:
-            t2 = threading.Thread(target=self._north,)
-            t2.start()
+            p2 = multiprocessing.Process(target=self._north,)
+            p2.start()
         else:
             logger.warning("[交易所]今日无北向交易或不在交易时间段内")
 
 
 if __name__ == "__main__":
-    # h = FlowExchangeSpider()
-    # h._start()
+    # FlowExchangeSpider()._start()
 
     while True:
-        h = FlowExchangeSpider()
-        h.start()
+        FlowExchangeSpider().start()
         time.sleep(3)
         print()
         print()
