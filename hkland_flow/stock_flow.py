@@ -188,6 +188,7 @@ class FlowExchangeSpider(object):
             return count
 
     def _create_table(self):
+        self.spider_init()
         sql = """
         CREATE TABLE IF NOT EXISTS `{}` (
           `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
