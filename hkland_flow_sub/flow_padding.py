@@ -3,7 +3,6 @@ import datetime
 import multiprocessing
 import os
 import sys
-import threading
 import time
 import pandas as pd
 
@@ -20,7 +19,6 @@ from hkland_flow_sub.flow_netin import EastMoneyFlowNetIn
 class FlowPadding(FlowBase):
     def __init__(self):
         super(FlowPadding, self).__init__()
-        # self.final_table_name = 'hkland_flow_new'
         self.final_table_name = 'hkland_flow_v2'
 
         self.netin_table = 'hkland_flow_netin'
@@ -288,15 +286,9 @@ class FlowPadding(FlowBase):
 
 
 def schedule_start():
-    # threading.Thread(target=FlowPadding().start).start()
-    # threading.Thread(target=EastMoneyFlowNetBuy().start).start()
-    # threading.Thread(target=EastMoneyFlowNetIn().start).start()
-
-    multiprocessing.Process(target=FlowPadding().start).start()
     multiprocessing.Process(target=EastMoneyFlowNetBuy().start).start()
     multiprocessing.Process(target=EastMoneyFlowNetIn().start).start()
-
-    pass
+    multiprocessing.Process(target=FlowPadding().start).start()
 
 
 if __name__ == '__main__':
