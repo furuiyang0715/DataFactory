@@ -200,68 +200,82 @@ class FlowPadding(FlowBase):
             data.pop("CMFTime")
         return _datas
 
-    def get_flow_netbuy_datas(self, category):
+    def get_flow_netbuy_datas(self, category, dt_list):
         """
         category:1 南向数据
                  2 北向数据
         """
         self.spider_init()
         select_fields = ",".join(self.netbuy_fields)
-        sql = '''select {} from {} where Category = {}; '''.format(select_fields, self.netbuy_table, category)
+        sql = '''select {} from {} where Category = {} and DateTime >= {} and DateTime <= {}; '''.format(
+            select_fields, self.netbuy_table, category, dt_list[0], dt_list[-1])
         ret = self.spider_client.select_all(sql)
-        # 转换为以时间为 key 的字典
-        netbuy_datas = {}
-        for r in ret:
-            netbuy_datas.update({r.get("DateTime"): r})
-        # print(netbuy_datas)
-        return netbuy_datas
+        if ret:
+            # 转换为以时间为 key 的字典
+            netbuy_datas = {}
+            for r in ret:
+                netbuy_datas.update({r.get("DateTime"): r})
+            return netbuy_datas
+        else:
+            return {}
 
-    def get_flow_netin_datas(self, category):
+    def get_flow_netin_datas(self, category, dt_list):
         self.spider_init()
         select_fields = ','.join(self.netin_fields)
-        sql = '''select {} from {} where Category = {};'''.format(select_fields, self.netin_table, category)
+        sql = '''select {} from {} where Category = {} and DateTime >= {} and DateTime <= {};'''.format(
+            select_fields, self.netin_table, category, dt_list[0], dt_list[-1])
         ret = self.spider_client.select_all(sql)
-        netin_datas = {}
-        for r in ret:
-            netin_datas.update({r.get("DateTime"): r})
-        return netin_datas
+        if ret:
+            netin_datas = {}
+            for r in ret:
+                netin_datas.update({r.get("DateTime"): r})
+            return netin_datas
+        else:
+            return {}
 
     def _start(self):
+        # (1) 判断当前是否是交易时间段
         is_trading = self._check_if_trading_period()
         if not is_trading:
             logger.info("非交易时段")
             return
 
-        # 建表
+        # (2) 建表
         if LOCAL:
             self._create_table()
 
         for category in (1, 2):
             category_info = "北向" if category == 2 else "南向"
-            # 判断是否交易日
+            # (3) 判断当天是否交易日
             is_trading_day = self._check_if_trading_today(category)
             if not is_trading_day:
                 logger.info("今日 {} 非交易日 ".format(category_info))
+                return
 
-            # 合成北向数据 合成数据数据以分钟线为 key
-            part_datas1 = self.get_flow_netbuy_datas(category)
-            part_datas2 = self.get_flow_netin_datas(category)
+            # (4) 获取交易日该方向目前的有数据的时间段
+            dt_list = self.get_dt_list(category)
+            if dt_list is None:
+                logger.info("未开盘")
+                return
+
+            # 每个方向均需要从两个分表中合成数据 数据以分钟线为 key
+            part_datas1 = self.get_flow_netbuy_datas(category, dt_list)
+            part_datas2 = self.get_flow_netin_datas(category, dt_list)
+            if (not part_datas1) and (not part_datas2):
+                return
+
             merge_datas = {}
             for _min, v1 in part_datas1.items():
                 if _min in part_datas2:
                     _val = copy.deepcopy(v1)
                     _val.update(part_datas2.get(_min))
                     merge_datas[_min] = _val
+            if not merge_datas:
+                return
 
             north_df = pd.DataFrame(list(merge_datas.values()))
             # 以分钟时间为索引
             north_df = north_df.set_index("DateTime")
-            dt_list = self.get_dt_list(category)
-
-            if dt_list is None:
-                logger.info("未开盘")
-                return
-
             need_north_df = north_df.reindex(index=dt_list)
             # TODO 数据不超前
             # need_north_df.replace({0: None}, inplace=True)
@@ -279,6 +293,7 @@ class FlowPadding(FlowBase):
             for data in datas:
                 if not data in already_datas:
                     to_insert_lst.append(data)
+
             print(category_info, len(to_insert_lst))
             self.product_init()
             for data in to_insert_lst:
@@ -297,6 +312,9 @@ if __name__ == '__main__':
     while True:
         schedule_start()
         time.sleep(5)
+        print()
+        print()
+        print()
 
 
 '''

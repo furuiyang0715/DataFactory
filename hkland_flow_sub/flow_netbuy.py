@@ -180,10 +180,10 @@ class EastMoneyFlowNetBuy(FlowBase):
         self._create_table()
 
         py_data = self.get_response_data()
-        logger.info("开始处理陆港通北向数据")
+        logger.info("flow netbuy 开始处理陆港通北向数据")
         self.process_s2n(py_data)
 
-        logger.info("开始处理陆港通南向数据")
+        logger.info("flow netbuy 开始处理陆港通南向数据")
         self.process_n2s(py_data)
 
 
