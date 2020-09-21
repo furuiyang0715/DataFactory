@@ -207,7 +207,7 @@ class FlowPadding(FlowBase):
         """
         self.spider_init()
         select_fields = ",".join(self.netbuy_fields)
-        sql = '''select {} from {} where Category = {} and DateTime >= {} and DateTime <= {}; '''.format(
+        sql = '''select {} from {} where Category = {} and DateTime >= '{}' and DateTime <= '{}'; '''.format(
             select_fields, self.netbuy_table, category, dt_list[0], dt_list[-1])
         ret = self.spider_client.select_all(sql)
         if ret:
@@ -222,7 +222,7 @@ class FlowPadding(FlowBase):
     def get_flow_netin_datas(self, category, dt_list):
         self.spider_init()
         select_fields = ','.join(self.netin_fields)
-        sql = '''select {} from {} where Category = {} and DateTime >= {} and DateTime <= {};'''.format(
+        sql = '''select {} from {} where Category = {} and DateTime >= '{}' and DateTime <= '{}';'''.format(
             select_fields, self.netin_table, category, dt_list[0], dt_list[-1])
         ret = self.spider_client.select_all(sql)
         if ret:
