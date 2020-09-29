@@ -250,13 +250,13 @@ class FlowPadding(FlowBase):
             is_trading_day = self._check_if_trading_today(category)
             if not is_trading_day:
                 logger.info("今日 {} 非交易日 ".format(category_info))
-                return
+                continue    # !!!! not return
 
             # (4) 获取交易日该方向目前的有数据的时间段
             dt_list = self.get_dt_list(category)
             if dt_list is None:
                 logger.info("未开盘")
-                return
+                continue    # !!!!! not return
 
             # 每个方向均需要从两个分表中合成数据 数据以分钟线为 key
             part_datas1 = self.get_flow_netbuy_datas(category, dt_list)
