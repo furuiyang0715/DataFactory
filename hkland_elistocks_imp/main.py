@@ -282,6 +282,21 @@ class OriginChecker(BaseSpider):
                 in_date_item.update({"Flag": 2, "OutDate": _date})
                 self._save(self.product_client, in_date_item, table_name, fields)
 
+        for secu_code, _date in rm_2:
+            in_date_item = self.get_indate_data(trading_type, table_name, 2, secu_code)
+            if in_date_item:
+                in_date_item.update({"Flag": 2, "OutDate": _date})
+                self._save(self.product_client, in_date_item, table_name, fields)
+
+        for secu_code, _date in rm_134:
+            for trading_category in (1, 3, 4):
+                in_date_item = self.get_indate_data(trading_type, table_name, trading_category, secu_code)
+                if in_date_item:
+                    in_date_item.update({"Flag": 2, "OutDate": _date})
+                    self._save(self.product_client, in_date_item, table_name, fields)
+
+
+
 
 
         # for item in recover_1:
