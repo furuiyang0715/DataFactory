@@ -87,41 +87,31 @@ class OriginChecker(BaseSpider):
         return ret
 
     def process_sz_changes(self, changes):
-        pass
-        # change_removal = 'Removal'
+        change_add1 = 'Addition'
+        sentence_add34 = 'This stock will also be added to the List of Eligible SZSE Securities for Margin Trading and the List of Eligible SZSE Securities for Short Selling'
+        change_add34 = 'Addition to List of Eligible SZSE Securities for Margin Trading and List of Eligible SZSE Securities for Short Selling'
+        change_add2 = 'Transfer to List of Special SZSE Securities/Special China Connect Securities (stocks eligible for sell only)'
+        sentence_rm34 = 'This stock will also be removed from the List of Eligible SZSE Securities for Margin Trading and the List of Eligible SZSE Securities for Short Selling'
+        change_rvl2 = 'Removal'
+        change_rm2 = 'Addition (from List of Special SZSE Securities/Special China Connect Securities (stocks eligible for sell only))'
+        change_suspended = 'Buy orders suspended'
+        change_resumed = 'Buy orders resumed'
+
         # change_removal_more = 'Remove from List of Eligible SZSE Securities for Margin Trading and List of Eligible SZSE Securities for Short Selling'
-        #
-        # change_addition = 'Addition'
-        # change_addition_more = 'Addition to List of Eligible SZSE Securities for Margin Trading and List of Eligible SZSE Securities for Short Selling'
-        # change_addition_less = 'Addition (from List of Special SZSE Securities/Special China Connect Securities (stocks eligible for sell only))'
-        #
-        # change_transfer = 'Transfer to List of Special SZSE Securities/Special China Connect Securities (stocks eligible for sell only)'
-        # change_recover = 'Addition (from List of Special SZSE Securities/Special China Connect Securities (stocks eligible for sell only))'
-        #
-        # change_buyorders_resumed = 'Buy orders resumed'
-        # change_buyorders_suspended = 'Buy orders suspended'
-        #
-        # addition_sentence = 'This stock will also be added to the List of Eligible SZSE Securities for Margin Trading and the List of Eligible SZSE Securities for Short Selling'
-        # recover_sentence = 'This stock will also be added to the List of Eligible SZSE Securities for Margin Trading and the List of Eligible SZSE Securities for Short Selling as it is also included in SZSE stock list for margin trading and shortselling.'
-        # remove_sentence = 'This stock will also be removed from the List of Eligible SZSE Securities for Margin Trading and the List of Eligible SZSE Securities for Short Selling.'
         # rename_sentence = 'SZSE Stock Code and Stock Name are changed'
-        #
-        # self.process("sz",
-        #              changes,
-        #              change_removal,
-        #              change_removal_more,
-        #              change_addition,
-        #              change_addition_more,
-        #              change_addition_less,
-        #              change_transfer,
-        #              change_recover,
-        #              change_buyorders_resumed,
-        #              change_buyorders_suspended,
-        #              addition_sentence,
-        #              recover_sentence,
-        #              remove_sentence,
-        #              rename_sentence,
-        #              )
+
+        self.process("sz",
+                     changes,
+                     change_add1,
+                     sentence_add34,
+                     change_add34,
+                     change_add2,
+                     sentence_rm34,
+                     change_rvl2,
+                     change_rm2,
+                     change_suspended,
+                     change_resumed,
+                     )
 
     def process_sh_changes(self, changes):
         # 标的类别(TargetCategory): 1-可买入及卖出，2-只可卖出，3-可进行保证金交易，4-可进行担保卖空，5-触发持股比例限制暂停买入。
@@ -216,6 +206,9 @@ class OriginChecker(BaseSpider):
                 add_1.append((secu_code, _effectivedate))
                 if sentence_add34 in _remarks:
                     add_34.append((secu_code, _effectivedate))
+            else:
+                print("* " * 100)
+                print(pprint.pformat(change))
 
         if not self.sql_deal:
             return
