@@ -87,40 +87,41 @@ class OriginChecker(BaseSpider):
         return ret
 
     def process_sz_changes(self, changes):
-        change_removal = 'Removal'
-        change_removal_more = 'Remove from List of Eligible SZSE Securities for Margin Trading and List of Eligible SZSE Securities for Short Selling'
-
-        change_addition = 'Addition'
-        change_addition_more = 'Addition to List of Eligible SZSE Securities for Margin Trading and List of Eligible SZSE Securities for Short Selling'
-        change_addition_less = 'Addition (from List of Special SZSE Securities/Special China Connect Securities (stocks eligible for sell only))'
-
-        change_transfer = 'Transfer to List of Special SZSE Securities/Special China Connect Securities (stocks eligible for sell only)'
-        change_recover = 'Addition (from List of Special SZSE Securities/Special China Connect Securities (stocks eligible for sell only))'
-
-        change_buyorders_resumed = 'Buy orders resumed'
-        change_buyorders_suspended = 'Buy orders suspended'
-
-        addition_sentence = 'This stock will also be added to the List of Eligible SZSE Securities for Margin Trading and the List of Eligible SZSE Securities for Short Selling'
-        recover_sentence = 'This stock will also be added to the List of Eligible SZSE Securities for Margin Trading and the List of Eligible SZSE Securities for Short Selling as it is also included in SZSE stock list for margin trading and shortselling.'
-        remove_sentence = 'This stock will also be removed from the List of Eligible SZSE Securities for Margin Trading and the List of Eligible SZSE Securities for Short Selling.'
-        rename_sentence = 'SZSE Stock Code and Stock Name are changed'
-
-        self.process("sz",
-                     changes,
-                     change_removal,
-                     change_removal_more,
-                     change_addition,
-                     change_addition_more,
-                     change_addition_less,
-                     change_transfer,
-                     change_recover,
-                     change_buyorders_resumed,
-                     change_buyorders_suspended,
-                     addition_sentence,
-                     recover_sentence,
-                     remove_sentence,
-                     rename_sentence,
-                     )
+        pass
+        # change_removal = 'Removal'
+        # change_removal_more = 'Remove from List of Eligible SZSE Securities for Margin Trading and List of Eligible SZSE Securities for Short Selling'
+        #
+        # change_addition = 'Addition'
+        # change_addition_more = 'Addition to List of Eligible SZSE Securities for Margin Trading and List of Eligible SZSE Securities for Short Selling'
+        # change_addition_less = 'Addition (from List of Special SZSE Securities/Special China Connect Securities (stocks eligible for sell only))'
+        #
+        # change_transfer = 'Transfer to List of Special SZSE Securities/Special China Connect Securities (stocks eligible for sell only)'
+        # change_recover = 'Addition (from List of Special SZSE Securities/Special China Connect Securities (stocks eligible for sell only))'
+        #
+        # change_buyorders_resumed = 'Buy orders resumed'
+        # change_buyorders_suspended = 'Buy orders suspended'
+        #
+        # addition_sentence = 'This stock will also be added to the List of Eligible SZSE Securities for Margin Trading and the List of Eligible SZSE Securities for Short Selling'
+        # recover_sentence = 'This stock will also be added to the List of Eligible SZSE Securities for Margin Trading and the List of Eligible SZSE Securities for Short Selling as it is also included in SZSE stock list for margin trading and shortselling.'
+        # remove_sentence = 'This stock will also be removed from the List of Eligible SZSE Securities for Margin Trading and the List of Eligible SZSE Securities for Short Selling.'
+        # rename_sentence = 'SZSE Stock Code and Stock Name are changed'
+        #
+        # self.process("sz",
+        #              changes,
+        #              change_removal,
+        #              change_removal_more,
+        #              change_addition,
+        #              change_addition_more,
+        #              change_addition_less,
+        #              change_transfer,
+        #              change_recover,
+        #              change_buyorders_resumed,
+        #              change_buyorders_suspended,
+        #              addition_sentence,
+        #              recover_sentence,
+        #              remove_sentence,
+        #              rename_sentence,
+        #              )
 
     def process_sh_changes(self, changes):
         # 标的类别(TargetCategory): 1-可买入及卖出，2-只可卖出，3-可进行保证金交易，4-可进行担保卖空，5-触发持股比例限制暂停买入。
@@ -295,114 +296,13 @@ class OriginChecker(BaseSpider):
                     in_date_item.update({"Flag": 2, "OutDate": _date})
                     self._save(self.product_client, in_date_item, table_name, fields)
 
+        for secu_code, _date in rvl_2:
+            in_date_item = self.get_indate_data(trading_type, table_name, 2, secu_code)
+            if in_date_item:
+                in_date_item.update({"Flag": 2, "OutDate": _date})
+                self._save(self.product_client, in_date_item, table_name, fields)
 
-
-
-
-        # for item in recover_1:
-        #     print(item)
-        #     #  结束 2
-        #     secu_code, _date = item
-        #     in_date_item = self.get_indate_data(trading_type, table_name, 2, secu_code)
-        #     if in_date_item:
-        #         in_date_item.update({"Flag": 2, "OutDate": _date})
-        #         r1 = self._save(self.product_client, in_date_item, table_name, fields)
-        #         print("***** ", r1)
-        #         # （恢复）增加 1
-        #         inner_code, secu_abbr = self.get_juyuan_codeinfo(secu_code)
-        #         item = {'TradingType': trading_type,
-        #                 'TargetCategory': 1,
-        #                 'InnerCode': inner_code,
-        #                 'SecuCode': secu_code,
-        #                 'SecuAbbr': secu_abbr,
-        #                 'InDate': _date,
-        #                 'Flag': 1,
-        #                 }
-        #         r2 = self._save(self.product_client, item, table_name, fields)
-        #         print("##### ", r2)
-        #
-        # for item in recover_134:
-        #     print(item)
-        #     # 结束 2
-        #     secu_code, _date = item
-        #     in_date_item = self.get_indate_data(trading_type, table_name, 2, secu_code)
-        #     if in_date_item:
-        #         in_date_item.update({"Flag": 2, "OutDate": _date})
-        #         self._product_init()
-        #         r1 = self._save(self.product_client, in_date_item, table_name, fields)
-        #         print("***** ", r1)
-        #         # （恢复）增加 1 3 4
-        #         inner_code, secu_abbr = self.get_juyuan_codeinfo(secu_code)
-        #         base_item = {
-        #             'TradingType': trading_type, 'InnerCode': inner_code, 'SecuCode': secu_code,
-        #             'SecuAbbr': secu_abbr, 'InDate': _date, 'Flag': 1,
-        #         }
-        #         item1, item3, item4 = copy.copy(base_item), copy.copy(base_item), copy.copy(base_item)
-        #         item1.update({'TargetCategory': 1})
-        #         item3.update({'TargetCategory': 3})
-        #         item4.update({'TargetCategory': 4})
-        #         ret = self._batch_save(self.product_client, [item1, item3, item4], table_name, fields)
-        #         print("***** ", ret)
-        #
-        # for item in transfer_1:
-        #     # print(item)
-        #     secu_code, _date = item
-        #     inner_code, secu_abbr = self.get_juyuan_codeinfo(secu_code)
-        #     in_date_item = self.get_indate_data(trading_type, table_name, 1, secu_code)
-        #     if in_date_item:
-        #         # 移出 1
-        #         in_date_item.update({"Flag": 2, "OutDate": _date})
-        #         r1 = self._save(self.product_client, in_date_item, table_name, fields)
-        #         # print(r1)
-        #         # 增加 2
-        #         item = {'TradingType': trading_type,
-        #                 'TargetCategory': 2,
-        #                 'InnerCode': inner_code,
-        #                 'SecuCode': secu_code,
-        #                 'SecuAbbr': secu_abbr,
-        #                 'InDate': _date,
-        #                 'Flag': 1,
-        #
-        #                 }
-        #         # print("****************", item)
-        #         self._product_init()
-        #         r2 = self._save(self.product_client, item, table_name, fields)
-        #         # print(r2)
-        #
-        # for item in transfer_134:
-        #     print(item)
-        #     secu_code, _date = item
-        #     self._product_init()
-        #     # 移除 1 3 4
-        #     for trading_category in (1, 3, 4):
-        #         in_date_item = self.get_indate_data(trading_type, table_name, trading_category, secu_code)
-        #         if in_date_item:
-        #             in_date_item.update({"Flag": 2, "OutDate": _date})
-        #             r1 = self._save(self.product_client, in_date_item, table_name, fields)
-        #             print("##### ", r1)
-        #     # 增加 2
-        #     inner_code, secu_abbr = self.get_juyuan_codeinfo(secu_code)
-        #     item = {'TradingType': trading_type,
-        #             'TargetCategory': 2,
-        #             'InnerCode': inner_code,
-        #             'SecuCode': secu_code,
-        #             'SecuAbbr': secu_abbr,
-        #             'InDate': _date,
-        #             'Flag': 1,
-        #             }
-        #     r2 = self._save(self.product_client, item, table_name, fields)
-        #     print("***** ", r2)
-        #
-        # for item in removal_2:
-        #     print(item)
-        #     secu_code, _date = item
-        #     self._product_init()
-        #     # 移除 2
-        #     in_date_item = self.get_indate_data(trading_type, table_name, 2, secu_code)
-        #     if in_date_item:
-        #         in_date_item.update({"Flag": 2, "OutDate": _date})
-        #         r1 = self._save(self.product_client, in_date_item, table_name, fields)
-        #         print("****** ", r1)
+        self.product_client.end()
 
     def get_indate_data(self, trading_type, table_name, trading_category, secu_code):
         self._product_init()
@@ -506,6 +406,6 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    # main()
 
-    # task()
+    task()
