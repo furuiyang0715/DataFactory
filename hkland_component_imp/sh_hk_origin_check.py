@@ -40,26 +40,24 @@ class SHSCComponent(BaseSpider):
     #         assert data in juyuan_datas
 
     def get_shhk_diff_changes(self, _type):
-        """获得两次时间点之间的记录差异"""
+        """获得两次时间点之间的差异记录"""
         assert _type in ("sh", "hk")
         if _type == "sh":
             table_name = self.sh_change_table_name
         else:
             table_name = self.hk_change_table_name
 
-        self._test_init()
         self._spider_init()
+        client = self.spider_client
 
-        if self.is_local:
-            client = self.test_client
-        else:
-            client = self.spider_client
-
+        # 从爬虫数据库中获取到要比较的两个时间点
         sql = """select distinct(Time) from {}; """.format(table_name)
         ret = client.select_all(sql)
         times = [r.get("Time") for r in ret]
-        t1 = times[0]
-        t2 = times[-1]
+        t1 = times[0]   # 第一次
+        # t1 = times[len(times) - 2]   # 倒数第二次
+        t2 = times[-1]   # 最后一次
+        print(t1, t2)
 
         sql1 = '''select * from {} where Time = '{}' ;'''.format(table_name, t1)
         sql2 = '''select * from {} where Time = '{}' ;'''.format(table_name, t2)
@@ -88,12 +86,10 @@ class SHSCComponent(BaseSpider):
             for record in datas2:
                 if not record in datas1:
                     to_add.append(record)
-
             return to_add, to_delete
 
     def __init__(self):
         super(SHSCComponent, self).__init__()
-        self.is_local = LOCAL
         self.juyuan_table_name = 'lc_shsccomponent'
         self.dc_table_name = 'hkland_hgcomponent'
         self.target_table_name = 'hkland_hgcomponent'
@@ -125,6 +121,7 @@ class SHSCComponent(BaseSpider):
         self.ding_info = ''
 
     def refresh_update_time(self):
+        """在工具表中刷新更新时间"""
         self._product_init()
         sql = '''select max(UPDATETIMEJZ) as max_dt from {}; '''.format(self.target_table_name)
         max_dt = self.product_client.select_one(sql).get("max_dt")
@@ -134,13 +131,9 @@ class SHSCComponent(BaseSpider):
         self.product_client.update(refresh_sql)
 
     def check_target_exist(self, record):
-        self._test_init()
+        """检查生成的记录在目标库中是否存在"""
         self._product_init()
-        if self.is_local:
-            client = self.test_client
-        else:
-            client = self.product_client
-
+        client = self.product_client
         if record.get("InDate"):
             is_exist = client.select_one(
                 "select * from {} where CompType = {} and SecuCode = '{}' and InDate = '{}'; ".format(
@@ -156,43 +149,32 @@ class SHSCComponent(BaseSpider):
         else:
             return False
 
-    def is_in_list(self, code):
-        self._test_init()
-        self._product_init()
-        if self.is_local:
-            client = self.test_client
-        else:
-            client = self.product_client
-
-        ret = client.select_all(
-            "select flag from {} where SecuCode = '{}' and InDate = (select max(InDate) from {} where SecuCode = '{}'); ".format(
-                self.target_table_name, code, self.target_table_name, code))[0]
-        if ret.get("flag") == 1:
-            return True
-        else:
-            return False
+    # def is_in_list(self, code):
+    #     self._product_init()
+    #     client = self.product_client
+    #     ret = client.select_all(
+    #         "select flag from {} where SecuCode = '{}' and InDate = (select max(InDate) from {} where SecuCode = '{}'); ".format(
+    #             self.target_table_name, code, self.target_table_name, code))[0]
+    #     if ret.get("flag") == 1:
+    #         return True
+    #     else:
+    #         return False
 
     def check_hk_list(self):
         self._spider_init()
-        self._test_init()
         self._product_init()
 
         def get_spider_hk_list():
             sql = 'select distinct(SecuCode) from {} where Time = (select max(Time) from {} );'.format(
                 self.hk_list_table_name, self.hk_list_table_name)
-            if self.is_local:
-                ret = self.test_client.select_all(sql)
-            else:
-                ret = self.spider_client.select_all(sql)
+
+            ret = self.spider_client.select_all(sql)
             hk_list = [r.get("SecuCode") for r in ret]
             return hk_list
 
         def get_target_hk_list():
             sql = 'select SecuCode from {} where CompType = 1 and Flag = 1;'.format(self.target_table_name)
-            if self.is_local:
-                ret = self.test_client.select_all(sql)
-            else:
-                ret = self.product_client.select_all(sql)
+            ret = self.product_client.select_all(sql)
             hk_list = [r.get("SecuCode") for r in ret]
             return hk_list
 
@@ -205,44 +187,33 @@ class SHSCComponent(BaseSpider):
 
     def check_sh_list(self):
         self._spider_init()
-        self._test_init()
-        self._product_init()
+        self._dc_init()
 
         def get_spider_sh_list():
             sql = 'select distinct(SSESCode) from {} where Date = (select max(Date) from {});'.format(
                 self.sh_list_table_name, self.sh_list_table_name)
-            if self.is_local:
-                ret = self.test_client.select_all(sql)
-            else:
-                ret = self.spider_client.select_all(sql)
+            ret = self.spider_client.select_all(sql)
             sh_list = [r.get("SSESCode") for r in ret]
+            # print(">>> ", sh_list)
             return sh_list
 
         def get_target_sh_list():
             sql = 'select SecuCode from {} where CompType = 2 and Flag = 1;'.format(self.target_table_name)
-            if self.is_local:
-                ret = self.test_client.select_all(sql)
-            else:
-                ret = self.product_client.select_all(sql)
+            ret = self.dc_client.select_all(sql)
             sh_list = [r.get("SecuCode") for r in ret]
             return sh_list
 
         spider_hu_list = set(get_spider_sh_list())
         target_hu_list = set(get_target_sh_list())
         logger.info(spider_hu_list == target_hu_list)
-        print(spider_hu_list - target_hu_list)
-        print(target_hu_list - spider_hu_list)
+        print("爬虫比目标表多 : ", spider_hu_list - target_hu_list)
+        print("目标比爬虫表多 : ", target_hu_list - spider_hu_list)
         return spider_hu_list == target_hu_list
 
     def process_sh_changes(self, hu_changes):
-        self._test_init()
+        # client 是与 dc 一致的测试库
         self._product_init()
-
-        if self.is_local:
-            client = self.test_client
-        else:
-            client = self.product_client
-
+        client = self.product_client
         add_items = []
         recover_items = []
         transfer_items = []
@@ -334,6 +305,7 @@ class SHSCComponent(BaseSpider):
         for items in (add_items, recover_items, transfer_items, removal_items):
             if items:
                 self._batch_save(client, items, self.target_table_name, self.fields)
+                client.end()
 
     def process_hk_changes(self, hk_changes):
         def get_hk_inner_code(secu_code):
@@ -346,13 +318,8 @@ class SHSCComponent(BaseSpider):
             else:
                 return None
 
-        self._test_init()
         self._product_init()
-
-        if self.is_local:
-            client = self.test_client
-        else:
-            client = self.product_client
+        client = self.product_client
         add_items = []
         delete_items = []
 
@@ -417,10 +384,22 @@ class SHSCComponent(BaseSpider):
         info = '港股(沪)的核对结果: {}\n'.format(ret2)
         self.ding_info += info
 
-        self.ding(self.ding_info)
+        # self.ding(self.ding_info)
+        print(self.ding_info)
         self.refresh_update_time()
 
 
 if __name__ == "__main__":
-    sz = SHSCComponent()
-    sz.start()
+    SHSCComponent().start()
+
+
+'''
+核对流程: 
+检查该条记录在爬虫清单表(hkex_lgt_sse_securities)中是否存在： 
+select distinct(SSESCode) from hkex_lgt_sse_securities where Date = (select max(Date) from hkex_lgt_sse_securities); 
+select * from hkex_lgt_sse_securities where Date = (select max(Date) from hkex_lgt_sse_securities) and SSESCode = '601995'; 
+
+在爬虫变更表(hkex_lgt_change_of_sse_securities_lists) 拿到最新历史:
+select * from hkex_lgt_change_of_sse_securities_lists where EffectiveDate = (select max(EffectiveDate) from hkex_lgt_change_of_sse_securities_lists) and SSESCode = '601995'; 
+
+'''

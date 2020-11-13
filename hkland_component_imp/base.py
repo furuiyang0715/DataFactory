@@ -219,3 +219,11 @@ and ListedSector in (1, 2, 6, 7) and SecuCode = "{}";'.format(secu_code)
         sql = '''select * from {}; '''.format(table_name)
         datas = self.dc_client.select_all(sql)
         self._batch_save(self.test_client, datas, table_name, [])
+
+    def sync_spider2test(self):
+        pass
+
+
+# if __name__ == '__main__':
+#     for table in ("hkland_sgcomponent", "hkland_sgelistocks"):
+#         BaseSpider().sync_dc2test(table)
