@@ -48,6 +48,30 @@ class OriginChecker(BaseSpider):
     def __init__(self):
         super(OriginChecker, self).__init__()
         self.sql_deal = SQL_DEAL
+        self.tool_table_name = 'base_table_updatetime'
+
+    def refresh_update_time(self):
+        """在工具表中刷新更新时间
+        'hkland_hgelistocks' # 沪港通合资格股
+        'hkland_sgelistocks' # 深港通合资格股
+
+        3 | hkland_hgelistocks      | 2020-06-16 23:17:39 |       1
+        8 | hkland_sgelistocks      | 2020-06-16 23:18:17 |       1
+
+        replace into base_table_updatetime (id,TableName, LastUpdateTime,IsValid) values (3, 'hkland_hgelistocks', '{}', 1);
+        replace into base_table_updatetime (id,TableName, LastUpdateTime,IsValid) values (8, 'hkland_sgelistocks', '{}', 1);
+
+        """
+        self._product_init()
+        for table_name, num in {"hkland_hgelistocks": 3, "hkland_sgelistocks": 8}.items():
+            sql = '''select max(UPDATETIMEJZ) as max_dt from {};'''.format(table_name)
+            max_dt = self.product_client.select_one(sql).get("max_dt")
+            logger.info("最新的更新时间是{}".format(max_dt))
+            refresh_sql = '''replace into {} (id,TableName, LastUpdateTime,IsValid) values ({}, '{}', '{}', 1);
+            '''.format(self.tool_table_name, num, table_name, max_dt)
+            print(refresh_sql)
+            self.product_client.update(refresh_sql)
+            self.product_client.end()
 
     def get_distinct_spider_udpate_time(self, table_name):
         self._spider_init()
@@ -440,8 +464,27 @@ class OriginChecker(BaseSpider):
 
         info += "沪股合资格校对的结果是 {}, \n深股合资格校对的结果是 {}\n".format((sh1, sh2, sh3, sh4), (sz1, sz2, sz3, sz4))
         print(info)
-        # self.ding(info)
+        self.ding(info)
+
+
+def task():
+    checker = OriginChecker()
+    checker.start()
+    checker.refresh_update_time()
+
+
+def main():
+    logger.info("当前时间是{} ".format(datetime.datetime.now()))
+    task()
+    schedule.every().day.at("17:00").do(task)
+
+    while True:
+        logger.info("当前调度系统中的任务列表是{}".format(schedule.jobs))
+        schedule.run_pending()
+        time.sleep(1800)
 
 
 if __name__ == "__main__":
-    OriginChecker().start()
+    main()
+
+    # task()
