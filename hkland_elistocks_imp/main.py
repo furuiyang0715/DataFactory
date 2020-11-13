@@ -14,7 +14,7 @@ file_path = os.path.abspath(os.path.join(cur_path, ".."))
 sys.path.insert(0, file_path)
 
 from hkland_elistocks_imp.const import records_sh, records_sz
-from hkland_elistocks_imp.configs import LOCAL, SQL_DEAL
+from hkland_elistocks_imp.configs import SQL_DEAL
 from hkland_elistocks_imp.base import logger, BaseSpider
 from hkland_elistocks_imp.ganerate_hklands import DailyUpdate
 
