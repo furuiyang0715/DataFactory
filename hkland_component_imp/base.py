@@ -220,10 +220,3 @@ and ListedSector in (1, 2, 6, 7) and SecuCode = "{}";'.format(secu_code)
         sql = '''select * from {}; '''.format(table_name)
         datas = self.dc_client.select_all(sql)
         self._batch_save(self.test_client, datas, table_name, [])
-
-
-if __name__ == "__main__":
-    bs = BaseSpider()
-    # 将数据同步到测试库 先 delete from 不要 drop 掉表结构
-    # bs.sync_dc2test('hkland_hgcomponent')
-    # bs.sync_dc2test('hkland_sgcomponent')
