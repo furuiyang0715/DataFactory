@@ -132,7 +132,8 @@ class OriginChecker(BaseSpider):
             return
 
         # 对相应的项目进行增删改
-        # ID   | TradingType | TargetCategory | InnerCode | SecuCode | SecuAbbr| InDate| OutDate | Flag | CCASSCode | ParValue | CREATETIMEJZ        | UPDATETIMEJZ        | CMFID | CMFTime
+        # ID  TradingType TargetCategory InnerCode SecuCode SecuAbbr InDate OutDate Flag CCASSCode
+        # ParValue CREATETIMEJZ UPDATETIMEJZ CMFID CMFTime
         fields = ['TradingType', 'TargetCategory', 'InnerCode', 'SecuCode',
                   # 'SecuAbbr',
                   'InDate', 'OutDate', 'Flag']
@@ -140,8 +141,6 @@ class OriginChecker(BaseSpider):
         table_name = 'hkland_hgelistocks' if trading_type == 1 else 'hkland_sgelistocks'
 
         for item in add_1:
-            # print("# " * 20)
-            # print(item)
             secu_code, _date = item
             # TODO
             if secu_code in ("600956", ):
@@ -351,7 +350,6 @@ class OriginChecker(BaseSpider):
             count += 1
 
         dp = DailyUpdate()
-
         sh1 = dp.sh_short_sell_list()
         sh2 = dp.sh_buy_margin_trading_list()
         sh3 = dp.sh_only_sell_list()

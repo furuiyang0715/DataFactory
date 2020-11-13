@@ -39,8 +39,8 @@ class DailyUpdate(BaseSpider):
         lst = set([r.get("SSESCode") for r in ret])
         assert datas
         assert lst
-        # print(datas - lst)
-        # print(lst - datas)
+        print(f'sh buyandsell: 变更-列表{datas - lst}')
+        print(f'sh buyandsell: 列表-变更{lst - datas}')
         return (not (datas - lst)) and (not (lst - datas))
 
     def sz_buy_and_sell_list(self):
@@ -58,8 +58,8 @@ class DailyUpdate(BaseSpider):
         lst = set([r.get("SSESCode") for r in ret])
         assert datas
         assert lst
-        # print(datas - lst)
-        # print(lst - datas)
+        print(f'sz buyandsell: 变更-列表{datas - lst}')
+        print(f'sz buyandsell: 列表-变更{lst - datas}')
         return (not (datas - lst)) and (not (lst - datas))
 
     def sh_only_sell_list(self):
@@ -77,14 +77,13 @@ class DailyUpdate(BaseSpider):
         lst = set([r.get("SSESCode") for r in ret])
         assert datas
         assert lst
-        # print(datas - lst)
-        # print(lst - datas)
+        print(f'sh onlysell: 变更-列表{datas - lst}')
+        print(f'sh onlysell: 列表-变更{lst - datas}')
         return (not (datas - lst)) and (not (lst - datas))
 
     def sz_only_sell_list(self):
         self._spider_init()
         self._product_init()
-
         sql = '''select SecuCode from hkland_sgelistocks where TradingType = 3 and TargetCategory = 2 and Flag = 1; '''
         ret = self.product_client.select_all(sql)
         datas = set([r.get("SecuCode") for r in ret])
@@ -95,8 +94,8 @@ class DailyUpdate(BaseSpider):
         lst = set([r.get("SSESCode") for r in ret])
         assert datas
         assert lst
-        # print(datas - lst)
-        # print(lst - datas)
+        print(f'sz onlysell: 变更-列表{datas - lst}')
+        print(f'sz onlysell: 列表-变更{lst - datas}')
         return (not (datas - lst)) and (not (lst - datas))
 
     def sh_buy_margin_trading_list(self):
@@ -114,8 +113,8 @@ class DailyUpdate(BaseSpider):
         lst = set([r.get("SSESCode") for r in ret])
         assert datas
         assert lst
-        # print(datas - lst)
-        # print(lst - datas)
+        print(f'sh buymargintrading: 变更-列表{datas - lst}')
+        print(f'sh buymargintrading: 列表-变更{lst - datas}')
         return (not (datas - lst)) and (not (lst - datas))
 
     def sz_buy_margin_trading_list(self):
@@ -132,8 +131,8 @@ class DailyUpdate(BaseSpider):
         lst = set([r.get("SSESCode") for r in ret])
         assert lst
         assert datas
-        # print(datas - lst)
-        # print(lst - datas)
+        print(f'sz buymargintrading: 变更-列表{datas - lst}')
+        print(f'sz buymargintrading: 列表-变更{lst - datas}')
         return (not (datas - lst)) and (not (lst - datas))
 
     def sh_short_sell_list(self):
@@ -144,12 +143,14 @@ class DailyUpdate(BaseSpider):
         ret = self.product_client.select_all(sql)
         datas = set([r.get("SecuCode") for r in ret])
 
-        sql = 'select distinct(SSESCode) from {} where Date = (select max(Date) from {});'.format(self.sh_short_sell_list_table, self.sh_short_sell_list_table)
+        sql = 'select distinct(SSESCode) from {} where Date = (select max(Date) from {});'.format(
+            self.sh_short_sell_list_table, self.sh_short_sell_list_table)
         ret = self.spider_client.select_all(sql)
-
         lst = set([r.get("SSESCode") for r in ret])
         assert datas
         assert lst
+        print(f'sh short sell: 变更-列表{datas - lst}')
+        print(f'sh short sell: 列表-变更{lst - datas}')
         return (not (datas - lst)) and (not (lst - datas))
 
     def sz_short_sell_list(self):
@@ -166,8 +167,8 @@ class DailyUpdate(BaseSpider):
         lst = set([r.get("SSESCode") for r in ret])
         assert datas
         assert lst
-        # print(datas - lst)
-        # print(lst - datas)
+        print(f'sz short sell: 变更-列表{datas - lst}')
+        print(f'sz short sell: 列表-变更{lst - datas}')
         return (not (datas - lst)) and (not (lst - datas))
 
     # def run_0615_sh(self):
