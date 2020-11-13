@@ -90,23 +90,28 @@ class OriginChecker(BaseSpider):
                      change_addition_less,
                      change_transfer,
                      change_recover,
-                     addition_sentence,
                      change_buyorders_resumed,
                      change_buyorders_suspended,
+                     addition_sentence,
                      recover_sentence,
                      remove_sentence,
                      rename_sentence,
                      )
 
     def process_sh_changes(self, changes):
+        # (从 2 中) 删除
         change_removal = 'Removal'
+        # 从 3 4 中删除
         change_removal_more = 'Remove from List of Eligible SSE Securities for Margin Trading and List of Eligible SSE Securities for Short Selling'
-
+        # 加入 (1)
         change_addition = 'Addition'
+        # 加入 3 4
         change_addition_more = 'Addition to List of Eligible SSE Securities for Margin Trading and List of Eligible SSE Securities for Short Selling'
+        # 加入 2
         change_addition_less = 'Addition to List of Special SSE Securities/Special China Connect Securities (stocks eligible for sell only)'
-
+        # 移出 1 3 4, 加入 2
         change_transfer = 'Transfer to List of Special SSE Securities/Special China Connect Securities (stocks eligible for sell only)'
+        # 移出 2
         change_recover = 'Addition (from List of Special SSE Securities/Special China Connect Securities (stocks eligible for sell only))'
 
         change_buyorders_resumed = 'Buy orders resumed'
@@ -117,18 +122,22 @@ class OriginChecker(BaseSpider):
         remove_sentence = 'This stock will also be removed from the List of Eligible SSE Securities for Margin Trading and the List of Eligible SSE Securities for Short Selling.'
         rename_sentence = 'SSE Stock Code and Stock Name are changed'
 
+        # TargetCategory` int(11) NOT NULL COMMENT '标的类别',
+        # 标的类别(TargetCategory): 1-可买入及卖出，2-只可卖出，3-可进行保证金交易，4-可进行担保卖空，5-触发持股比例限制暂停买入。
+        # https://wikijs.jingzhuan.cn/%E6%95%B0%E6%8D%AE/%E7%9B%AE%E5%BD%95-%E8%A1%8D%E7%94%9F%E6%95%B0%E6%8D%AE%E5%BA%93%E6%96%87%E6%A1%A3/%E9%99%86%E6%B8%AF%E9%80%9A-%E6%B2%AA%E6%B8%AF%E9%80%9A%E5%90%88%E8%B5%84%E6%A0%BC%E8%82%A1%E5%8F%98%E6%9B%B4
+
         self.process("sh",
                      changes,
                      change_removal,
                      change_removal_more,
-                     change_addition,
-                     change_addition_more,
+                     change_addition,    # 加入 1
+                     change_addition_more,   # 加入 1 3 4
                      change_addition_less,
                      change_transfer,
                      change_recover,
+                     change_buyorders_resumed,     # 移出 5
+                     change_buyorders_suspended,   # 加入 5
                      addition_sentence,
-                     change_buyorders_resumed,
-                     change_buyorders_suspended,
                      recover_sentence,
                      remove_sentence,
                      rename_sentence,
@@ -142,9 +151,9 @@ class OriginChecker(BaseSpider):
                 change_addition_less,
                 change_transfer,
                 change_recover,
-                addition_sentence,
                 change_buyorders_resumed,
                 change_buyorders_suspended,
+                addition_sentence,
                 recover_sentence,
                 remove_sentence,
                 rename_sentence,
@@ -163,42 +172,29 @@ class OriginChecker(BaseSpider):
             _change, _remarks, secu_code = change.get('Ch_ange'), change.get("Remarks"), change.get("SSESCode")
             _effectivedate = change.get("EffectiveDate")
 
-            # if _change == change_addition:
-            #     if addition_sentence in _remarks:
-            #         add_134.append((secu_code, _effectivedate))
-            #     else:
-            #         add_1.append((secu_code, _effectivedate))
-            # elif _change == change_recover:
-            #     if recover_sentence in _remarks:
-            #         recover_134.append((secu_code, _effectivedate))
-            #     else:
-            #         recover_1.append((secu_code, _effectivedate))
-            # elif _change == change_transfer:
-            #     if remove_sentence in _remarks:
-            #         transfer_134.append((secu_code, _effectivedate))
-            #     else:
-            #         transfer_1.append((secu_code, _effectivedate))
-            # elif _change == change_removal:
-            #     removal_2.append((secu_code, _effectivedate))
-
-            # 新版
             if _change == change_addition:  # add 1
                 add_1.append((secu_code, _effectivedate))
             elif _change == change_addition_more:  # add 1 3 4
                 add_134.append((secu_code, _effectivedate))
-
-            elif _change == change_recover:
-                if recover_sentence in _remarks:
+            elif _change == change_recover:    # 移出 2
+                if recover_sentence in _remarks:   # 加入 1 3 4
                     recover_134.append((secu_code, _effectivedate))
-                else:
+                else:   # 加入 1
                     recover_1.append((secu_code, _effectivedate))
-            elif _change == change_transfer:
-                if remove_sentence in _remarks:
+            elif _change == change_transfer:   # 加入 2
+                if remove_sentence in _remarks:   # 移出 3 4
                     transfer_134.append((secu_code, _effectivedate))
-                else:
+                else:   # 移出 1
                     transfer_1.append((secu_code, _effectivedate))
-            elif _change == change_removal:
+            elif _change == change_removal:  # 移出 2
                 removal_2.append((secu_code, _effectivedate))
+            elif _change == change_removal_more:   # 移出 3 4
+                transfer_134.append((secu_code, _effectivedate))
+            elif _change == change_addition_less:    # 加入 2
+
+                pass
+            else:
+                pass
 
         print("{}_add_1: ".format(flag), add_1)
         print("{}_add_134: ".format(flag), add_134)
