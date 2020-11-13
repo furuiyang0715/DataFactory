@@ -14,4 +14,4 @@ WORKDIR /hkland_elistocks_imp
 
 RUN pip install -r requirements.txt -i https://pypi.douban.com/simple
 
-ENTRYPOINT ["python", "check_origin_diff.py"]
+ENTRYPOINT ["python", "main.py"]
