@@ -7,8 +7,10 @@ cf = configparser.ConfigParser()
 thisdir = os.path.dirname(__file__)
 cf.read(os.path.join(thisdir, '.conf'))
 
-# 是否本地 默认是在本地运行
-LOCAL = int(env.get("LOCAL", 1))
+# delopy
+SECRET = env.get("SECRET", cf.get('deploy', 'SECRET'))
+TOKEN = env.get("TOKEN", cf.get('deploy', 'TOKEN'))
+LOCAL = int(env.get("LOCAL", cf.get('deploy', 'LOCAL')))
 
 # 聚源
 JUY_HOST = env.get("JUY_HOST", cf.get('juyuan', 'JUY_HOST'))
@@ -39,11 +41,11 @@ if not LOCAL:
     SPIDER_PASSWD = env.get("SPIDER_PASSWD", cf.get('spider', 'SPIDER_PASSWD'))
     SPIDER_DB = env.get("SPIDER_DB", cf.get('spider', 'SPIDER_DB'))
 else:
-    SPIDER_HOST = TEST_HOST
-    SPIDER_PORT = TEST_PORT
-    SPIDER_USER = TEST_USER
-    SPIDER_PASSWD = TEST_PASSWD
-    SPIDER_DB = TEST_DB
+    SPIDER_HOST = env.get("SPIDER_HOST", cf.get('spider2', 'SPIDER_HOST'))
+    SPIDER_PORT = int(env.get("SPIDER_PORT", cf.get('spider2', 'SPIDER_PORT')))
+    SPIDER_USER = env.get("SPIDER_USER", cf.get('spider2', 'SPIDER_USER'))
+    SPIDER_PASSWD = env.get("SPIDER_PASSWD", cf.get('spider2', 'SPIDER_PASSWD'))
+    SPIDER_DB = env.get("SPIDER_DB", cf.get('spider2', 'SPIDER_DB'))
 
 # 目标数据库
 if not LOCAL:
@@ -59,15 +61,11 @@ else:
     TARGET_PASSWD = TEST_PASSWD
     TARGET_DB = TEST_DB
 
-# delopy
-SECRET = env.get("SECRET", cf.get('deploy', 'SECRET'))
-TOKEN = env.get("TOKEN", cf.get('deploy', 'TOKEN'))
 
-
-if __name__ == "__main__":
-    import sys
-    mod = sys.modules[__name__]
-    attrs = dir(mod)
-    attrs = [attr for attr in attrs if not attr.startswith("__") and attr.isupper()]
-    for attr in attrs:
-        print(attr, ":", getattr(mod, attr))
+# if __name__ == "__main__":
+#     import sys
+#     mod = sys.modules[__name__]
+#     attrs = dir(mod)
+#     attrs = [attr for attr in attrs if not attr.startswith("__") and attr.isupper()]
+#     for attr in attrs:
+#         print(attr, ":", getattr(mod, attr))
