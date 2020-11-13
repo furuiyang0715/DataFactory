@@ -230,6 +230,24 @@ class OriginChecker(BaseSpider):
         trading_type = 1 if flag == "sh" else 3
         table_name = 'hkland_hgelistocks' if trading_type == 1 else 'hkland_sgelistocks'
 
+        for secu_code, _date in suspended:    # 增加 5
+            inner_code, secu_abbr = self.get_juyuan_codeinfo(secu_code)
+            item = {'TradingType': trading_type,
+                    'TargetCategory': 5,
+                    'InnerCode': inner_code,
+                    'SecuCode': secu_code,
+                    'SecuAbbr': secu_abbr,
+                    'InDate': _date,
+                    'Flag': 1,
+                    }
+            self._save(self.product_client, item, table_name, fields)
+
+        for secu_code, _date in resumed:    # 移出 5
+            in_date_item = self.get_indate_data(trading_type, table_name, 5, secu_code)
+            if in_date_item:
+                in_date_item.update({"Flag": 2, "OutDate": _date})
+                self._save(self.product_client, in_date_item, table_name, fields)
+
         for secu_code, _date in add_1:
             inner_code, secu_abbr = self.get_juyuan_codeinfo(secu_code)
             item = {'TradingType': trading_type,
