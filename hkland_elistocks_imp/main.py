@@ -240,6 +240,17 @@ class OriginChecker(BaseSpider):
                     }
             self._save(self.product_client, item, table_name, fields)
 
+        for secu_code, _date in add_34:
+            inner_code, secu_abbr = self.get_juyuan_codeinfo(secu_code)
+            base_item = {
+                'TradingType': trading_type, 'InnerCode': inner_code, 'SecuCode': secu_code,
+                'SecuAbbr': secu_abbr, 'InDate': _date, 'Flag': 1,
+            }
+            item3, item4 = copy.deepcopy(base_item), copy.deepcopy(base_item)
+            item3.update({'TargetCategory': 3})
+            item4.update({'TargetCategory': 4})
+            self._batch_save(self.product_client, [item3, item4], table_name, fields)
+
         for secu_code, _date in add_134:
             inner_code, secu_abbr = self.get_juyuan_codeinfo(secu_code)
             base_item = {
