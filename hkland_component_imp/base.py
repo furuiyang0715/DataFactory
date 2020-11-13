@@ -225,5 +225,12 @@ and ListedSector in (1, 2, 6, 7) and SecuCode = "{}";'.format(secu_code)
 
 
 # if __name__ == '__main__':
-#     for table in ("hkland_sgcomponent", "hkland_sgelistocks"):
+#     for table in (
+#             "hkland_sgcomponent",
+#             "hkland_hgcomponent",
+#
+#
+#             "hkland_hgelistocks",
+#             "hkland_sgelistocks",
+#                   ):
 #         BaseSpider().sync_dc2test(table)

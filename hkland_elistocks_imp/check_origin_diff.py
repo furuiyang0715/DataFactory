@@ -44,28 +44,19 @@ def catch_exceptions(cancel_on_failure=False):
 class OriginChecker(BaseSpider):
     def __init__(self):
         super(OriginChecker, self).__init__()
-        self.is_local = LOCAL
         self.sql_deal = SQL_DEAL
 
     def get_distinct_spider_udpate_time(self, table_name):
-        self._test_init()
         self._spider_init()
         sql = '''select distinct(Time) from {};'''.format(table_name)
-        if self.is_local:
-            ret = self.test_client.select_all(sql)
-        else:
-            ret = self.spider_client.select_all(sql)
+        ret = self.spider_client.select_all(sql)
         return ret
 
     def select_onetime_records(self, table_name, onetime: datetime.datetime):
         """获取某一个时间点的记录"""
-        self._test_init()
         self._spider_init()
         sql = '''select * from {} where Time = '{}'; '''.format(table_name, onetime)
-        if self.is_local:
-            ret = self.test_client.select_all(sql)
-        else:
-            ret = self.spider_client.select_all(sql)
+        ret = self.spider_client.select_all(sql)
         return ret
 
     def process_sz_changes(self, changes):
@@ -371,7 +362,7 @@ class OriginChecker(BaseSpider):
 
         info += "沪股合资格校对的结果是 {}, \n深股合资格校对的结果是 {}\n".format((sh1, sh2, sh3, sh4), (sz1, sz2, sz3, sz4))
         print(info)
-        self.ding(info)
+        # self.ding(info)
 
 
 def task():
@@ -393,15 +384,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-'''
-docker build -t registry.cn-shenzhen.aliyuncs.com/jzdev/dcfactory/kland_scelistocks:v0.0.1 .
-docker push registry.cn-shenzhen.aliyuncs.com/jzdev/dcfactory/kland_scelistocks:v0.0.1
-sudo docker pull registry.cn-shenzhen.aliyuncs.com/jzdev/dcfactory/kland_scelistocks:v0.0.1
-
-sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name scelistocks_imp \
---env LOCAL=0 \
---env SQL_DEAL=1  \
-registry.cn-shenzhen.aliyuncs.com/jzdev/dcfactory/kland_scelistocks:v0.0.1
-
-'''
