@@ -29,10 +29,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-'''
-docker build -t registry.cn-shenzhen.aliyuncs.com/jzdev/dcfactory/kland_component:v0.0.1 .
-docker push registry.cn-shenzhen.aliyuncs.com/jzdev/dcfactory/kland_component:v0.0.1
-sudo docker pull registry.cn-shenzhen.aliyuncs.com/jzdev/dcfactory/kland_component:v0.0.1
-sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name  component_imp --env LOCAL=0 registry.cn-shenzhen.aliyuncs.com/jzdev/dcfactory/kland_component:v0.0.1
-'''
