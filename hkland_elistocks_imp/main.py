@@ -178,6 +178,9 @@ class OriginChecker(BaseSpider):
         rvl_2 = []
         rm_2 = []
 
+        suspended = []
+        resumed = []
+
         for change in changes:
             _change, _remarks, secu_code = change.get('Ch_ange'), change.get("Remarks"), change.get("SSESCode")
             _effectivedate = change.get("EffectiveDate")
@@ -206,6 +209,10 @@ class OriginChecker(BaseSpider):
                 add_1.append((secu_code, _effectivedate))
                 if sentence_add34 in _remarks:
                     add_34.append((secu_code, _effectivedate))
+            elif _change == change_suspended:
+                suspended.append((secu_code, _effectivedate))
+            elif _change == change_resumed:
+                resumed.append((secu_code, _effectivedate))
             else:
                 print("* " * 100)
                 print(pprint.pformat(change))
