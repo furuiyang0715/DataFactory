@@ -123,113 +123,95 @@ class OriginChecker(BaseSpider):
                      )
 
     def process_sh_changes(self, changes):
-        # (从 2 中) 删除
-        change_removal = 'Removal'
-        # 从 3 4 中删除
-        change_removal_more = 'Remove from List of Eligible SSE Securities for Margin Trading and List of Eligible SSE Securities for Short Selling'
-        # 加入 (1)
-        change_addition = 'Addition'
-        # 加入 3 4
-        change_addition_more = 'Addition to List of Eligible SSE Securities for Margin Trading and List of Eligible SSE Securities for Short Selling'
-        # 加入 2
-        change_addition_less = 'Addition to List of Special SSE Securities/Special China Connect Securities (stocks eligible for sell only)'
-        # 移出 1 3 4, 加入 2
-        change_transfer = 'Transfer to List of Special SSE Securities/Special China Connect Securities (stocks eligible for sell only)'
-        # 移出 2
-        change_recover = 'Addition (from List of Special SSE Securities/Special China Connect Securities (stocks eligible for sell only))'
-
-        change_buyorders_resumed = 'Buy orders resumed'
-        change_buyorders_suspended = 'Buy orders suspended'
-
-        addition_sentence = 'This stock will also be added to the List of Eligible SSE Securities for Margin Trading and the List of Eligible SSE Securities for Short Selling'
-        recover_sentence = 'This stock will also be added to the List of Eligible SSE Securities for Margin Trading and the List of Eligible SSE Securities for Short Selling as it is also included in SSE stock list for margin trading and shortselling.'
-        remove_sentence = 'This stock will also be removed from the List of Eligible SSE Securities for Margin Trading and the List of Eligible SSE Securities for Short Selling.'
-        rename_sentence = 'SSE Stock Code and Stock Name are changed'
-
-        # TargetCategory` int(11) NOT NULL COMMENT '标的类别',
         # 标的类别(TargetCategory): 1-可买入及卖出，2-只可卖出，3-可进行保证金交易，4-可进行担保卖空，5-触发持股比例限制暂停买入。
-        # https://wikijs.jingzhuan.cn/%E6%95%B0%E6%8D%AE/%E7%9B%AE%E5%BD%95-%E8%A1%8D%E7%94%9F%E6%95%B0%E6%8D%AE%E5%BA%93%E6%96%87%E6%A1%A3/%E9%99%86%E6%B8%AF%E9%80%9A-%E6%B2%AA%E6%B8%AF%E9%80%9A%E5%90%88%E8%B5%84%E6%A0%BC%E8%82%A1%E5%8F%98%E6%9B%B4
+        change_add1 = 'Addition'  # 該Ａ股將納入中華通證券
+        # 在加入 1 的时候同时加入 3 4
+        sentence_add34 = 'This stock will also be added to the List of Eligible SSE Securities for Margin Trading and the List of Eligible SSE Securities for Short Selling'
+
+        # 加入可進行保證金交易的合資格上交所證券名單及可賣空的合資格滬股通證券名單
+        change_add34 = 'Addition to List of Eligible SSE Securities for Margin Trading and List of Eligible SSE Securities for Short Selling'
+
+        # 移至滬股通特別證券/中華通特別證券名單 (只可賣出)
+        change_add2 = 'Transfer to List of Special SSE Securities/Special China Connect Securities (stocks eligible for sell only)'
+        # 移入 2 时，一般要移出 1, 在有特别说明时移出  3 4
+        sentence_rm34 = 'This stock will also be removed from the List of Eligible SZSE Securities for Margin Trading and the List of Eligible SZSE Securities for Short Selling.'
+
+        # 移除, 从 2 中移除
+        change_rvl2 = 'Removal'
+
+        # 加入(由滬股通特別證券/中華通特別證券名單 (只可賣出))
+        # 意思为移出 2 加入 1
+        change_rm2 = "Addition (from List of Special SSE Securities/Special China Connect Securities (stocks eligible for sell only))"
+        # 在移出 2 的时候注明是否加入 3 4
+        # sentence_add34 = 'This stock will also be added to the List of Eligible SSE Securities for Margin Trading and the List of Eligible SSE Securities for Short Selling'
+
+        # 已暫停買入
+        change_suspended = 'Buy orders suspended'
+
+        # 已恢復買入
+        change_resumed = 'Buy orders resumed'
 
         self.process("sh",
                      changes,
-                     change_removal,
-                     change_removal_more,
-                     change_addition,    # 加入 1
-                     change_addition_more,   # 加入 1 3 4
-                     change_addition_less,
-                     change_transfer,
-                     change_recover,
-                     change_buyorders_resumed,     # 移出 5
-                     change_buyorders_suspended,   # 加入 5
-                     addition_sentence,
-                     recover_sentence,
-                     remove_sentence,
-                     rename_sentence,
+                     change_add1,
+                     sentence_add34,
+                     change_add34,
+                     change_add2,
+                     sentence_rm34,
+                     change_rvl2,
+                     change_rm2,
+                     change_suspended,
+                     change_resumed,
                      )
 
-    def process(self, flag, changes,
-                change_removal,
-                change_removal_more,
-                change_addition,
-                change_addition_more,
-                change_addition_less,
-                change_transfer,
-                change_recover,
-                change_buyorders_resumed,
-                change_buyorders_suspended,
-                addition_sentence,
-                recover_sentence,
-                remove_sentence,
-                rename_sentence,
+    def process(self, flag,
+                changes,
+                change_add1,
+                sentence_add34,
+                change_add34,
+                change_add2,
+                sentence_rm34,
+                change_rvl2,
+                change_rm2,
+                change_suspended,
+                change_resumed,
                 ):
-        add_134 = []
+
         add_1 = []
+        add_34 = []
+        add_134 = []
+        rm_134 = []
+        rm_1 = []
+        rvl_2 = []
+        rm_2 = []
 
-        recover_1 = []
-        recover_134 = []
-
-        transfer_1 = []
-        transfer_134 = []
-
-        removal_2 = []
         for change in changes:
             _change, _remarks, secu_code = change.get('Ch_ange'), change.get("Remarks"), change.get("SSESCode")
             _effectivedate = change.get("EffectiveDate")
 
-            if _change == change_addition:  # add 1
-                add_1.append((secu_code, _effectivedate))
-            elif _change == change_addition_more:  # add 1 3 4
-                add_134.append((secu_code, _effectivedate))
-            elif _change == change_recover:    # 移出 2
-                if recover_sentence in _remarks:   # 加入 1 3 4
-                    recover_134.append((secu_code, _effectivedate))
-                else:   # 加入 1
-                    recover_1.append((secu_code, _effectivedate))
-            elif _change == change_transfer:   # 加入 2
-                if remove_sentence in _remarks:   # 移出 3 4
-                    transfer_134.append((secu_code, _effectivedate))
-                else:   # 移出 1
-                    transfer_1.append((secu_code, _effectivedate))
-            elif _change == change_removal:  # 移出 2
-                removal_2.append((secu_code, _effectivedate))
-            elif _change == change_removal_more:   # 移出 3 4
-                transfer_134.append((secu_code, _effectivedate))
-            elif _change == change_addition_less:    # 加入 2
+            if _change == change_add1:
+                if sentence_add34 in _remarks:
+                    add_134.append((secu_code, _effectivedate))
+                else:
+                    add_1.append((secu_code, _effectivedate))
 
-                pass
-            else:
-                pass
+            elif _change == change_add34:
+                add_34.append((secu_code, _effectivedate))
 
-        print("{}_add_1: ".format(flag), add_1)
-        print("{}_add_134: ".format(flag), add_134)
+            elif _change == change_add2:
+                if sentence_rm34 in _remarks:
+                    rm_134.append((secu_code, _effectivedate))
+                else:
+                    rm_1.append((secu_code, _effectivedate))
 
-        print("{}_recover_1: ".format(flag), recover_1)
-        print("{}_recover_134: ".format(flag), recover_134)
+            elif _change == change_rvl2:
+                rvl_2.append((secu_code, _effectivedate))
 
-        print("{}_transfer_1: ".format(flag), transfer_1)
-        print("{}_transfer_134".format(flag), transfer_134)
-
-        print("{}_removal_2".format(flag), removal_2)
+            elif _change == change_rm2:
+                if sentence_add34 in _remarks:
+                    add_34.append((secu_code, _effectivedate))
+                else:
+                    rm_2.append((secu_code, _effectivedate))
 
         if not self.sql_deal:
             return

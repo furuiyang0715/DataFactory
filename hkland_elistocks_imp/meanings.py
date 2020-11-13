@@ -33,3 +33,10 @@ change_suspended = 'Buy orders suspended'
 
 # 已恢復買入
 change_resumed = 'Buy orders resumed'
+
+
+
+
+# r1 = 'This stock will also be added to the List of Eligible SSE Securities for Margin Trading and the List of Eligible SSE Securities for Short Selling'
+# r2 = 'This stock will also be added to the List of Eligible SSE Securities for Margin Trading and the List of Eligible SSE Securities for Short Selling'
+# print(r1 == r2)
