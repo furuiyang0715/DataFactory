@@ -7,7 +7,6 @@ file_path = os.path.abspath(os.path.join(cur_path, ".."))
 sys.path.insert(0, file_path)
 
 from hkland_component_imp.base import BaseSpider, logger
-from hkland_component_imp.configs import LOCAL
 
 
 class SZSCComponent(BaseSpider):
@@ -47,13 +46,8 @@ class SZSCComponent(BaseSpider):
         else:
             table_name = self.hk_change_table_name
 
-        self._test_init()
         self._spider_init()
-
-        if self.is_local:
-            client = self.test_client
-        else:
-            client = self.spider_client
+        client = self.spider_client
 
         sql1 = 'select * from {} where Time = (select min(Time) from {});'.format(table_name, table_name)
         sql2 = 'select * from {} where Time = (select max(Time) from {});'.format(table_name, table_name)
@@ -81,7 +75,6 @@ class SZSCComponent(BaseSpider):
 
     def __init__(self):
         super(SZSCComponent, self).__init__()
-        self.is_local = LOCAL
         self.juyuan_table_name = 'lc_zhsccomponent'
         self.dc_table_name = 'hkland_sgcomponent'
         self.target_table_name = 'hkland_sgcomponent'
@@ -123,14 +116,8 @@ class SZSCComponent(BaseSpider):
 
     def check_target_exist(self, record):
         """判断移入或者移出的数据 在目标库中是否存在"""
-        self._test_init()
         self._product_init()
-
-        if self.is_local:
-            client = self.test_client
-        else:
-            client = self.product_client
-
+        client = self.product_client
         if record.get("InDate"):
             is_exist = client.select_one(
                 "select * from {} where CompType = {} and SecuCode = '{}' and InDate = '{}'; ".format(
@@ -146,23 +133,17 @@ class SZSCComponent(BaseSpider):
         else:
             return False
 
-    def is_in_list(self, code):
-        """判断是否在目标库的当前列表中 """
-        self._test_init()
-        self._product_init()
-
-        if self.is_local:
-            client = self.test_client
-        else:
-            client = self.product_client
-
-        ret = client.select_all(
-            "select flag from {} where SecuCode = '{}' and InDate = (select max(InDate) from {} where SecuCode = '{}'); ".format(
-                self.target_table_name, code, self.target_table_name, code))[0]
-        if ret.get("flag") == 1:
-            return True
-        else:
-            return False
+    # def is_in_list(self, code):
+    #     """判断是否在目标库的当前列表中 """
+    #     self._product_init()
+    #     client = self.product_client
+    #     ret = client.select_all(
+    #         "select flag from {} where SecuCode = '{}' and InDate = (select max(InDate) from {} where SecuCode = '{}'); ".format(
+    #             self.target_table_name, code, self.target_table_name, code))[0]
+    #     if ret.get("flag") == 1:
+    #         return True
+    #     else:
+    #         return False
 
     def check_hk_list(self):
         self._spider_init()
@@ -172,19 +153,13 @@ class SZSCComponent(BaseSpider):
         def get_spider_hk_list():
             sql = 'select distinct(SecuCode) from {} where Time = (select max(Time) from {});'.format(
                 self.hk_list_table_name, self.hk_list_table_name)
-            if self.is_local:
-                ret = self.test_client.select_all(sql)
-            else:
-                ret = self.spider_client.select_all(sql)
+            ret = self.spider_client.select_all(sql)
             hk_list = [r.get("SecuCode") for r in ret]
             return hk_list
 
         def get_target_hk_list():
             sql = 'select SecuCode from {} where CompType = 4 and Flag = 1;'.format(self.target_table_name)
-            if self.is_local:
-                ret = self.test_client.select_all(sql)
-            else:
-                ret = self.product_client.select_all(sql)
+            ret = self.product_client.select_all(sql)
             hk_list = [r.get("SecuCode") for r in ret]
             return hk_list
 
@@ -197,25 +172,18 @@ class SZSCComponent(BaseSpider):
 
     def check_zh_list(self):
         self._spider_init()
-        self._test_init()
         self._product_init()
 
         def get_spider_zh_list():
             sql = 'select distinct(SSESCode) from {} where Date = (select max(Date) from {});'.format(
                 self.sz_list_table_name, self.sz_list_table_name)
-            if self.is_local:
-                ret = self.test_client.select_all(sql)
-            else:
-                ret = self.spider_client.select_all(sql)
+            ret = self.spider_client.select_all(sql)
             zh_list = [r.get("SSESCode") for r in ret]
             return zh_list
 
         def get_target_zh_list():
             sql = 'select SecuCode from {} where CompType = 3 and Flag = 1;'.format(self.target_table_name)
-            if self.is_local:
-                ret = self.test_client.select_all(sql)
-            else:
-                ret = self.product_client.select_all(sql)
+            ret = self.product_client.select_all(sql)
             zh_list = [r.get("SecuCode") for r in ret]
             return zh_list
 
@@ -227,14 +195,8 @@ class SZSCComponent(BaseSpider):
         return spider_zh_list == target_zh_list
 
     def process_zh_changes(self, zh_changes):
-        self._test_init()
         self._product_init()
-
-        if self.is_local:
-            client = self.test_client
-        else:
-            client = self.product_client
-
+        client = self.product_client
         add_items = []
         recover_items = []
         transfer_items = []
@@ -341,14 +303,8 @@ class SZSCComponent(BaseSpider):
                 return inner_code
             else:
                 return None
-
-        self._test_init()
         self._product_init()
-
-        if self.is_local:
-            client = self.test_client
-        else:
-            client = self.product_client
+        client = self.product_client
         add_items = []
         delete_items = []
         for change in hk_changes:
@@ -414,5 +370,4 @@ class SZSCComponent(BaseSpider):
 
 
 if __name__ == "__main__":
-    sz = SZSCComponent()
-    sz.start()
+    SZSCComponent().start()
