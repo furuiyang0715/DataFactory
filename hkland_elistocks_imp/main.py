@@ -432,6 +432,7 @@ class OriginChecker(BaseSpider):
                 f.write(pprint.pformat(to_insert))
             count += 1
 
+        # 检查一致性
         dp = DailyUpdate()
         sh1 = dp.sh_short_sell_list()
         sh2 = dp.sh_buy_margin_trading_list()
@@ -448,20 +449,5 @@ class OriginChecker(BaseSpider):
         # self.ding(info)
 
 
-def task():
-    OriginChecker().start()
-
-
-def main():
-    logger.info("当前时间是{} ".format(datetime.datetime.now()))
-    task()
-    schedule.every().day.at("17:00").do(task)
-
-    while True:
-        logger.info("当前调度系统中的任务列表是{}".format(schedule.jobs))
-        schedule.run_pending()
-        time.sleep(1800)
-
-
 if __name__ == "__main__":
-    task()
+    OriginChecker().start()
