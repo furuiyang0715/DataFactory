@@ -6,9 +6,8 @@ import logging
 import time
 import traceback
 import urllib.parse
-
-
 import requests
+
 from hkland_component_imp.configs import TARGET_HOST, LOCAL, TARGET_PORT, TARGET_USER, TARGET_PASSWD, TARGET_DB, \
     JUY_HOST, JUY_PORT, JUY_USER, JUY_PASSWD, JUY_DB, DATACENTER_HOST, DATACENTER_PORT, DATACENTER_USER, \
     DATACENTER_PASSWD, DATACENTER_DB, SPIDER_HOST, SPIDER_PORT, SPIDER_USER, SPIDER_PASSWD, SPIDER_DB, TEST_HOST, \
