@@ -7,5 +7,5 @@ __pycache__
 *.xls
 *.log.*
 *.pickle
-temp
+temp*
 hkland
