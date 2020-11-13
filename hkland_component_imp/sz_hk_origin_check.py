@@ -215,7 +215,7 @@ class SZSCComponent(BaseSpider):
                 record = {"CompType": 3, "SecuCode": secu_code, "InDate": effective_date}
                 is_exist = self.check_target_exist(record)
                 if is_exist:
-                    logger.info("记录已存在")
+                    # logger.info("记录已存在")
                     continue
                 inner_code, secu_abbr = self.get_juyuan_codeinfo(secu_code)
                 record.update({"InnerCode": inner_code, "Flag": 1})
@@ -228,7 +228,7 @@ class SZSCComponent(BaseSpider):
                 record = {"CompType": 3, "SecuCode": secu_code, "InDate": effective_date}
                 is_exist = self.check_target_exist(record)
                 if is_exist:
-                    logger.info("记录已存在")
+                    # logger.info("记录已存在")
                     continue
                 inner_code, secu_abbr = self.get_juyuan_codeinfo(secu_code)
                 record.update({"InnerCode": inner_code, "Flag": 1})
@@ -242,7 +242,7 @@ class SZSCComponent(BaseSpider):
                 # 移除记录要检查之前的移除效果是否存在 因为 OutDate 不是唯一的联合主键
                 is_exist = self.check_target_exist(record)
                 if is_exist:
-                    logger.info("记录已存在")
+                    # logger.info("记录已存在")
                     continue
                 inner_code, secu_abbr = self.get_juyuan_codeinfo(secu_code)
 
@@ -250,7 +250,7 @@ class SZSCComponent(BaseSpider):
                 in_date = client.select_one(sql)
                 if not in_date:
                     # 已经处理过的数据 eg. 002681, 002176
-                    print(secu_code)
+                    # print(secu_code)
                     continue
                 else:
                     in_date = in_date.get("InDate")
@@ -266,7 +266,7 @@ class SZSCComponent(BaseSpider):
                 record = {"CompType": 3, "SecuCode": secu_code, "OutDate": effective_date}
                 is_exist = self.check_target_exist(record)
                 if is_exist:
-                    logger.info("记录已存在")
+                    # logger.info("记录已存在")
                     continue
 
                 inner_code, secu_abbr = self.get_juyuan_codeinfo(secu_code)
@@ -274,7 +274,7 @@ class SZSCComponent(BaseSpider):
                 is_exist = client.select_one(sql)
                 if not is_exist:
                     # 前期已经移除过或者不对状态造成影响的
-                    print(secu_code)
+                    # print(secu_code)
                     continue
                 else:
                     in_date = is_exist.get("InDate")
@@ -316,7 +316,7 @@ class SZSCComponent(BaseSpider):
                 record = {"CompType": 4, "SecuCode": secu_code, "InDate": effective_date}
                 is_exist = self.check_target_exist(record)
                 if is_exist:
-                    logger.info("记录已存在")
+                    # logger.info("记录已存在")
                     continue
                 inner_code = get_hk_inner_code(secu_code)
                 record.update({"InnerCode": inner_code, "Flag": 1})
@@ -329,13 +329,13 @@ class SZSCComponent(BaseSpider):
                 record = {"CompType": 4, "SecuCode": secu_code, "OutDate": effective_date}
                 is_exist = self.check_target_exist(record)
                 if is_exist:
-                    logger.info("记录已存在")
+                    # logger.info("记录已存在")
                     continue
                 inner_code = get_hk_inner_code(secu_code)
                 sql = 'select  InDate from {} where CompType = 4 and SecuCode = {} and Flag = 1; '.format(self.target_table_name, secu_code)
                 ret = client.select_one(sql)
                 if not ret:
-                    print(secu_code)
+                    # print(secu_code)
                     continue
                 else:
                     in_date = ret.get("InDate")
