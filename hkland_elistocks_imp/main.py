@@ -221,19 +221,15 @@ class OriginChecker(BaseSpider):
         # 对相应的项目进行增删改
         # ID  TradingType TargetCategory InnerCode SecuCode SecuAbbr InDate OutDate Flag CCASSCode
         # ParValue CREATETIMEJZ UPDATETIMEJZ CMFID CMFTime
+        self._product_init()
         fields = ['TradingType', 'TargetCategory', 'InnerCode', 'SecuCode',
                   # 'SecuAbbr',
                   'InDate', 'OutDate', 'Flag']
         trading_type = 1 if flag == "sh" else 3
         table_name = 'hkland_hgelistocks' if trading_type == 1 else 'hkland_sgelistocks'
 
-        for item in add_1:
-            secu_code, _date = item
-            # TODO
-            if secu_code in ("600956",):
-                continue
+        for secu_code, _date in add_1:
             inner_code, secu_abbr = self.get_juyuan_codeinfo(secu_code)
-            # 增加 1
             item = {'TradingType': trading_type,
                     'TargetCategory': 1,
                     'InnerCode': inner_code,
@@ -242,130 +238,124 @@ class OriginChecker(BaseSpider):
                     'InDate': _date,
                     'Flag': 1,
                     }
-            self._product_init()
-            ret = self._save(self.product_client, item, table_name, fields)
-            # print(ret)
+            self._save(self.product_client, item, table_name, fields)
 
-        for item in add_134:
-            secu_code, _date = item
+        for secu_code, _date in add_134:
             inner_code, secu_abbr = self.get_juyuan_codeinfo(secu_code)
-            # 增加 1 3 4
             base_item = {
                 'TradingType': trading_type, 'InnerCode': inner_code, 'SecuCode': secu_code,
                 'SecuAbbr': secu_abbr, 'InDate': _date, 'Flag': 1,
             }
-            item1, item3, item4 = copy.copy(base_item), copy.copy(base_item), copy.copy(base_item)
+            item1, item3, item4 = copy.deepcopy(base_item), copy.deepcopy(base_item), copy.deepcopy(base_item)
             item1.update({'TargetCategory': 1})
             item3.update({'TargetCategory': 3})
             item4.update({'TargetCategory': 4})
-            self._product_init()
-            ret = self._batch_save(self.product_client, [item1, item3, item4], table_name, fields)
-            print("****** ", ret)
+            self._batch_save(self.product_client, [item1, item3, item4], table_name, fields)
 
-        for item in recover_1:
-            print(item)
-            #  结束 2
-            secu_code, _date = item
-            in_date_item = self.get_indate_data(trading_type, table_name, 2, secu_code)
-            if in_date_item:
-                in_date_item.update({"Flag": 2, "OutDate": _date})
-                r1 = self._save(self.product_client, in_date_item, table_name, fields)
-                print("***** ", r1)
-                # （恢复）增加 1
-                inner_code, secu_abbr = self.get_juyuan_codeinfo(secu_code)
-                item = {'TradingType': trading_type,
-                        'TargetCategory': 1,
-                        'InnerCode': inner_code,
-                        'SecuCode': secu_code,
-                        'SecuAbbr': secu_abbr,
-                        'InDate': _date,
-                        'Flag': 1,
-                        }
-                r2 = self._save(self.product_client, item, table_name, fields)
-                print("##### ", r2)
-
-        for item in recover_134:
-            print(item)
-            # 结束 2
-            secu_code, _date = item
-            in_date_item = self.get_indate_data(trading_type, table_name, 2, secu_code)
-            if in_date_item:
-                in_date_item.update({"Flag": 2, "OutDate": _date})
-                self._product_init()
-                r1 = self._save(self.product_client, in_date_item, table_name, fields)
-                print("***** ", r1)
-                # （恢复）增加 1 3 4
-                inner_code, secu_abbr = self.get_juyuan_codeinfo(secu_code)
-                base_item = {
-                    'TradingType': trading_type, 'InnerCode': inner_code, 'SecuCode': secu_code,
-                    'SecuAbbr': secu_abbr, 'InDate': _date, 'Flag': 1,
-                }
-                item1, item3, item4 = copy.copy(base_item), copy.copy(base_item), copy.copy(base_item)
-                item1.update({'TargetCategory': 1})
-                item3.update({'TargetCategory': 3})
-                item4.update({'TargetCategory': 4})
-                ret = self._batch_save(self.product_client, [item1, item3, item4], table_name, fields)
-                print("***** ", ret)
-
-        for item in transfer_1:
-            # print(item)
-            secu_code, _date = item
-            inner_code, secu_abbr = self.get_juyuan_codeinfo(secu_code)
-            in_date_item = self.get_indate_data(trading_type, table_name, 1, secu_code)
-            if in_date_item:
-                # 移出 1
-                in_date_item.update({"Flag": 2, "OutDate": _date})
-                r1 = self._save(self.product_client, in_date_item, table_name, fields)
-                # print(r1)
-                # 增加 2
-                item = {'TradingType': trading_type,
-                        'TargetCategory': 2,
-                        'InnerCode': inner_code,
-                        'SecuCode': secu_code,
-                        'SecuAbbr': secu_abbr,
-                        'InDate': _date,
-                        'Flag': 1,
-
-                        }
-                # print("****************", item)
-                self._product_init()
-                r2 = self._save(self.product_client, item, table_name, fields)
-                # print(r2)
-
-        for item in transfer_134:
-            print(item)
-            secu_code, _date = item
-            self._product_init()
-            # 移除 1 3 4
-            for trading_category in (1, 3, 4):
-                in_date_item = self.get_indate_data(trading_type, table_name, trading_category, secu_code)
-                if in_date_item:
-                    in_date_item.update({"Flag": 2, "OutDate": _date})
-                    r1 = self._save(self.product_client, in_date_item, table_name, fields)
-                    print("##### ", r1)
-            # 增加 2
-            inner_code, secu_abbr = self.get_juyuan_codeinfo(secu_code)
-            item = {'TradingType': trading_type,
-                    'TargetCategory': 2,
-                    'InnerCode': inner_code,
-                    'SecuCode': secu_code,
-                    'SecuAbbr': secu_abbr,
-                    'InDate': _date,
-                    'Flag': 1,
-                    }
-            r2 = self._save(self.product_client, item, table_name, fields)
-            print("***** ", r2)
-
-        for item in removal_2:
-            print(item)
-            secu_code, _date = item
-            self._product_init()
-            # 移除 2
-            in_date_item = self.get_indate_data(trading_type, table_name, 2, secu_code)
-            if in_date_item:
-                in_date_item.update({"Flag": 2, "OutDate": _date})
-                r1 = self._save(self.product_client, in_date_item, table_name, fields)
-                print("****** ", r1)
+        # for item in recover_1:
+        #     print(item)
+        #     #  结束 2
+        #     secu_code, _date = item
+        #     in_date_item = self.get_indate_data(trading_type, table_name, 2, secu_code)
+        #     if in_date_item:
+        #         in_date_item.update({"Flag": 2, "OutDate": _date})
+        #         r1 = self._save(self.product_client, in_date_item, table_name, fields)
+        #         print("***** ", r1)
+        #         # （恢复）增加 1
+        #         inner_code, secu_abbr = self.get_juyuan_codeinfo(secu_code)
+        #         item = {'TradingType': trading_type,
+        #                 'TargetCategory': 1,
+        #                 'InnerCode': inner_code,
+        #                 'SecuCode': secu_code,
+        #                 'SecuAbbr': secu_abbr,
+        #                 'InDate': _date,
+        #                 'Flag': 1,
+        #                 }
+        #         r2 = self._save(self.product_client, item, table_name, fields)
+        #         print("##### ", r2)
+        #
+        # for item in recover_134:
+        #     print(item)
+        #     # 结束 2
+        #     secu_code, _date = item
+        #     in_date_item = self.get_indate_data(trading_type, table_name, 2, secu_code)
+        #     if in_date_item:
+        #         in_date_item.update({"Flag": 2, "OutDate": _date})
+        #         self._product_init()
+        #         r1 = self._save(self.product_client, in_date_item, table_name, fields)
+        #         print("***** ", r1)
+        #         # （恢复）增加 1 3 4
+        #         inner_code, secu_abbr = self.get_juyuan_codeinfo(secu_code)
+        #         base_item = {
+        #             'TradingType': trading_type, 'InnerCode': inner_code, 'SecuCode': secu_code,
+        #             'SecuAbbr': secu_abbr, 'InDate': _date, 'Flag': 1,
+        #         }
+        #         item1, item3, item4 = copy.copy(base_item), copy.copy(base_item), copy.copy(base_item)
+        #         item1.update({'TargetCategory': 1})
+        #         item3.update({'TargetCategory': 3})
+        #         item4.update({'TargetCategory': 4})
+        #         ret = self._batch_save(self.product_client, [item1, item3, item4], table_name, fields)
+        #         print("***** ", ret)
+        #
+        # for item in transfer_1:
+        #     # print(item)
+        #     secu_code, _date = item
+        #     inner_code, secu_abbr = self.get_juyuan_codeinfo(secu_code)
+        #     in_date_item = self.get_indate_data(trading_type, table_name, 1, secu_code)
+        #     if in_date_item:
+        #         # 移出 1
+        #         in_date_item.update({"Flag": 2, "OutDate": _date})
+        #         r1 = self._save(self.product_client, in_date_item, table_name, fields)
+        #         # print(r1)
+        #         # 增加 2
+        #         item = {'TradingType': trading_type,
+        #                 'TargetCategory': 2,
+        #                 'InnerCode': inner_code,
+        #                 'SecuCode': secu_code,
+        #                 'SecuAbbr': secu_abbr,
+        #                 'InDate': _date,
+        #                 'Flag': 1,
+        #
+        #                 }
+        #         # print("****************", item)
+        #         self._product_init()
+        #         r2 = self._save(self.product_client, item, table_name, fields)
+        #         # print(r2)
+        #
+        # for item in transfer_134:
+        #     print(item)
+        #     secu_code, _date = item
+        #     self._product_init()
+        #     # 移除 1 3 4
+        #     for trading_category in (1, 3, 4):
+        #         in_date_item = self.get_indate_data(trading_type, table_name, trading_category, secu_code)
+        #         if in_date_item:
+        #             in_date_item.update({"Flag": 2, "OutDate": _date})
+        #             r1 = self._save(self.product_client, in_date_item, table_name, fields)
+        #             print("##### ", r1)
+        #     # 增加 2
+        #     inner_code, secu_abbr = self.get_juyuan_codeinfo(secu_code)
+        #     item = {'TradingType': trading_type,
+        #             'TargetCategory': 2,
+        #             'InnerCode': inner_code,
+        #             'SecuCode': secu_code,
+        #             'SecuAbbr': secu_abbr,
+        #             'InDate': _date,
+        #             'Flag': 1,
+        #             }
+        #     r2 = self._save(self.product_client, item, table_name, fields)
+        #     print("***** ", r2)
+        #
+        # for item in removal_2:
+        #     print(item)
+        #     secu_code, _date = item
+        #     self._product_init()
+        #     # 移除 2
+        #     in_date_item = self.get_indate_data(trading_type, table_name, 2, secu_code)
+        #     if in_date_item:
+        #         in_date_item.update({"Flag": 2, "OutDate": _date})
+        #         r1 = self._save(self.product_client, in_date_item, table_name, fields)
+        #         print("****** ", r1)
 
     def get_indate_data(self, trading_type, table_name, trading_category, secu_code):
         self._product_init()
