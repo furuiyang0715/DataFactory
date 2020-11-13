@@ -180,6 +180,7 @@ class OriginChecker(BaseSpider):
         add_1 = []
         add_34 = []
         add_134 = []
+        add_2 = []
         rm_134 = []
         rm_1 = []
         rvl_2 = []
@@ -199,6 +200,7 @@ class OriginChecker(BaseSpider):
                 add_34.append((secu_code, _effectivedate))
 
             elif _change == change_add2:
+                add_2.append((secu_code, _effectivedate))
                 if sentence_rm34 in _remarks:
                     rm_134.append((secu_code, _effectivedate))
                 else:
@@ -208,10 +210,10 @@ class OriginChecker(BaseSpider):
                 rvl_2.append((secu_code, _effectivedate))
 
             elif _change == change_rm2:
+                rm_2.append((secu_code, _effectivedate))
+                add_1.append((secu_code, _effectivedate))
                 if sentence_add34 in _remarks:
                     add_34.append((secu_code, _effectivedate))
-                else:
-                    rm_2.append((secu_code, _effectivedate))
 
         if not self.sql_deal:
             return
