@@ -299,15 +299,17 @@ class OriginChecker(BaseSpider):
             'hkex_lgt_change_of_sse_securities_lists': '',
             'hkex_lgt_change_of_szse_securities_lists': '',
         }
+
         info = ''
         count = 1
         for table in origin_map:
             ret = self.get_distinct_spider_udpate_time(table)
             dt_list = sorted([r.get("Time") for r in ret])
-            print("{} 至今全部的更新时间列表是{}".format(table, dt_list))
+            # print("{} 至今全部的更新时间列表是{}".format(table, dt_list))
             # 注意: 最后的两次的差异 以及最后一次与第一次之间的差异 按需
             latest_records = self.select_onetime_records(table, dt_list[-1])
             first_records = self.select_onetime_records(table, dt_list[0])
+            print(f"{table}: {dt_list[0]} --> {dt_list[-1]} ")
 
             # 去掉一些无关字段
             for r in latest_records:
@@ -369,8 +371,6 @@ def task():
     OriginChecker().start()
 
 
-# task()
-
 def main():
     logger.info("当前时间是{} ".format(datetime.datetime.now()))
     task()
@@ -383,4 +383,5 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    # main()
+    task()

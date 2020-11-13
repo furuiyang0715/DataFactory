@@ -9,3 +9,5 @@ __pycache__
 *.pickle
 temp*
 hkland
+to_insert_*.txt
+to_delete_*.txt

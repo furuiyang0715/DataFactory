@@ -6,9 +6,8 @@ import logging
 import time
 import traceback
 import urllib.parse
-
-
 import requests
+
 from hkland_elistocks_imp.configs import LOCAL, TARGET_HOST, TARGET_PORT, TARGET_USER, TARGET_PASSWD, TARGET_DB, \
     JUY_HOST, JUY_PORT, JUY_USER, JUY_PASSWD, JUY_DB, DATACENTER_HOST, DATACENTER_PORT, DATACENTER_USER, \
     DATACENTER_PASSWD, DATACENTER_DB, SPIDER_HOST, SPIDER_PORT, SPIDER_USER, SPIDER_PASSWD, SPIDER_DB, TEST_HOST, \
@@ -211,16 +210,16 @@ and ListedSector in (1, 2, 6, 7) and SecuCode = "{}";'.format(secu_code)
         else:
             logger.warning("钉钉消息发送失败")
 
-    def sync_dc2test(self, table_name):
-        """测试使用 将 dc 数据库导出到测试库"""
-        self._dc_init()
-        self._test_init()
-        sql = '''select * from {}; '''.format(table_name)
-        datas = self.dc_client.select_all(sql)
-        self._batch_save(self.test_client, datas, table_name, [])
+    # def sync_dc2test(self, table_name):
+    #     """测试使用 将 dc 数据库导出到测试库"""
+    #     self._dc_init()
+    #     self._test_init()
+    #     sql = '''select * from {}; '''.format(table_name)
+    #     datas = self.dc_client.select_all(sql)
+    #     self._batch_save(self.test_client, datas, table_name, [])
 
 
-if __name__ == "__main__":
-    bs = BaseSpider()
-    bs.sync_dc2test("hkland_hgelistocks")
-    bs.sync_dc2test("hkland_sgelistocks")
+# if __name__ == "__main__":
+#     bs = BaseSpider()
+#     bs.sync_dc2test("hkland_hgelistocks")
+#     bs.sync_dc2test("hkland_sgelistocks")

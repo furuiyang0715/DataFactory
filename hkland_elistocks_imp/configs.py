@@ -14,7 +14,7 @@ LOCAL = int(env.get("LOCAL", cf.get('deploy', 'LOCAL')))
 # 是否是首次运行
 FIRST = int(env.get("FIRST", 0))
 # 是否直接进行数据库处理
-SQL_DEAL = int(env.get("SQL_DEAL", 0))
+SQL_DEAL = int(env.get("SQL_DEAL", 1))
 
 # 聚源
 JUY_HOST = env.get("JUY_HOST", cf.get('juyuan', 'JUY_HOST'))
