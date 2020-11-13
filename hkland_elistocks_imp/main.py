@@ -181,6 +181,7 @@ class OriginChecker(BaseSpider):
         add_34 = []
         add_134 = []
         add_2 = []
+
         rm_134 = []
         rm_1 = []
         rvl_2 = []
@@ -262,6 +263,19 @@ class OriginChecker(BaseSpider):
             item3.update({'TargetCategory': 3})
             item4.update({'TargetCategory': 4})
             self._batch_save(self.product_client, [item1, item3, item4], table_name, fields)
+
+        for secu_code, _date in add_2:
+            inner_code, secu_abbr = self.get_juyuan_codeinfo(secu_code)
+            item = {'TradingType': trading_type,
+                    'TargetCategory': 2,
+                    'InnerCode': inner_code,
+                    'SecuCode': secu_code,
+                    'SecuAbbr': secu_abbr,
+                    'InDate': _date,
+                    'Flag': 1,
+                    }
+            self._save(self.product_client, item, table_name, fields)
+
 
         # for item in recover_1:
         #     print(item)
