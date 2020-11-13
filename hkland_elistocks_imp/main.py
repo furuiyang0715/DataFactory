@@ -372,19 +372,16 @@ class OriginChecker(BaseSpider):
 
     def start(self):
         """直接检查两个数据点之间的差异"""
-        _map = {
-            'hkland_hgelistocks': '',  # 沪港通合资格股
-            'hkland_sgelistocks': '',  # 深港通合资格股
 
-        }
-        origin_map = {
-            'hkex_lgt_change_of_sse_securities_lists': '',
-            'hkex_lgt_change_of_szse_securities_lists': '',
-        }
+        # 两个合资格股的变更表
+        origin_change_tables = [
+            'hkex_lgt_change_of_sse_securities_lists',
+            'hkex_lgt_change_of_szse_securities_lists',
+        ]
 
         info = ''
         count = 1
-        for table in origin_map:
+        for table in origin_change_tables:
             ret = self.get_distinct_spider_udpate_time(table)
             dt_list = sorted([r.get("Time") for r in ret])
             # print("{} 至今全部的更新时间列表是{}".format(table, dt_list))
@@ -426,10 +423,11 @@ class OriginChecker(BaseSpider):
             else:
                 self.process_sz_changes(to_insert)
 
-            with open("to_delete_{}.txt".format(count), "w") as f:
-                f.write(pprint.pformat(to_delete))
-            with open("to_insert_{}.txt".format(count), "w") as f:
-                f.write(pprint.pformat(to_insert))
+            # with open("to_delete_{}.txt".format(count), "w") as f:
+            #     f.write(pprint.pformat(to_delete))
+            # with open("to_insert_{}.txt".format(count), "w") as f:
+            #     f.write(pprint.pformat(to_insert))
+
             count += 1
 
         # 检查一致性
