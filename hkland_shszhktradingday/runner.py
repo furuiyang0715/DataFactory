@@ -24,10 +24,9 @@ def download_lastst_csv_file():
         # urlretrieve(load_2020_file_path, '2020 Calendar_csv_c.csv')
         urlretrieve(load_2021_file_path, '2021 Calendar_csv_c.csv')
     except:
-        traceback.print_exc()
-        print("Update csv file fail.")
+        logger.debug(f"Update csv file fail. {traceback.format_exc()}")
     else:
-        print("Success.")
+        logger.info("Download success.")
 
 
 def update_calendar():
