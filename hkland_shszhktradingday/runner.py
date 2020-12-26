@@ -3,10 +3,11 @@ import logging
 import sys
 import time
 import schedule
+import traceback
+from urllib.request import urlretrieve
 
 sys.path.append("./../")
 
-from hkland_shszhktradingday.down_load_lastest_file import download_lastst_csv_file
 from hkland_shszhktradingday.gene_trading_days import CSVLoader
 from hkland_shszhktradingday.parse_page_update_info import get_lastest_update_dt
 
@@ -14,12 +15,32 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(level
 logger = logging.getLogger(__name__)
 
 
+def download_lastst_csv_file():
+    # load_2019_file_path = 'https://www.hkex.com.hk/-/media/HKEX-Market/Mutual-Market/Stock-Connect/Reference-Materials/Trading-Hour,-Trading-and-Settlement-Calendar/2019-Calendar_csv_c.csv?la=zh-HK'
+    # load_2020_file_path = 'https://www.hkex.com.hk/-/media/HKEX-Market/Mutual-Market/Stock-Connect/Reference-Materials/Trading-Hour,-Trading-and-Settlement-Calendar/2020-Calendar_csv_c.csv?la=zh-HK'
+    load_2021_file_path = 'https://www.hkex.com.hk/-/media/HKEX-Market/Mutual-Market/Stock-Connect/Reference-Materials/Trading-Hour,-Trading-and-Settlement-Calendar/2021-Calendar_csv_c.csv?la=zh-HK'
+    try:
+        # urlretrieve(load_2019_file_path, '2019 Calendar_csv_c.csv')
+        # urlretrieve(load_2020_file_path, '2020 Calendar_csv_c.csv')
+        urlretrieve(load_2021_file_path, '2021 Calendar_csv_c.csv')
+    except:
+        traceback.print_exc()
+        print("Update csv file fail.")
+    else:
+        print("Success.")
+
+
 def update_calendar():
     logger.info("开始下载更新后的文件")
     download_lastst_csv_file()
     logger.info("下载完毕")
 
-    for file_path, year in [('2019 Calendar_csv_c.csv', 2019), ('2020 Calendar_csv_c.csv', 2020)]:
+    for file_path, year in [
+                            # ('2019 Calendar_csv_c.csv', 2019),
+                            # ('2020 Calendar_csv_c.csv', 2020),
+                            ('2021 Calendar_csv_c.csv', 2021),
+
+    ]:
         logger.info("开始刷新 {} 年的数据".format(year))
         ll = CSVLoader(csv_file_path=file_path, year=year)
         ll.start()
