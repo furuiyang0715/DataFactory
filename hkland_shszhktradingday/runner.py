@@ -4,12 +4,13 @@ import sys
 import time
 import schedule
 import traceback
+import re
+import requests as req
+from lxml import html
 from urllib.request import urlretrieve
 
 sys.path.append("./../")
-
 from hkland_shszhktradingday.gene_trading_days import CSVLoader
-from hkland_shszhktradingday.parse_page_update_info import get_lastest_update_dt
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -29,6 +30,21 @@ def download_lastst_csv_file():
         logger.info("Download success.")
 
 
+def get_lastest_update_dt():
+    # 解析页面更新时间 确定是否需要更新 csv 文件
+    page_url = 'https://www.hkex.com.hk/Mutual-Market/Stock-Connect/Reference-Materials/Trading-Hour,-Trading-and-Settlement-Calendar?sc_lang=zh-HK'
+    body = req.get(page_url).text
+    doc = html.fromstring(body)
+    '''
+    <p class="loadMore__timetag" data-last-updated-display="更新日期 2020年1月28日">更新日期 2020年1月28日</p>
+    '''
+    update_dt_str = doc.xpath("//p[@class='loadMore__timetag']")[0].text_content()
+    dt_str = re.findall(r"更新日期 (\d{4}年\d{1,2}月\d{1,2}日)", update_dt_str)[0]
+    update_dt = datetime.datetime.strptime(dt_str, "%Y年%m月%d日")
+    logger.info(f"上一次的更新时间是 {update_dt}")
+    return update_dt
+
+
 def update_calendar():
     logger.info("开始下载更新后的文件")
     download_lastst_csv_file()
@@ -46,11 +62,14 @@ def update_calendar():
 
 
 def task():
-    now = datetime.datetime.now()
-    logger.info("Now: {}".format(now))
-    lastest_update_dt = get_lastest_update_dt()
+    _now = datetime.datetime.now()
+    logger.info(f"Now: {_now}")
+    try:
+        lastest_update_dt = get_lastest_update_dt()
+    except:
+        lastest_update_dt = None
     logger.info("Last Update Time: {}".format(lastest_update_dt))
-    if not lastest_update_dt >= now - datetime.timedelta(days=2):
+    if lastest_update_dt and (not lastest_update_dt >= now - datetime.timedelta(days=2)):
         logger.info("No Update in Latest 2 Days, Return.")
         return
 
