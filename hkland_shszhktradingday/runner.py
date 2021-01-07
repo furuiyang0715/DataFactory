@@ -69,7 +69,7 @@ def task():
     except:
         lastest_update_dt = None
     logger.info("Last Update Time: {}".format(lastest_update_dt))
-    if lastest_update_dt and (not lastest_update_dt >= now - datetime.timedelta(days=2)):
+    if lastest_update_dt and (not lastest_update_dt >= _now - datetime.timedelta(days=2)):
         logger.info("No Update in Latest 2 Days, Return.")
         return
 
@@ -78,12 +78,12 @@ def task():
 
 def main():
     update_calendar()
+    task()
 
     schedule.every().day.at("08:00").do(task)
     schedule.every().day.at("12:00").do(task)
 
     while True:
-        # logger.info("当前调度系统中的任务列表是{}".format(schedule.jobs))
         schedule.run_pending()
         time.sleep(180)
 
