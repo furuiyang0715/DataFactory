@@ -41,7 +41,7 @@ class EastMoneyTop10(BaseSpider):
             info[key] = value
         return info
 
-    def _start(self):
+    def start(self):
         # # 检查当前是否是交易日
         # is_trading_day = self._check_if_trading_today(2, self.day)
         # print("{} 是否交易日 : {} ".format(self.day, is_trading_day))
@@ -147,23 +147,6 @@ class EastMoneyTop10(BaseSpider):
                     datetime.datetime.now(), self.table_name, len(jishu)))
 
         self.refresh_update_time()
-
-    def start(self):
-        count = 0
-        while True:
-            try:
-                self._start()
-            except Exception as e:
-                count += 1
-                if count > 5:
-                    self.ding("【datacenter】当前时间{}, 十大成交股程序 {} 第 {} 次尝试出错了, "
-                              "错误原因是 {}".format(datetime.datetime.now(), self.table_name, count, e))
-                    traceback.print_exc()
-                    time.sleep(30)
-                else:
-                    print("十大成交股爬取程序失败, 重启.")
-            else:
-                break
 
 
 def schedule_task():
