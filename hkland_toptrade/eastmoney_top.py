@@ -6,16 +6,12 @@ import re
 import sys
 import time
 import traceback
-
 import requests
-import schedule
 
 cur_path = os.path.split(os.path.realpath(__file__))[0]
 file_path = os.path.abspath(os.path.join(cur_path, ".."))
 sys.path.insert(0, file_path)
-
 from hkland_toptrade.base_spider import BaseSpider, logger
-from hkland_toptrade.configs import LOCAL
 
 
 class EastMoneyTop10(BaseSpider):
@@ -46,20 +42,16 @@ class EastMoneyTop10(BaseSpider):
         return info
 
     def _start(self):
-        # 检查当前是否是交易日
-        is_trading_day = self._check_if_trading_today(2, self.day)
-        print("{} 是否交易日 : {} ".format(self.day, is_trading_day))
-
-        if not is_trading_day:
-            print("{} 非交易日 ".format(self.day))
-            return
+        # # 检查当前是否是交易日
+        # is_trading_day = self._check_if_trading_today(2, self.day)
+        # print("{} 是否交易日 : {} ".format(self.day, is_trading_day))
+        #
+        # if not is_trading_day:
+        #     print("{} 非交易日 ".format(self.day))
+        #     return
 
         self._juyuan_init()
         self._product_init()
-
-        if LOCAL:
-            self._create_table()
-
         resp = requests.get(self.url, headers=self.headers)
         if resp.status_code == 200:
             body = resp.text
@@ -187,35 +179,5 @@ def schedule_task():
     EastMoneyTop10(day_str).start()
 
 
-def main():
-    # TODO first, 在容器启动时,无论时间, 进行一次重启.
-    EastMoneyTop10(datetime.datetime.today().strftime("%Y-%m-%d")).start()
-
+if __name__ == '__main__':
     schedule_task()
-    schedule.every(2).minutes.do(schedule_task)
-    while True:
-        schedule.run_pending()
-        time.sleep(10)
-
-
-if __name__ == "__main__":
-
-    main()
-
-
-'''
-docker build -f Dockerfile_top -t registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_toptrade:v1 .
-docker push registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_toptrade:v1
-sudo docker pull registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_toptrade:v1
-
-
-# remote
-sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name toptrade \
---env LOCAL=0 \
-registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_toptrade:v1
-
-# local
-sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name toptrade \
---env LOCAL=1 \
-registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_toptrade:v1
-'''

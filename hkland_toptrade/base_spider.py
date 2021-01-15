@@ -200,32 +200,6 @@ class BaseSpider(object):
         logger.info("1 首次插入 2 替换插入: {}".format(count))
         self.product_client.end()
 
-    def _create_table(self):
-        sql = '''
-        CREATE TABLE IF NOT EXISTS `{}` (
-          `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-          `Date` date NOT NULL COMMENT '时间',
-          `SecuCode` varchar(10) COLLATE utf8_bin NOT NULL COMMENT '证券代码',
-          `InnerCode` int(11) NOT NULL COMMENT '内部编码',
-          `SecuAbbr` varchar(20) COLLATE utf8_bin NOT NULL COMMENT '股票简称',
-          `Close` decimal(19,3) NOT NULL COMMENT '收盘价',
-          `ChangePercent` decimal(19,5) NOT NULL COMMENT '涨跌幅',
-          `TJME` decimal(19,3) NOT NULL COMMENT '净买额（元/港元）',
-          `TMRJE` decimal(19,3) NOT NULL COMMENT '买入金额（元/港元）',
-          `TCJJE` decimal(19,3) NOT NULL COMMENT '成交金额（元/港元）',
-          `CategoryCode` varchar(10) COLLATE utf8_bin DEFAULT NULL COMMENT '类别代码:GGh: 港股通(沪), GGs: 港股通(深), HG: 沪股通, SG: 深股通',
-          `CMFID` bigint(20) NOT NULL COMMENT '来源ID',
-          `CMFTime` datetime NOT NULL COMMENT '来源日期',
-          `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
-          `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-          PRIMARY KEY (`id`),
-          UNIQUE KEY `un` (`SecuCode`,`Date`,`CategoryCode`) USING BTREE,
-          UNIQUE KEY `un2` (`InnerCode`,`Date`,`CategoryCode`) USING BTREE
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='陆港通十大成交股';
-        '''.format(self.table_name)
-        self.product_client.insert(sql)
-        self.product_client.end()
-
     def get_juyuan_codeinfo(self, secu_code):
         """A 股的聚源内部编码以及证券简称"""
         self._juyuan_init()
