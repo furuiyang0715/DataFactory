@@ -6,6 +6,8 @@ import traceback
 import requests
 import schedule
 
+import utils
+
 cur_path = os.path.split(os.path.realpath(__file__))[0]
 file_path = os.path.abspath(os.path.join(cur_path, ".."))
 sys.path.insert(0, file_path)
@@ -140,7 +142,7 @@ class ExchangeTop10(BaseSpider):
                 self._product_init()
                 count = self._batch_save(self.product_client, items, self.table_name, self.fields)
                 self.info += "{}批量插入{}条\n".format(category, count)
-            self.ding(self.info)
+            utils.ding_msg(self.info)
             self.refresh_update_time()
         else:
             print(resp)

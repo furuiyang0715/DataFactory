@@ -16,6 +16,7 @@ DC_DB = env.get("DC_DB", cf.get('dc', 'DC_DB'))
 
 # deploy
 LOCAL = bool(int(env.get("LOCAL", cf.get('deploy', 'LOCAL'))))
+USER_PHONE = env.get('USER_PHONE', cf.get('deploy', 'USER_PHONE'))
 SECRET = env.get("SECRET", cf.get('deploy', 'SECRET'))
 TOKEN = env.get("TOKEN", cf.get('deploy', 'TOKEN'))
 

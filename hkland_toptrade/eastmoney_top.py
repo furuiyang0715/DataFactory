@@ -4,13 +4,14 @@ import json
 import os
 import re
 import sys
-import time
-import traceback
 import requests
+
+import utils
 
 cur_path = os.path.split(os.path.realpath(__file__))[0]
 file_path = os.path.abspath(os.path.join(cur_path, ".."))
 sys.path.insert(0, file_path)
+
 from hkland_toptrade.base_spider import BaseSpider, logger
 
 
@@ -143,7 +144,7 @@ class EastMoneyTop10(BaseSpider):
                     if ret == 1:
                         jishu.append(ret)
             if len(jishu) != 0:
-                self.ding("【datacenter】当前的时间是{}, 数据库 {} 更入了 {} 条新数据".format(
+                utils.ding_msg("【datacenter】当前的时间是{}, 数据库 {} 更入了 {} 条新数据".format(
                     datetime.datetime.now(), self.table_name, len(jishu)))
 
         self.refresh_update_time()

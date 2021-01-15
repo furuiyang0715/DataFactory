@@ -141,42 +141,6 @@ class BaseSpider(object):
             sql_pool.end()
             return count
 
-    def ding(self, msg):
-        def get_url():
-            timestamp = str(round(time.time() * 1000))
-            secret_enc = SECRET.encode('utf-8')
-            string_to_sign = '{}\n{}'.format(timestamp, SECRET)
-            string_to_sign_enc = string_to_sign.encode('utf-8')
-            hmac_code = hmac.new(secret_enc, string_to_sign_enc, digestmod=hashlib.sha256).digest()
-            sign = urllib.parse.quote_plus(base64.b64encode(hmac_code))
-            url = 'https://oapi.dingtalk.com/robot/send?access_token={}&timestamp={}&sign={}'.format(
-                TOKEN, timestamp, sign)
-            return url
-
-        url = get_url()
-        header = {
-            "Content-Type": "application/json",
-            "Charset": "UTF-8"
-        }
-        message = {
-            "msgtype": "text",
-            "text": {
-                "content": "{}@15626046299".format(msg)
-            },
-            "at": {
-                "atMobiles": [
-                    "15626046299",
-                ],
-                "isAtAll": False
-            }
-        }
-        message_json = json.dumps(message)
-        resp = requests.post(url=url, data=message_json, headers=header)
-        if resp.status_code == 200:
-            pass
-        else:
-            logger.warning("钉钉消息发送失败")
-
     def refresh_update_time(self):
         sql = '''select max(UPDATETIMEJZ) as max_dt from {}; '''.format(self.table_name)
         max_dt = self.product_client.select_one(sql).get("max_dt")
