@@ -2,19 +2,14 @@
 import datetime
 import json
 import logging
-import os
 import re
-import sys
 import requests
 
 import utils
-
-cur_path = os.path.split(os.path.realpath(__file__))[0]
-file_path = os.path.abspath(os.path.join(cur_path, ".."))
-sys.path.insert(0, file_path)
 from sql_base import Connection
 from hkland_configs import (PRODUCT_MYSQL_HOST, PRODUCT_MYSQL_USER, PRODUCT_MYSQL_PASSWORD,
-                            PRODUCT_MYSQL_DB, PRODUCT_MYSQL_PORT, JUY_HOST, JUY_PORT, JUY_DB, JUY_PASSWD, JUY_USER)
+                            PRODUCT_MYSQL_DB, PRODUCT_MYSQL_PORT, JUY_HOST, JUY_PORT, JUY_DB,
+                            JUY_PASSWD, JUY_USER)
 
 logger = logging.getLogger()
 
@@ -29,8 +24,8 @@ class EastMoneyTop10(object):
         self.day = day    # datetime.datetime.strftime("%Y-%m-%d")
         self.url = 'http://data.eastmoney.com/hsgt/top10/{}.html'.format(day)
         self.table_name = 'hkland_toptrade'
-        self.fields = ['Date', 'SecuCode', 'InnerCode', 'SecuAbbr', 'Close', 'ChangePercent', 'TJME', 'TMRJE', 'TCJJE',
-                       'CategoryCode']
+        self.fields = ['Date', 'SecuCode', 'InnerCode', 'SecuAbbr', 'Close', 'ChangePercent',
+                       'TJME', 'TMRJE', 'TCJJE', 'CategoryCode']
 
         self.product_conn = Connection(
             host=PRODUCT_MYSQL_HOST,
@@ -167,21 +162,3 @@ class EastMoneyTop10(object):
                     datetime.datetime.now(), self.table_name, len(jishu)))
 
         # self.refresh_update_time()
-
-
-def schedule_task():
-    # 设置时间段的目的是 在非更新时间内 不去无谓的请求
-    t_day = datetime.datetime.today()
-    start_time = datetime.datetime(t_day.year, t_day.month, t_day.day, 17, 10, 0)
-    end_time = datetime.datetime(t_day.year, t_day.month, t_day.day, 20, 10, 0)
-    if not (t_day >= start_time and t_day <= end_time):
-        logger.warning("不在 17:10 到 20:10 的更新时段内")
-        return
-
-    day_str = t_day.strftime("%Y-%m-%d")
-    print("今天:", day_str)  # 今天的时间字符串 如果当前还未出 "十大成交股"数据 返回空列表
-    EastMoneyTop10(day_str).start()
-
-
-if __name__ == '__main__':
-    schedule_task()
