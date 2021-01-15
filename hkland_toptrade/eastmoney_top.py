@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import datetime
 import json
+import logging
 import os
 import re
 import sys
@@ -11,23 +12,25 @@ import utils
 cur_path = os.path.split(os.path.realpath(__file__))[0]
 file_path = os.path.abspath(os.path.join(cur_path, ".."))
 sys.path.insert(0, file_path)
-
 from sql_base import Connection
-from hkland_toptrade.base_spider import BaseSpider, logger
 from hkland_configs import (PRODUCT_MYSQL_HOST, PRODUCT_MYSQL_USER, PRODUCT_MYSQL_PASSWORD,
                             PRODUCT_MYSQL_DB, PRODUCT_MYSQL_PORT, JUY_HOST, JUY_PORT, JUY_DB, JUY_PASSWD, JUY_USER)
 
+logger = logging.getLogger()
 
-class EastMoneyTop10(BaseSpider):
+
+class EastMoneyTop10(object):
     """十大成交股 东财数据源 """
     def __init__(self, day: str):
-        super(EastMoneyTop10, self).__init__()
         self.headers = {
             'Referer': 'http://data.eastmoney.com/hsgt/top10.html',
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36',
         }
         self.day = day    # datetime.datetime.strftime("%Y-%m-%d")
         self.url = 'http://data.eastmoney.com/hsgt/top10/{}.html'.format(day)
+        self.table_name = 'hkland_toptrade'
+        self.fields = ['Date', 'SecuCode', 'InnerCode', 'SecuAbbr', 'Close', 'ChangePercent', 'TJME', 'TMRJE', 'TCJJE',
+                       'CategoryCode']
 
         self.product_conn = Connection(
             host=PRODUCT_MYSQL_HOST,
@@ -69,9 +72,6 @@ class EastMoneyTop10(BaseSpider):
         # if not is_trading_day:
         #     print("{} 非交易日 ".format(self.day))
         #     return
-
-        self._juyuan_init()
-        self._product_init()
 
         resp = requests.get(self.url, headers=self.headers)
         if resp.status_code == 200:
@@ -166,7 +166,7 @@ class EastMoneyTop10(BaseSpider):
                 utils.ding_msg("【datacenter】当前的时间是{}, 数据库 {} 更入了 {} 条新数据".format(
                     datetime.datetime.now(), self.table_name, len(jishu)))
 
-        self.refresh_update_time()
+        # self.refresh_update_time()
 
 
 def schedule_task():
