@@ -52,6 +52,7 @@ class EastMoneyTop10(BaseSpider):
 
         self._juyuan_init()
         self._product_init()
+
         resp = requests.get(self.url, headers=self.headers)
         if resp.status_code == 200:
             body = resp.text

@@ -58,18 +58,6 @@ class BaseSpider(object):
         self.dc_client = None
 
     def _init_pool(self, cfg: dict):
-        """
-        eg.
-        conf = {
-                "host": LOCAL_MYSQL_HOST,
-                "port": LOCAL_MYSQL_PORT,
-                "user": LOCAL_MYSQL_USER,
-                "password": LOCAL_MYSQL_PASSWORD,
-                "db": LOCAL_MYSQL_DB,
-        }
-        :param cfg:
-        :return:
-        """
         pool = PyMysqlPoolBase(**cfg)
         return pool
 
