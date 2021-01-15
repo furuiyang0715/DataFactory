@@ -12,7 +12,10 @@ cur_path = os.path.split(os.path.realpath(__file__))[0]
 file_path = os.path.abspath(os.path.join(cur_path, ".."))
 sys.path.insert(0, file_path)
 
+from sql_base import Connection
 from hkland_toptrade.base_spider import BaseSpider, logger
+from hkland_configs import (PRODUCT_MYSQL_HOST, PRODUCT_MYSQL_USER, PRODUCT_MYSQL_PASSWORD,
+                            PRODUCT_MYSQL_DB, PRODUCT_MYSQL_PORT, JUY_HOST, JUY_PORT, JUY_DB, JUY_PASSWD, JUY_USER)
 
 
 class EastMoneyTop10(BaseSpider):
@@ -26,6 +29,22 @@ class EastMoneyTop10(BaseSpider):
         self.day = day    # datetime.datetime.strftime("%Y-%m-%d")
         self.url = 'http://data.eastmoney.com/hsgt/top10/{}.html'.format(day)
 
+        self.product_conn = Connection(
+            host=PRODUCT_MYSQL_HOST,
+            database=PRODUCT_MYSQL_DB,
+            user=PRODUCT_MYSQL_USER,
+            password=PRODUCT_MYSQL_PASSWORD,
+            port=PRODUCT_MYSQL_PORT,
+        )
+
+        self.juyuan_conn = Connection(
+            host=JUY_HOST,
+            port=JUY_PORT,
+            user=JUY_USER,
+            password=JUY_PASSWD,
+            database=JUY_DB,
+        )
+
     def _get_inner_code_map(self, market_type):
         """https://dd.gildata.com/#/tableShow/27/column///
            https://dd.gildata.com/#/tableShow/718/column///
@@ -34,7 +53,7 @@ class EastMoneyTop10(BaseSpider):
             sql = 'SELECT SecuCode,InnerCode from SecuMain WHERE SecuCategory in (1, 2) and SecuMarket in (83, 90) and ListedSector in (1, 2, 6, 7);'
         else:
             sql = '''SELECT SecuCode,InnerCode from hk_secumain WHERE SecuCategory in (51, 3, 53, 78) and SecuMarket in (72) and ListedSector in (1, 2, 6, 7);'''
-        ret = self.juyuan_client.select_all(sql)
+        ret = self.juyuan_conn.query(sql)
         info = {}
         for r in ret:
             key = r.get("SecuCode")
@@ -140,7 +159,7 @@ class EastMoneyTop10(BaseSpider):
 
                     else:
                         raise
-                    ret = self._save(self.product_client, item, self.table_name, self.fields)
+                    ret = self.product_conn.table_insert(self.table_name, item, self.fields)
                     if ret == 1:
                         jishu.append(ret)
             if len(jishu) != 0:
