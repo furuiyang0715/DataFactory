@@ -1,24 +1,20 @@
 import datetime
-import os
-import sys
+import logging
 import time
 import traceback
 import requests
-import schedule
-
 import utils
+from hkland_configs import (DC_HOST, DC_PORT, DC_USER, DC_PASSWD, DC_DB, PRODUCT_MYSQL_HOST,
+                            PRODUCT_MYSQL_DB, PRODUCT_MYSQL_USER, PRODUCT_MYSQL_PASSWORD,
+                            PRODUCT_MYSQL_PORT, JUY_HOST, JUY_PORT, JUY_USER, JUY_PASSWD, JUY_DB)
+from sql_base import Connection
 
-cur_path = os.path.split(os.path.realpath(__file__))[0]
-file_path = os.path.abspath(os.path.join(cur_path, ".."))
-sys.path.insert(0, file_path)
-
-from hkland_toptrade.base_spider import BaseSpider, logger
+logger = logging.getLogger()
 
 
-class ExchangeTop10(BaseSpider):
+class ExchangeTop10(object):
     """十大成交股交易所数据源"""
     def __init__(self):
-        super(ExchangeTop10, self).__init__()
         self.info = '交易所十大成交股:\n'
         self.web_url = 'https://www.hkex.com.hk/Mutual-Market/Stock-Connect/Statistics/Historical-Daily?sc_lang=zh-HK#select4=1&select5=0&select3=0&select1=16&select2=5'
         _today = datetime.datetime.combine(datetime.datetime.today(), datetime.time.min)
@@ -26,12 +22,36 @@ class ExchangeTop10(BaseSpider):
         self.url = 'https://www.hkex.com.hk/chi/csm/DailyStat/data_tab_daily_{}c.js?_={}'.format(self.dt_str, int(time.time()*1000))
         self.fields = ['Date', 'SecuCode', 'InnerCode', 'SecuAbbr',
                        'TJME', 'TMRJE', 'TCJJE', 'CategoryCode', ]
+        self.table_name = 'hkland_toptrade'
         self.category_map = {
             "SSE Northbound": ("HG", 1),     # 沪股通
             "SSE Southbound": ("GGh", 2),    # 港股通（沪）
             "SZSE Northbound": ("SG", 3),    # 深股通
             "SZSE Southbound": ("GGs", 4),   # 港股通（深）
         }
+        self.dc_conn = Connection(
+            host=DC_HOST,
+            port=DC_PORT,
+            user=DC_USER,
+            password=DC_PASSWD,
+            database=DC_DB,
+        )
+
+        self.product_conn = Connection(
+            host=PRODUCT_MYSQL_HOST,
+            database=PRODUCT_MYSQL_DB,
+            user=PRODUCT_MYSQL_USER,
+            password=PRODUCT_MYSQL_PASSWORD,
+            port=PRODUCT_MYSQL_PORT,
+        )
+
+        self.juyuan_conn = Connection(
+            host=JUY_HOST,
+            port=JUY_PORT,
+            user=JUY_USER,
+            password=JUY_PASSWD,
+            database=JUY_DB,
+        )
 
     @staticmethod
     def re_money_data(data: str):
@@ -39,19 +59,31 @@ class ExchangeTop10(BaseSpider):
         return data
 
     def get_al_datas(self):
-        self._dc_init()
         sql = '''select * from {} where Date = '{}';  '''.format(self.table_name, self.dt_str)
-        al_datas = self.dc_client.select_all(sql)
+        al_datas = self.dc_conn.query(sql)
         return al_datas
 
     def _check_if_trading_today(self, category):
         """检查下当前方向是否交易"""
-        self._dc_init()
         tradingtype = self.category_map.get(category)[1]
         sql = 'select IfTradingDay from hkland_shszhktradingday where TradingType={} and EndDate = "{}";'.format(
             tradingtype, self.dt_str)
-        ret = True if self.dc_client.select_one(sql).get('IfTradingDay') == 1 else False
+        ret = True if self.dc_conn.get(sql).get('IfTradingDay') == 1 else False
         return ret
+
+    def get_juyuan_codeinfo(self, secu_code):
+        """A 股的聚源内部编码以及证券简称"""
+        sql = 'SELECT SecuCode,InnerCode, SecuAbbr from SecuMain WHERE SecuCategory in (1, 2, 8) \
+and SecuMarket in (83, 90) \
+and ListedSector in (1, 2, 6, 7) and SecuCode = "{}";'.format(secu_code)
+        ret = self.juyuan_conn.get(sql)
+        return ret.get('InnerCode'), ret.get("SecuAbbr")
+
+    def get_juyuan_hkcodeinfo(self, secu_code):
+        """港股的聚源内部编码以及证券简称"""
+        sql = 'select SecuCode,InnerCode, SecuAbbr  from hk_secumain where SecuCode = "{}";'.format(secu_code)
+        ret = self.juyuan_conn.get(sql)
+        return ret.get('InnerCode'), ret.get("SecuAbbr")
 
     def start(self):
         # 在发起请求之前 判断今天的数据 是否已经存在
@@ -136,53 +168,14 @@ class ExchangeTop10(BaseSpider):
                     item.pop("Stock Code")
                     item['CMFID'] = 1
                     item['CMFTime'] = datetime.datetime.now()
-                    print(item)
+                    logger.info(item)
                     items.append(item)
-
-                self._product_init()
-                count = self._batch_save(self.product_client, items, self.table_name, self.fields)
+                count = self.product_conn.batch_insert(items, self.table_name, self.fields)
                 self.info += "{}批量插入{}条\n".format(category, count)
             utils.ding_msg(self.info)
-            self.refresh_update_time()
+
+            # self.refresh_update_time()
         else:
-            print(resp)
+            logger.warning(resp)
             logger.warning("{} 当天非交易日或尚无十大成交数据".format(self.dt_str))
             # 当天无数据时为 404
-
-
-def task():
-    ExchangeTop10().start()
-    _now = datetime.datetime.now()
-    _year, _month, _day = _now.year, _now.month, _now.day
-    _start = datetime.datetime(_year, _month, _day, 16, 0, 0)
-    _end = datetime.datetime(_year, _month, _day, 19, 0, 0)
-    if _now < _start or _now > _end:
-        logger.warning("当前时间 {}, 不在正常的更新时间下午 4 点到 7 点之间".format(_now))
-        return
-    ExchangeTop10().start()
-
-
-if __name__ == "__main__":
-    task()
-    schedule.every(5).minutes.do(task)
-
-    while True:
-        schedule.run_pending()
-        time.sleep(10)
-
-
-'''
-docker build -f Dockerfile_exchangetop -t registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_toptrade_exchange:v1 .
-docker push registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_toptrade_exchange:v1
-sudo docker pull registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_toptrade_exchange:v1
-
-# remote 
-sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name toptrade_exchange \
---env LOCAL=0 \
-registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_toptrade_exchange:v1
-
-# local
-sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name toptrade_exchange \
---env LOCAL=1 \
-registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/hkland_toptrade_exchange:v1 
-'''

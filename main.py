@@ -3,6 +3,7 @@ import logging
 
 from hkland_configs import LOCAL
 from hkland_toptrade.eastmoney_top import EastMoneyTop10
+from hkland_toptrade.exchange_top10 import ExchangeTop10
 
 if LOCAL:
     logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -25,5 +26,19 @@ def schedule_task():
     EastMoneyTop10(day_str).start()
 
 
+def task():
+    ExchangeTop10().start()
+    _now = datetime.datetime.now()
+    _year, _month, _day = _now.year, _now.month, _now.day
+    _start = datetime.datetime(_year, _month, _day, 16, 0, 0)
+    _end = datetime.datetime(_year, _month, _day, 19, 0, 0)
+    if _now < _start or _now > _end:
+        logger.warning("当前时间 {}, 不在正常的更新时间下午 4 点到 7 点之间".format(_now))
+        return
+    ExchangeTop10().start()
+
+
 if __name__ == '__main__':
-    schedule_task()
+    # schedule_task()
+
+    task()
