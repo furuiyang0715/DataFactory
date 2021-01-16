@@ -1,19 +1,15 @@
 import datetime
-import os
 import re
-import sys
 import execjs
 import requests
 from lxml import html
 
-cur_path = os.path.split(os.path.realpath(__file__))[0]
-file_path = os.path.abspath(os.path.join(cur_path, ".."))
-sys.path.insert(0, file_path)
-
-from hkland_toptrade.base_spider import BaseSpider
+from hkland_configs import (PRODUCT_MYSQL_HOST, PRODUCT_MYSQL_DB, PRODUCT_MYSQL_USER, PRODUCT_MYSQL_PASSWORD,
+                            PRODUCT_MYSQL_PORT, JUY_HOST, JUY_PORT, JUY_USER, JUY_PASSWD, JUY_DB)
+from sql_base import Connection
 
 
-class JqkaTop10(BaseSpider):
+class JqkaTop10(object):
     """十大成交股 同花顺数据源"""
     def __init__(self):
         super(JqkaTop10, self).__init__()
@@ -27,10 +23,28 @@ class JqkaTop10(BaseSpider):
             'X-Requested-With': 'XMLHttpRequest',
             'Connection': 'keep-alive',
         }
+        self.table_name = 'hkland_toptrade'
+        self.fields = ['Date', 'SecuCode', 'InnerCode', 'SecuAbbr', 'Close', 'ChangePercent', 'TJME',
+                       'TMRJE', 'TCJJE', 'CategoryCode']
+        self.product_conn = Connection(
+            host=PRODUCT_MYSQL_HOST,
+            database=PRODUCT_MYSQL_DB,
+            user=PRODUCT_MYSQL_USER,
+            password=PRODUCT_MYSQL_PASSWORD,
+            port=PRODUCT_MYSQL_PORT,
+        )
+
+        self.juyuan_conn = Connection(
+            host=JUY_HOST,
+            port=JUY_PORT,
+            user=JUY_USER,
+            password=JUY_PASSWD,
+            database=JUY_DB,
+        )
 
     @property
     def cookies(self):
-        with open('jqka.js', 'r') as f:
+        with open('hkland_toptrade/jqka.js', 'r') as f:
             jscont = f.read()
         cont = execjs.compile(jscont)
         cookie_v = cont.call('v')
@@ -49,9 +63,9 @@ and ListedSector in (1, 2, 6, 7) and SecuCode = "{}";'.format(secu_code)
         and SecuMarket in (72) and ListedSector in (1, 2, 6, 7) and SecuCode = "{}";'.format(secu_code)
 
         if market in ("HG", "SG"):
-            ret = self.juyuan_client.select_one(sql1)
+            ret = self.juyuan_conn.get(sql1)
         elif market in ("GGh", "GGs"):
-            ret = self.juyuan_client.select_one(sql2)
+            ret = self.juyuan_conn.get(sql2)
         else:
             raise
         return ret.get('InnerCode')
@@ -78,8 +92,6 @@ and ListedSector in (1, 2, 6, 7) and SecuCode = "{}";'.format(secu_code)
         return data
 
     def start(self):
-        self._juyuan_init()
-        self._product_init()
         # 建表 直接入pro库 建表报错; 在首次建表之后此步骤忽略
         # self._create_table()
 
@@ -96,8 +108,8 @@ and ListedSector in (1, 2, 6, 7) and SecuCode = "{}";'.format(secu_code)
             items = self.get_top(category, url)
             allitems.extend(items)
 
-        self._batch_save(self.product_client, allitems, self.table_name, self.fields)
-        self.refresh_update_time()
+        self.product_conn.batch_insert(allitems, self.table_name, self.fields)
+        # self.refresh_update_time()
 
     def get_top(self, category, url):
         body = self.get(url)
@@ -180,7 +192,3 @@ and ListedSector in (1, 2, 6, 7) and SecuCode = "{}";'.format(secu_code)
                 item['CMFTime'] = datetime.datetime.now()  # 兼容和之前的程序 用当前的时间代替
                 items.append(item)
         return items
-
-
-if __name__ == "__main__":
-    JqkaTop10().start()

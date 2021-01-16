@@ -4,6 +4,7 @@ import logging
 from hkland_configs import LOCAL
 from hkland_toptrade.eastmoney_top import EastMoneyTop10
 from hkland_toptrade.exchange_top10 import ExchangeTop10
+from hkland_toptrade.jqka10_top import JqkaTop10
 
 if LOCAL:
     logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -38,7 +39,11 @@ def task():
     ExchangeTop10().start()
 
 
-if __name__ == '__main__':
-    # schedule_task()
+if __name__ == "__main__":
+    JqkaTop10().start()
 
-    task()
+
+# if __name__ == '__main__':
+#     # schedule_task()
+#
+#     task()
