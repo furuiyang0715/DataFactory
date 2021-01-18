@@ -15,15 +15,12 @@ import opencc
 from apscheduler.schedulers.blocking import BlockingScheduler
 from lxml import html
 
-sys.path.append("./../")
 from hkland_shares.configs import (SPIDER_MYSQL_HOST, SPIDER_MYSQL_PORT, SPIDER_MYSQL_USER, SPIDER_MYSQL_PASSWORD,
                                    SPIDER_MYSQL_DB, PRODUCT_MYSQL_HOST, PRODUCT_MYSQL_PORT, PRODUCT_MYSQL_USER,
                                    PRODUCT_MYSQL_PASSWORD, PRODUCT_MYSQL_DB, JUY_HOST, JUY_PORT, JUY_USER, JUY_PASSWD,
                                    JUY_DB, DC_HOST, DC_PORT, DC_USER, DC_PASSWD, DC_DB, SECRET, TOKEN)
 from hkland_shares.sql_pool import PyMysqlPoolBase
-
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
+logger = logging.getLogger()
 
 now = lambda: time.time()
 
@@ -453,54 +450,18 @@ def spider_task():
 #     raise Exception("我在执行的过程中出错了 ")
 
 
-if __name__ == '__main__':
-    scheduler = BlockingScheduler()
-    # 确保重启时可以执行一次
-    spider_task()
-    mysql_task()
-    scheduler.add_job(spider_task, 'cron', hour='0-3, 3-6', minute='0, 20, 40')
-    scheduler.add_job(mysql_task, 'cron', hour='3')
-    logger.info('Press Ctrl+{0} to exit'.format('Break' if os.name == 'nt' else 'C'))
-    try:
-        scheduler.start()
-    except (KeyboardInterrupt, SystemExit):
-        pass
-    except Exception as e:
-        logger.info(f"本次任务执行出错{e}")
-        sys.exit(0)
-
-
-# if __name__ == "__main__":
-#
+# if __name__ == '__main__':
+#     scheduler = BlockingScheduler()
+#     # 确保重启时可以执行一次
 #     spider_task()
-#
 #     mysql_task()
-
-
-# 检查沪股中的浦发银行
-# select * from holding_shares_sh where SecuCode = '600000.XSHG' order by Date;
-
-# 检查深股中的平安银行
-# select * from holding_shares_sz where SecuCode = '000001.XSHE' order by Date;
-
-# 检查港股中的长和
-# select * from holding_shares_hk where SecuCode = '00001' order by Date;
-
-# 注: 如果需要的不是目前的数据 请修改 offset
-
-# 部署
-'''
-docker build -f Dockerfile_webspider -t registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/shares_webspider:v1 .
-docker push registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/shares_webspider:v1 
-sudo docker pull registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/shares_webspider:v1 
-# remote 
-sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name shares_spider \
---env LOCAL=0 \
-registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/shares_webspider:v1  
-
-# local
-sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name shares_spider \
---env LOCAL=1 \
-registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/shares_webspider:v1   
-
-'''
+#     scheduler.add_job(spider_task, 'cron', hour='0-3, 3-6', minute='0, 20, 40')
+#     scheduler.add_job(mysql_task, 'cron', hour='3')
+#     logger.info('Press Ctrl+{0} to exit'.format('Break' if os.name == 'nt' else 'C'))
+#     try:
+#         scheduler.start()
+#     except (KeyboardInterrupt, SystemExit):
+#         pass
+#     except Exception as e:
+#         logger.info(f"本次任务执行出错{e}")
+#         sys.exit(0)
