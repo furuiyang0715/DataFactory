@@ -14,11 +14,11 @@ logger = logging.getLogger()
 
 class ExchangeTop10(object):
     """十大成交股交易所数据源"""
-    def __init__(self):
+    def __init__(self, day: datetime.datetime):
         self.info = '交易所十大成交股:\n'
         self.web_url = 'https://www.hkex.com.hk/Mutual-Market/Stock-Connect/Statistics/Historical-Daily?sc_lang=zh-HK#select4=1&select5=0&select3=0&select1=16&select2=5'
-        _today = datetime.datetime.combine(datetime.datetime.today(), datetime.time.min)
-        self.dt_str = _today.strftime("%Y%m%d")
+        self.dt = day
+        self.dt_str = day.strftime("%Y%m%d")
         self.url = 'https://www.hkex.com.hk/chi/csm/DailyStat/data_tab_daily_{}c.js?_={}'.format(self.dt_str, int(time.time()*1000))
         self.fields = ['Date', 'SecuCode', 'InnerCode', 'SecuAbbr',
                        'TJME', 'TMRJE', 'TCJJE', 'CategoryCode', ]
@@ -58,19 +58,6 @@ class ExchangeTop10(object):
         data = float(data.replace(",", ""))
         return data
 
-    def get_al_datas(self):
-        sql = '''select * from {} where Date = '{}';  '''.format(self.table_name, self.dt_str)
-        al_datas = self.dc_conn.query(sql)
-        return al_datas
-
-    def _check_if_trading_today(self, category):
-        """检查下当前方向是否交易"""
-        tradingtype = self.category_map.get(category)[1]
-        sql = 'select IfTradingDay from hkland_shszhktradingday where TradingType={} and EndDate = "{}";'.format(
-            tradingtype, self.dt_str)
-        ret = True if self.dc_conn.get(sql).get('IfTradingDay') == 1 else False
-        return ret
-
     def get_juyuan_codeinfo(self, secu_code):
         """A 股的聚源内部编码以及证券简称"""
         sql = 'SELECT SecuCode,InnerCode, SecuAbbr from SecuMain WHERE SecuCategory in (1, 2, 8) \
@@ -86,17 +73,6 @@ and ListedSector in (1, 2, 6, 7) and SecuCode = "{}";'.format(secu_code)
         return ret.get('InnerCode'), ret.get("SecuAbbr")
 
     def start(self):
-        # 在发起请求之前 判断今天的数据 是否已经存在
-        tra_lst = list()
-        for catrgory in self.category_map:
-            is_trading = self._check_if_trading_today(catrgory)
-            tra_lst.append(is_trading)
-        today_nums = sum(tra_lst) * 10
-        al_datas = self.get_al_datas()
-        if len(al_datas) == today_nums:
-            logger.info("{} 数据已入库".format(self.dt_str))
-            return
-
         logger.info(self.url)
         resp = requests.get(self.url)
         if resp.status_code == 200:
@@ -124,7 +100,6 @@ and ListedSector in (1, 2, 6, 7) and SecuCode = "{}";'.format(secu_code)
                 cur_dt = direction_data.get("date")
                 market = direction_data.get("market")
                 is_trading_day = direction_data.get("tradingDay")
-                # print(">> ", is_trading_day)
                 if is_trading_day == 0:
                     logger.warning("{} 方向无交易".format(market))
                     continue
@@ -173,8 +148,6 @@ and ListedSector in (1, 2, 6, 7) and SecuCode = "{}";'.format(secu_code)
                 count = self.product_conn.batch_insert(items, self.table_name, self.fields)
                 self.info += "{}批量插入{}条\n".format(category, count)
             utils.ding_msg(self.info)
-
-            # self.refresh_update_time()
         else:
             logger.warning(resp)
             logger.warning("{} 当天非交易日或尚无十大成交数据".format(self.dt_str))

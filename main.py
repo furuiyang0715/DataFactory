@@ -6,7 +6,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.executors.pool import ThreadPoolExecutor
 from hkland_configs import LOCAL
 from hkland_toptrade.eastmoney_top import EastMoneyTop10
-
+from hkland_toptrade.exchange_top10 import ExchangeTop10
 
 if LOCAL:
     logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -24,10 +24,14 @@ ap_scheduler = BackgroundScheduler(executors=executors)
 def handle(event_name: str):
     if event_name == 'toptrade':
         EastMoneyTop10(datetime.datetime.today()).start()
+    elif event_name == 'toptrade_exchange':
+        # ExchangeTop10(datetime.datetime.today()).start()
+        ExchangeTop10(datetime.datetime.today() - datetime.timedelta(days=3)).start()
 
 
 if __name__ == '__main__':
-    handle("toptrade")
+    # handle("toptrade")
+    handle("toptrade_exchange")
 
 
 # # 在每天的17到19点每隔2min执行一次
