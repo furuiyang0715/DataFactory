@@ -14,7 +14,7 @@ from sql_base import Connection
 logger = logging.getLogger()
 
 
-class HoldShares(object):
+class SharesSpider(object):
     """滬股通及深股通持股紀錄按日查詢"""
     spider_conn = Connection(    # 爬虫库
         host=SPIDER_MYSQL_HOST,
@@ -280,11 +280,11 @@ class HoldShares(object):
 
 def shares_spider_task():
     for _type in ("sh", "sz", "hk"):
-        HoldShares(_type).check_update()
+        SharesSpider(_type).check_update()
 
     for _type in ("sh", "sz", "hk"):
         logger.info("{} 爬虫开始运行.".format(_type))
         # for _offset in range(1, 3):
         _check_day = datetime.date.today() - datetime.timedelta(days=1)
         logger.info("数据时间是{}".format(_check_day))
-        HoldShares(_type, 1).start()
+        SharesSpider(_type, 1).start()
