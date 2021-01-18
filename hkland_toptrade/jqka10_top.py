@@ -1,18 +1,17 @@
 import datetime
+import logging
 import re
 import execjs
 import requests
 from lxml import html
+from hkland_toptrade.mixin import TopTradeMixin
 
-from hkland_configs import (PRODUCT_MYSQL_HOST, PRODUCT_MYSQL_DB, PRODUCT_MYSQL_USER, PRODUCT_MYSQL_PASSWORD,
-                            PRODUCT_MYSQL_PORT, JUY_HOST, JUY_PORT, JUY_USER, JUY_PASSWD, JUY_DB)
-from sql_base import Connection
+logger = logging.getLogger()
 
 
-class JqkaTop10(object):
+class JqkaTop10(TopTradeMixin):
     """十大成交股 同花顺数据源"""
     def __init__(self):
-        super(JqkaTop10, self).__init__()
         self.headers = {
             'Accept-Encoding': 'gzip, deflate',
             'Accept-Language': 'zh-CN,zh;q=0.9',
@@ -23,24 +22,8 @@ class JqkaTop10(object):
             'X-Requested-With': 'XMLHttpRequest',
             'Connection': 'keep-alive',
         }
-        self.table_name = 'hkland_toptrade'
         self.fields = ['Date', 'SecuCode', 'InnerCode', 'SecuAbbr', 'Close', 'ChangePercent', 'TJME',
                        'TMRJE', 'TCJJE', 'CategoryCode']
-        self.product_conn = Connection(
-            host=PRODUCT_MYSQL_HOST,
-            database=PRODUCT_MYSQL_DB,
-            user=PRODUCT_MYSQL_USER,
-            password=PRODUCT_MYSQL_PASSWORD,
-            port=PRODUCT_MYSQL_PORT,
-        )
-
-        self.juyuan_conn = Connection(
-            host=JUY_HOST,
-            port=JUY_PORT,
-            user=JUY_USER,
-            password=JUY_PASSWD,
-            database=JUY_DB,
-        )
 
     @property
     def cookies(self):
@@ -92,9 +75,6 @@ and ListedSector in (1, 2, 6, 7) and SecuCode = "{}";'.format(secu_code)
         return data
 
     def start(self):
-        # 建表 直接入pro库 建表报错; 在首次建表之后此步骤忽略
-        # self._create_table()
-
         # 类别代码:GGh: 港股通(沪), GGs: 港股通(深), HG: 沪股通, SG: 深股通'
         # value 中的网址也是 web 网址
         category_map = {
@@ -109,7 +89,6 @@ and ListedSector in (1, 2, 6, 7) and SecuCode = "{}";'.format(secu_code)
             allitems.extend(items)
 
         self.product_conn.batch_insert(allitems, self.table_name, self.fields)
-        # self.refresh_update_time()
 
     def get_top(self, category, url):
         body = self.get(url)
@@ -130,11 +109,11 @@ and ListedSector in (1, 2, 6, 7) and SecuCode = "{}";'.format(secu_code)
         for dt_info in dt_infos:
             if "十大成交股" in dt_info:
                 top_str = dt_info
-        print(top_str)
+        logger.info(top_str)
         top_dt_str = re.findall("\d{4}-\d{2}-\d{2}", top_str)[0]
         # 从网页中解析出来的 十大成交股 的最近时间
         top_dt = datetime.datetime.strptime(top_dt_str, "%Y-%m-%d")
-        print("{} 的最近更新时间是 {}".format(category, top_dt))
+        logger.info("{} 的最近更新时间是 {}".format(category, top_dt))
         top10_table = doc.xpath(".//table[@class='m-table1']")[0]
 
         # 爬取到网站中的全部字段
