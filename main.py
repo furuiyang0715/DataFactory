@@ -5,6 +5,7 @@ import time
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.executors.pool import ThreadPoolExecutor
 from hkland_configs import LOCAL
+from hkland_shszhktradingday.tradingdayspider import tradingday_task
 from hkland_toptrade.eastmoney_top import EastMoneyTop10
 from hkland_toptrade.exchange_top10 import ExchangeTop10
 from hkland_toptrade.jqka10_top import JqkaTop10
@@ -32,11 +33,16 @@ def handle(event_name: str):
     elif event_name == 'toptrade_jqka10':
         JqkaTop10().start()
 
+    elif event_name == 'tradingday':
+        tradingday_task()
+
 
 if __name__ == '__main__':
     # handle("toptrade")
     # handle("toptrade_exchange")
-    handle("toptrade_jqka10")
+    # handle("toptrade_jqka10")
+    handle("tradingday")
+
 
 
 # # 在每天的17到19点每隔2min执行一次

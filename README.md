@@ -128,3 +128,23 @@ TODO 每个交易日盘后可以根据最新实时流向数据计算一次
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='陆港通十大成交股';
 
 ```
+2.交易日 
+```shell script
+ CREATE TABLE IF NOT EXISTS `hkland_shszhktradingday` (
+      `id` bigint(20)  unsigned NOT NULL AUTO_INCREMENT,
+      `InfoSource` int(11) DEFAULT NULL COMMENT '信息来源',
+      `EndDate` datetime NOT NULL COMMENT '截止日期',
+      `TradingType` int(11) NOT NULL COMMENT '交易类型',
+      `IfTradingDay` int(11) DEFAULT NULL COMMENT '是否交易日',
+      `TradingPeriod` int(11) DEFAULT NULL COMMENT '交易时段',
+      `Reason` varchar(50) DEFAULT NULL COMMENT '非周末非交易日原因',
+      `IfWeekEnd` int(11) DEFAULT NULL COMMENT '是否周最后交易日',
+      `IfMonthEnd` int(11) DEFAULT NULL COMMENT '是否月最后交易日',
+      `IfQuarterEnd` int(11) DEFAULT NULL COMMENT '是否季最后交易日',
+      `IfYearEnd` int(11) DEFAULT NULL COMMENT '是否年最后交易日',
+      `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
+      `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      UNIQUE KEY `IX_QT_SHSZHSCTradingDay` (`EndDate`,`TradingType`),
+      UNIQUE KEY `IX_QT_SHSZHSCTradingDay_ID` (`ID`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=gbk COMMENT '陆股通交易日'; 
+```

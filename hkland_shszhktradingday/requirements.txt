@@ -1,6 +1,0 @@
-schedule==0.6.0
-PyMySQL==0.9.3
-pandas==0.25.3
-requests==2.22.0
-lxml==4.4.2
-DBUtils==1.3
