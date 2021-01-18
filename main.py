@@ -23,15 +23,16 @@ ap_scheduler = BackgroundScheduler(executors=executors)
 
 def handle(event_name: str):
     if event_name == 'toptrade':
-        EastMoneyTop10(datetime.datetime.today()).start()
+        # EastMoneyTop10(datetime.datetime.today()).start()
+        EastMoneyTop10(datetime.datetime.today() - datetime.timedelta(days=3)).start()
     elif event_name == 'toptrade_exchange':
         # ExchangeTop10(datetime.datetime.today()).start()
         ExchangeTop10(datetime.datetime.today() - datetime.timedelta(days=3)).start()
 
 
 if __name__ == '__main__':
-    # handle("toptrade")
-    handle("toptrade_exchange")
+    handle("toptrade")
+    # handle("toptrade_exchange")
 
 
 # # 在每天的17到19点每隔2min执行一次

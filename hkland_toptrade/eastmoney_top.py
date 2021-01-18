@@ -6,15 +6,12 @@ import re
 import requests
 
 import utils
-from sql_base import Connection
-from hkland_configs import (PRODUCT_MYSQL_HOST, PRODUCT_MYSQL_USER, PRODUCT_MYSQL_PASSWORD,
-                            PRODUCT_MYSQL_DB, PRODUCT_MYSQL_PORT, JUY_HOST, JUY_PORT, JUY_DB,
-                            JUY_PASSWD, JUY_USER)
+from hkland_toptrade.mixin import TopTradeMixin
 
 logger = logging.getLogger()
 
 
-class EastMoneyTop10(object):
+class EastMoneyTop10(TopTradeMixin):
     """十大成交股 东财数据源 """
     def __init__(self, day: datetime.datetime):
         self.headers = {
@@ -24,41 +21,8 @@ class EastMoneyTop10(object):
         self.dt = day
         self.day = day.strftime("%Y-%m-%d")
         self.url = 'http://data.eastmoney.com/hsgt/top10/{}.html'.format(self.day)
-        self.table_name = 'hkland_toptrade'
         self.fields = ['Date', 'SecuCode', 'InnerCode', 'SecuAbbr', 'Close', 'ChangePercent',
                        'TJME', 'TMRJE', 'TCJJE', 'CategoryCode']
-
-        self.product_conn = Connection(
-            host=PRODUCT_MYSQL_HOST,
-            database=PRODUCT_MYSQL_DB,
-            user=PRODUCT_MYSQL_USER,
-            password=PRODUCT_MYSQL_PASSWORD,
-            port=PRODUCT_MYSQL_PORT,
-        )
-
-        self.juyuan_conn = Connection(
-            host=JUY_HOST,
-            port=JUY_PORT,
-            user=JUY_USER,
-            password=JUY_PASSWD,
-            database=JUY_DB,
-        )
-
-    def _get_inner_code_map(self, market_type):
-        """https://dd.gildata.com/#/tableShow/27/column///
-           https://dd.gildata.com/#/tableShow/718/column///
-        """
-        if market_type in ("sh", "sz"):
-            sql = 'SELECT SecuCode,InnerCode from SecuMain WHERE SecuCategory in (1, 2) and SecuMarket in (83, 90) and ListedSector in (1, 2, 6, 7);'
-        else:
-            sql = '''SELECT SecuCode,InnerCode from hk_secumain WHERE SecuCategory in (51, 3, 53, 78) and SecuMarket in (72) and ListedSector in (1, 2, 6, 7);'''
-        ret = self.juyuan_conn.query(sql)
-        info = {}
-        for r in ret:
-            key = r.get("SecuCode")
-            value = r.get('InnerCode')
-            info[key] = value
-        return info
 
     def crawl(self):
         resp = requests.get(self.url, headers=self.headers)
@@ -168,9 +132,3 @@ class EastMoneyTop10(object):
         self.crawl()
 
         self.refresh_updatetime()
-
-    def refresh_updatetime(self):
-        sql = '''select max(UPDATETIMEJZ) as max_dt from {}; '''.format(self.table_name)
-        max_dt = self.product_conn.get(sql).get("max_dt")
-        logger.info(f"{self.table_name} 最新的更新时间是{max_dt}")
-        self.product_conn.table_update('base_table_updatetime', {'LastUpdateTime': max_dt}, 'TableName', self.table_name)
