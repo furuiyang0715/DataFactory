@@ -5,6 +5,7 @@ import time
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.executors.pool import ThreadPoolExecutor
 from hkland_configs import LOCAL
+from hkland_shares.web_spider import shares_spider_task
 from hkland_shszhktradingday.tradingdayspider import tradingday_task
 from hkland_toptrade.eastmoney_top import EastMoneyTop10
 from hkland_toptrade.exchange_top10 import ExchangeTop10
@@ -35,6 +36,8 @@ def handle(event_name: str):
 
     elif event_name == 'tradingday':
         tradingday_task()
+    elif event_name == 'shares':
+        shares_spider_task()
 
 
 # # 在每天的17到19点每隔2min执行一次
@@ -52,4 +55,5 @@ if __name__ == '__main__':
     # handle("toptrade")
     # handle("toptrade_exchange")
     # handle("toptrade_jqka10")
-    handle("tradingday")
+    # handle("tradingday")
+    handle("shares")
