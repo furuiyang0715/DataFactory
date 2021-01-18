@@ -4,15 +4,12 @@ import time
 import traceback
 import requests
 import utils
-from hkland_configs import (DC_HOST, DC_PORT, DC_USER, DC_PASSWD, DC_DB, PRODUCT_MYSQL_HOST,
-                            PRODUCT_MYSQL_DB, PRODUCT_MYSQL_USER, PRODUCT_MYSQL_PASSWORD,
-                            PRODUCT_MYSQL_PORT, JUY_HOST, JUY_PORT, JUY_USER, JUY_PASSWD, JUY_DB)
-from sql_base import Connection
+from hkland_toptrade.mixin import TopTradeMixin
 
 logger = logging.getLogger()
 
 
-class ExchangeTop10(object):
+class ExchangeTop10(TopTradeMixin):
     """十大成交股交易所数据源"""
     def __init__(self, day: datetime.datetime):
         self.info = '交易所十大成交股:\n'
@@ -22,36 +19,12 @@ class ExchangeTop10(object):
         self.url = 'https://www.hkex.com.hk/chi/csm/DailyStat/data_tab_daily_{}c.js?_={}'.format(self.dt_str, int(time.time()*1000))
         self.fields = ['Date', 'SecuCode', 'InnerCode', 'SecuAbbr',
                        'TJME', 'TMRJE', 'TCJJE', 'CategoryCode', ]
-        self.table_name = 'hkland_toptrade'
         self.category_map = {
             "SSE Northbound": ("HG", 1),     # 沪股通
             "SSE Southbound": ("GGh", 2),    # 港股通（沪）
             "SZSE Northbound": ("SG", 3),    # 深股通
             "SZSE Southbound": ("GGs", 4),   # 港股通（深）
         }
-        self.dc_conn = Connection(
-            host=DC_HOST,
-            port=DC_PORT,
-            user=DC_USER,
-            password=DC_PASSWD,
-            database=DC_DB,
-        )
-
-        self.product_conn = Connection(
-            host=PRODUCT_MYSQL_HOST,
-            database=PRODUCT_MYSQL_DB,
-            user=PRODUCT_MYSQL_USER,
-            password=PRODUCT_MYSQL_PASSWORD,
-            port=PRODUCT_MYSQL_PORT,
-        )
-
-        self.juyuan_conn = Connection(
-            host=JUY_HOST,
-            port=JUY_PORT,
-            user=JUY_USER,
-            password=JUY_PASSWD,
-            database=JUY_DB,
-        )
 
     @staticmethod
     def re_money_data(data: str):

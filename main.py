@@ -31,8 +31,8 @@ def handle(event_name: str):
 
 
 if __name__ == '__main__':
-    handle("toptrade")
-    # handle("toptrade_exchange")
+    # handle("toptrade")
+    handle("toptrade_exchange")
 
 
 # # 在每天的17到19点每隔2min执行一次
