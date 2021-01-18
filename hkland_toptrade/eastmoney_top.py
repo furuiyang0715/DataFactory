@@ -16,12 +16,13 @@ logger = logging.getLogger()
 
 class EastMoneyTop10(object):
     """十大成交股 东财数据源 """
-    def __init__(self, day: str):
+    def __init__(self, day: datetime.datetime):
         self.headers = {
             'Referer': 'http://data.eastmoney.com/hsgt/top10.html',
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36',
         }
-        self.day = day    # datetime.datetime.strftime("%Y-%m-%d")
+        self.dt = day
+        self.day = day.strftime("%Y-%m-%d")
         self.url = 'http://data.eastmoney.com/hsgt/top10/{}.html'.format(day)
         self.table_name = 'hkland_toptrade'
         self.fields = ['Date', 'SecuCode', 'InnerCode', 'SecuAbbr', 'Close', 'ChangePercent',
@@ -59,15 +60,7 @@ class EastMoneyTop10(object):
             info[key] = value
         return info
 
-    def start(self):
-        # # 检查当前是否是交易日
-        # is_trading_day = self._check_if_trading_today(2, self.day)
-        # print("{} 是否交易日 : {} ".format(self.day, is_trading_day))
-        #
-        # if not is_trading_day:
-        #     print("{} 非交易日 ".format(self.day))
-        #     return
-
+    def crawl(self):
         resp = requests.get(self.url, headers=self.headers)
         if resp.status_code == 200:
             body = resp.text
@@ -88,17 +81,17 @@ class EastMoneyTop10(object):
             for data in [data1, data2, data3, data4]:
                 data = json.loads(data)
                 top_datas = data.get("data")
-                print(top_datas)
+                logger.debug(top_datas)
                 for top_data in top_datas:
                     item = dict()
-                    item['Date'] = self.day   # 时间
+                    item['Date'] = self.day  # 时间
                     secu_code = top_data.get("Code")
                     item['SecuCode'] = secu_code  # 证券代码
-                    item['SecuAbbr'] = top_data.get("Name")   # 证券简称
+                    item['SecuAbbr'] = top_data.get("Name")  # 证券简称
                     item['Close'] = top_data.get('Close')  # 收盘价
                     item['ChangePercent'] = top_data.get('ChangePercent')  # 涨跌幅
                     item['CMFID'] = 1  # 兼容之前的程序 写死
-                    item['CMFTime'] = datetime.datetime.now()   # 兼容和之前的程序 用当前的时间代替
+                    item['CMFTime'] = datetime.datetime.now()  # 兼容和之前的程序 用当前的时间代替
                     # '类别代码:GGh: 港股通(沪), GGs: 港股通(深), HG: 沪股通, SG: 深股通',
                     if top_data['MarketType'] == 1.0:
                         item['CategoryCode'] = 'HG'
@@ -160,5 +153,21 @@ class EastMoneyTop10(object):
             if len(jishu) != 0:
                 utils.ding_msg("【datacenter】当前的时间是{}, 数据库 {} 更入了 {} 条新数据".format(
                     datetime.datetime.now(), self.table_name, len(jishu)))
+        pass
 
-        # self.refresh_update_time()
+    def start(self):
+        # 检查当前是否是交易日
+        is_trading_day = utils.check_iftradingday('n', self.dt) and utils.check_iftradingday('s', self.dt)
+        if is_trading_day is False:
+            logger.info(f"{self.dt} 南北均不交易")
+            return
+
+        self.crawl()
+
+        self.refresh_updatetime()
+
+    def refresh_updatetime(self):
+        sql = '''select max(UPDATETIMEJZ) as max_dt from {}; '''.format(self.table_name)
+        max_dt = self.product_conn.get(sql).get("max_dt")
+        logger.info(f"{self.table_name} 最新的更新时间是{max_dt}")
+        self.product_conn.table_update('base_table_updatetime', {'LastUpdateTime': max_dt}, 'TableName', self.table_name)

@@ -22,17 +22,20 @@ ap_scheduler = BackgroundScheduler(executors=executors)
 
 
 def handle(event_name: str):
-    # TODO 判断今天是否是交易日
-
     if event_name == 'toptrade':
-        EastMoneyTop10(datetime.datetime.today().strftime("%Y-%m-%d")).start()
+        EastMoneyTop10(datetime.datetime.today()).start()
 
 
-ap_scheduler.add_job(func=handle, trigger="cron", hour='17-19', minute='*/2', args=('toptrade', ), name='toptrade', max_instances=1)
+if __name__ == '__main__':
+    handle("toptrade")
 
 
-ap_scheduler.start()
-
-
-while True:
-    time.sleep(10)
+# # 在每天的17到19点每隔2min执行一次
+# ap_scheduler.add_job(func=handle, trigger="cron", hour='17-19', minute='*/2', args=('toptrade', ), name='toptrade', max_instances=1)
+#
+#
+# ap_scheduler.start()
+#
+#
+# while True:
+#     time.sleep(10)
