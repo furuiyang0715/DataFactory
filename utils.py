@@ -63,6 +63,7 @@ def check_iftradingday(category: str, day: datetime.datetime):
     }
     一般来说 1 3 与 2 4 方向是否是一致的
     '''
+    day = day.date()
     dc_conn = Connection(
         host=DC_HOST,
         port=DC_PORT,

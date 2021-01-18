@@ -23,7 +23,7 @@ class EastMoneyTop10(object):
         }
         self.dt = day
         self.day = day.strftime("%Y-%m-%d")
-        self.url = 'http://data.eastmoney.com/hsgt/top10/{}.html'.format(day)
+        self.url = 'http://data.eastmoney.com/hsgt/top10/{}.html'.format(self.day)
         self.table_name = 'hkland_toptrade'
         self.fields = ['Date', 'SecuCode', 'InnerCode', 'SecuAbbr', 'Close', 'ChangePercent',
                        'TJME', 'TMRJE', 'TCJJE', 'CategoryCode']
@@ -62,6 +62,7 @@ class EastMoneyTop10(object):
 
     def crawl(self):
         resp = requests.get(self.url, headers=self.headers)
+        logger.info(f'{self.url} resp status: {resp}')
         if resp.status_code == 200:
             body = resp.text
             # 沪股通十大成交股
@@ -153,7 +154,9 @@ class EastMoneyTop10(object):
             if len(jishu) != 0:
                 utils.ding_msg("【datacenter】当前的时间是{}, 数据库 {} 更入了 {} 条新数据".format(
                     datetime.datetime.now(), self.table_name, len(jishu)))
-        pass
+
+        else:
+            logger.warning(f'resp status code {resp.status_code} o(╥﹏╥)o')
 
     def start(self):
         # 检查当前是否是交易日
