@@ -8,9 +8,9 @@ cur_path = os.path.split(os.path.realpath(__file__))[0]
 file_path = os.path.abspath(os.path.join(cur_path, ".."))
 sys.path.insert(0, file_path)
 
-from hkland_component_imp.configs import LOCAL
-from hkland_component_imp.sh_hk_origin_check import SHSCComponent
-from hkland_component_imp.sz_hk_origin_check import SZSCComponent
+from hkland_component.configs import LOCAL
+from hkland_component.sh_hk_origin_check import SHSCComponent
+from hkland_component.sz_hk_origin_check import SZSCComponent
 
 if LOCAL:
     logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')

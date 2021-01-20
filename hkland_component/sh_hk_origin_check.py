@@ -5,7 +5,7 @@ import sys
 cur_path = os.path.split(os.path.realpath(__file__))[0]
 file_path = os.path.abspath(os.path.join(cur_path, ".."))
 sys.path.insert(0, file_path)
-from hkland_component_imp.base import BaseSpider, logger
+from hkland_component.base import BaseSpider, logger
 
 
 class SHSCComponent(BaseSpider):
