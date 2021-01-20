@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 def task():
-    SHSCComponent().start()
+    # SHSCComponent().start()
     SZSCComponent().start()
 
 

@@ -10,34 +10,6 @@ from hkland_component_imp.base import BaseSpider, logger
 
 
 class SZSCComponent(BaseSpider):
-    # def juyuan_stats(self):
-    #     """获取聚源数据库中的数据【聚源库已停止更新】"""
-    #     self._juyuan_init()
-    #     fields_str = ",".join(self.fields)
-    #     sql = 'select {} from {}; '.format(fields_str, self.juyuan_table_name)
-    #     datas = self.juyuan_client.select_all(sql)
-    #     return datas
-
-    # def dc_stats(self):
-    #     """获取现在正式的 dc 数据库中的情况 """
-    #     self._dc_init()
-    #     fields_str = ",".join(self.fields)
-    #     sql = 'select {} from {}; '.format(fields_str, self.dc_table_name)
-    #     datas = self.dc_client.select_all(sql)
-    #     return datas
-
-    # def juyuan_dc_same_check(self):
-    #     """检查聚源以及 dc 数据库的一致性"""
-    #     juyuan_datas = self.juyuan_stats()
-    #     dc_datas = self.dc_stats()
-    #     logger.debug(len(juyuan_datas))
-    #     logger.debug(len(dc_datas))
-    #
-    #     for data in juyuan_datas:
-    #         assert data in dc_datas
-    #     for data in dc_datas:
-    #         assert data in juyuan_datas
-
     def get_szhk_diff_changes(self, _type):
         """获得两次时间点之间的记录差异"""
         assert _type in ("sz", "hk")
@@ -133,21 +105,8 @@ class SZSCComponent(BaseSpider):
         else:
             return False
 
-    # def is_in_list(self, code):
-    #     """判断是否在目标库的当前列表中 """
-    #     self._product_init()
-    #     client = self.product_client
-    #     ret = client.select_all(
-    #         "select flag from {} where SecuCode = '{}' and InDate = (select max(InDate) from {} where SecuCode = '{}'); ".format(
-    #             self.target_table_name, code, self.target_table_name, code))[0]
-    #     if ret.get("flag") == 1:
-    #         return True
-    #     else:
-    #         return False
-
     def check_hk_list(self):
         self._spider_init()
-        # self._test_init()
         self._product_init()
 
         def get_spider_hk_list():
@@ -364,10 +323,7 @@ class SZSCComponent(BaseSpider):
         ret2 = self.check_hk_list()
         info = '港股(深)的核对结果: {}\n'.format(ret2)
         self.ding_info += info
-        print(self.ding_info)
+
+        logger.info(self.ding_info)
         self.ding(self.ding_info)
         self.refresh_update_time()
-
-
-if __name__ == "__main__":
-    SZSCComponent().start()
