@@ -194,7 +194,6 @@ class SHSCComponent(BaseSpider):
                 self.sh_list_table_name, self.sh_list_table_name)
             ret = self.spider_client.select_all(sql)
             sh_list = [r.get("SSESCode") for r in ret]
-            # print(">>> ", sh_list)
             return sh_list
 
         def get_target_sh_list():

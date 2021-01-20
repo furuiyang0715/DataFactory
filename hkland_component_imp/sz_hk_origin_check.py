@@ -364,7 +364,7 @@ class SZSCComponent(BaseSpider):
         ret2 = self.check_hk_list()
         info = '港股(深)的核对结果: {}\n'.format(ret2)
         self.ding_info += info
-
+        print(self.ding_info)
         self.ding(self.ding_info)
         self.refresh_update_time()
 

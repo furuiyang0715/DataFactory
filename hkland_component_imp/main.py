@@ -20,11 +20,11 @@ def task():
 def main():
     task()
 
-    schedule.every().day.at("05:00").do(task)
-
-    while True:
-        schedule.run_pending()
-        time.sleep(180)
+    # schedule.every().day.at("05:00").do(task)
+    #
+    # while True:
+    #     schedule.run_pending()
+    #     time.sleep(180)
 
 
 if __name__ == "__main__":
