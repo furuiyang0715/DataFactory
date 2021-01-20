@@ -1,2 +1,7 @@
-requests==2.21.0
-PyMySQL==0.9.3
+requests
+PyMySQL
+pandas
+opencc
+lxml
+Apscheduler
+PyExecJS

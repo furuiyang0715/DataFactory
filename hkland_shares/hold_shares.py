@@ -1,12 +1,39 @@
 import datetime
 import logging
-import os
 import opencc
+
+from hkland_configs import SPIDER_MYSQL_HOST, SPIDER_MYSQL_USER, SPIDER_MYSQL_PASSWORD, SPIDER_MYSQL_DB, \
+    SPIDER_MYSQL_PORT, JUY_HOST, JUY_PORT, JUY_USER, JUY_PASSWD, JUY_DB, DC_HOST, DC_DB, DC_USER, DC_PASSWD, DC_PORT
+from sql_base import Connection
 
 logger = logging.getLogger(__name__)
 
 
 class HoldShares(object):
+    spider_conn = Connection(    # 爬虫库
+        host=SPIDER_MYSQL_HOST,
+        port=SPIDER_MYSQL_PORT,
+        user=SPIDER_MYSQL_USER,
+        password=SPIDER_MYSQL_PASSWORD,
+        database=SPIDER_MYSQL_DB,
+    )
+
+    juyuan_conn = Connection(
+        host=JUY_HOST,
+        port=JUY_PORT,
+        user=JUY_USER,
+        password=JUY_PASSWD,
+        database=JUY_DB,
+    )
+
+    dc_conn = Connection(
+        host=DC_HOST,
+        port=DC_PORT,
+        user=DC_USER,
+        password=DC_PASSWD,
+        database=DC_DB
+    )
+
     def __init__(self, type, offset=1):
         self.type = type
         self.url = 'https://www.hkexnews.hk/sdw/search/mutualmarket_c.aspx?t={}'.format(type)
@@ -99,7 +126,7 @@ class HoldShares(object):
         _map = {}
         while dt <= end_dt:
             sql = '''select max(Date) as before_max_dt from {} where Date <= '{}'; '''.format(self.spider_table, dt)
-            _dt = spider.select_one(sql).get("before_max_dt")
+            _dt = self.spider_conn.get(sql).get("before_max_dt")
             _map[str(dt)] = _dt
             dt += datetime.timedelta(days=1)
 
@@ -112,7 +139,7 @@ class HoldShares(object):
         else:
             trading_type = None
         if trading_type:
-            dc = self._init_pool(self.dc_cfg)
+            # dc = self._init_pool(self.dc_cfg)
             shhk_calendar_map = {}
             dt = start_dt
             while dt <= end_dt:
