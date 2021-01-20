@@ -8,17 +8,12 @@ import traceback
 import urllib.parse
 import requests
 
-from hkland_component_imp.configs import TARGET_HOST, LOCAL, TARGET_PORT, TARGET_USER, TARGET_PASSWD, TARGET_DB, \
-    JUY_HOST, JUY_PORT, JUY_USER, JUY_PASSWD, JUY_DB, DATACENTER_HOST, DATACENTER_PORT, DATACENTER_USER, \
-    DATACENTER_PASSWD, DATACENTER_DB, SPIDER_HOST, SPIDER_PORT, SPIDER_USER, SPIDER_PASSWD, SPIDER_DB, TEST_HOST, \
-    TEST_PORT, TEST_USER, TEST_PASSWD, TEST_DB, SECRET, TOKEN
+from hkland_component_imp.configs import (TARGET_HOST, TARGET_PORT, TARGET_USER, TARGET_PASSWD,
+    TARGET_DB, JUY_HOST, JUY_PORT, JUY_USER, JUY_PASSWD, JUY_DB, DATACENTER_HOST, DATACENTER_PORT,
+    DATACENTER_USER, DATACENTER_PASSWD, DATACENTER_DB, SPIDER_HOST, SPIDER_PORT, SPIDER_USER,
+                                          SPIDER_PASSWD, SPIDER_DB, SECRET, TOKEN)
 from hkland_component_imp.sql_pool import PyMysqlPoolBase
-
-if LOCAL:
-    logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-else:
-    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
+logger = logging.getLogger()
 
 
 class BaseSpider(object):
@@ -54,14 +49,6 @@ class BaseSpider(object):
         "db": SPIDER_DB,
     }
 
-    # test_cfg = {
-    #     "host": TEST_HOST,
-    #     "port": TEST_PORT,
-    #     "user": TEST_USER,
-    #     "password": TEST_PASSWD,
-    #     "db": TEST_DB,
-    # }
-
     def __init__(self):
         self.juyuan_client = None
         self.product_client = None
@@ -88,10 +75,6 @@ class BaseSpider(object):
     def _spider_init(self):
         if not self.spider_client:
             self.spider_client = self._init_pool(self.spider_cfg)
-
-    # def _test_init(self):
-    #     if not self.test_client:
-    #         self.test_client = self._init_pool(self.test_cfg)
 
     def __del__(self):
         if self.juyuan_client:
@@ -211,26 +194,3 @@ and ListedSector in (1, 2, 6, 7) and SecuCode = "{}";'.format(secu_code)
             pass
         else:
             logger.warning("钉钉消息发送失败")
-
-    # def sync_dc2test(self, table_name):
-    #     """测试使用 将 dc 数据库导出到测试库"""
-    #     self._dc_init()
-    #     self._test_init()
-    #     sql = '''select * from {}; '''.format(table_name)
-    #     datas = self.dc_client.select_all(sql)
-    #     self._batch_save(self.test_client, datas, table_name, [])
-
-    # def sync_spider2test(self):
-    #     pass
-
-
-# if __name__ == '__main__':
-#     for table in (
-#             "hkland_sgcomponent",
-#             "hkland_hgcomponent",
-#
-#
-#             "hkland_hgelistocks",
-#             "hkland_sgelistocks",
-#                   ):
-#         BaseSpider().sync_dc2test(table)

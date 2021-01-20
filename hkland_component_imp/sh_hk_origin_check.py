@@ -5,40 +5,10 @@ import sys
 cur_path = os.path.split(os.path.realpath(__file__))[0]
 file_path = os.path.abspath(os.path.join(cur_path, ".."))
 sys.path.insert(0, file_path)
-
 from hkland_component_imp.base import BaseSpider, logger
-from hkland_component_imp.configs import LOCAL
 
 
 class SHSCComponent(BaseSpider):
-    # def juyuan_stats(self):
-    #     """获取聚源数据库中的数据【聚源库已停止更新】"""
-    #     self._juyuan_init()
-    #     fields_str = ",".join(self.fields)
-    #     sql = 'select {} from {}; '.format(fields_str, self.juyuan_table_name)
-    #     datas = self.juyuan_client.select_all(sql)
-    #     return datas
-    #
-    # def dc_stats(self):
-    #     """获取现在正式的 dc 数据库中的情况 """
-    #     self._dc_init()
-    #     fields_str = ",".join(self.fields)
-    #     sql = 'select {} from {}; '.format(fields_str, self.dc_table_name)
-    #     datas = self.dc_client.select_all(sql)
-    #     return datas
-    #
-    # def juyuan_dc_same_check(self):
-    #     """检查聚源以及 dc 数据库的一致性"""
-    #     juyuan_datas = self.juyuan_stats()
-    #     dc_datas = self.dc_stats()
-    #     logger.debug(len(juyuan_datas))
-    #     logger.debug(len(dc_datas))
-    #
-    #     for data in juyuan_datas:
-    #         assert data in dc_datas
-    #     for data in dc_datas:
-    #         assert data in juyuan_datas
-
     def get_shhk_diff_changes(self, _type):
         """获得两次时间点之间的差异记录"""
         assert _type in ("sh", "hk")
@@ -55,9 +25,8 @@ class SHSCComponent(BaseSpider):
         ret = client.select_all(sql)
         times = [r.get("Time") for r in ret]
         t1 = times[0]   # 第一次
-        # t1 = times[len(times) - 2]   # 倒数第二次
         t2 = times[-1]   # 最后一次
-        print(t1, t2)
+        logger.info(f"沪港通两个需要比较的时间点分别是 {t1} 和 {t2}")
 
         sql1 = '''select * from {} where Time = '{}' ;'''.format(table_name, t1)
         sql2 = '''select * from {} where Time = '{}' ;'''.format(table_name, t2)
@@ -149,17 +118,6 @@ class SHSCComponent(BaseSpider):
         else:
             return False
 
-    # def is_in_list(self, code):
-    #     self._product_init()
-    #     client = self.product_client
-    #     ret = client.select_all(
-    #         "select flag from {} where SecuCode = '{}' and InDate = (select max(InDate) from {} where SecuCode = '{}'); ".format(
-    #             self.target_table_name, code, self.target_table_name, code))[0]
-    #     if ret.get("flag") == 1:
-    #         return True
-    #     else:
-    #         return False
-
     def check_hk_list(self):
         self._spider_init()
         self._product_init()
@@ -230,7 +188,7 @@ class SHSCComponent(BaseSpider):
                 record = {"CompType": 2, "SecuCode": secu_code, "InDate": effective_date}
                 is_exist = self.check_target_exist(record)
                 if is_exist:
-                    # logger.info("新增记录已存在")
+                    logger.debug("新增记录已存在")
                     continue
                 inner_code, secu_abbr = self.get_juyuan_codeinfo(secu_code)
                 record.update({"InnerCode": inner_code, "Flag": 1})
@@ -243,7 +201,7 @@ class SHSCComponent(BaseSpider):
                 record = {"CompType": 2, "SecuCode": secu_code, "InDate": effective_date}
                 is_exist = self.check_target_exist(record)
                 if is_exist:
-                    # logger.info("恢复记录已存在")
+                    logger.debug("恢复记录已存在")
                     continue
                 inner_code, secu_abbr = self.get_juyuan_codeinfo(secu_code)
                 record.update({"InnerCode": inner_code, "Flag": 1})
@@ -257,7 +215,7 @@ class SHSCComponent(BaseSpider):
                 record = {"CompType": 2, "SecuCode": secu_code, "OutDate": effective_date}
                 is_exist = self.check_target_exist(record)
                 if is_exist:
-                    # logger.info("移除记录已存在")
+                    logger.debug("移除记录已存在")
                     continue
 
                 inner_code, secu_abbr = self.get_juyuan_codeinfo(secu_code)
@@ -265,7 +223,6 @@ class SHSCComponent(BaseSpider):
                     self.target_table_name, secu_code)
                 in_date = client.select_one(sql)
                 if not in_date:
-                    print(secu_code)
                     continue
                 else:
                     in_date = in_date.get("InDate")
@@ -287,7 +244,7 @@ class SHSCComponent(BaseSpider):
                     self.target_table_name, secu_code)
                 is_exist = client.select_one(sql)
                 if not is_exist:
-                    print("removal: ", secu_code)
+                    logger.debug(f"removal: {secu_code}")
                     continue
                 else:
                     in_date = is_exist.get("InDate")
@@ -346,10 +303,10 @@ class SHSCComponent(BaseSpider):
                     # 1-港股通(沪); 2-沪股通。
                     sql = 'select  InDate from {} where CompType = 1 and SecuCode = {} and Flag = 1; '.format(
                         self.target_table_name, secu_code)
-                    print(sql)
+                    logger.debug(sql)
                     ret = client.select_one(sql)
                     if not ret:
-                        print(secu_code)
+                        logger.debug(secu_code)
                         continue
                     else:
                         in_date = ret.get("InDate")
@@ -359,9 +316,9 @@ class SHSCComponent(BaseSpider):
                     info = "港股(深)成分变更: 需要新增一条调出记录{}\n".format(record)
                     self.ding_info += info
 
-        print("# " * 20)
-        print(add_items)
-        print(delete_items)
+        logger.debug("# " * 20)
+        logger.debug(add_items)
+        logger.debug(delete_items)
         for items in (add_items, delete_items):
             if items:
                 self._batch_save(client, items, self.target_table_name, self.fields)
@@ -383,14 +340,9 @@ class SHSCComponent(BaseSpider):
         info = '港股(沪)的核对结果: {}\n'.format(ret2)
         self.ding_info += info
 
-        # self.ding(self.ding_info)
-        print(self.ding_info)
+        self.ding(self.ding_info)
+        logger.info(self.ding_info)
         self.refresh_update_time()
-
-
-if __name__ == "__main__":
-    SHSCComponent().start()
-
 
 '''
 核对流程: 

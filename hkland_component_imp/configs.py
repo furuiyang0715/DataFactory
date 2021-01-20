@@ -60,12 +60,3 @@ else:
     TARGET_USER = TEST_USER
     TARGET_PASSWD = TEST_PASSWD
     TARGET_DB = TEST_DB
-
-
-# if __name__ == "__main__":
-#     import sys
-#     mod = sys.modules[__name__]
-#     attrs = dir(mod)
-#     attrs = [attr for attr in attrs if not attr.startswith("__") and attr.isupper()]
-#     for attr in attrs:
-#         print(attr, ":", getattr(mod, attr))
