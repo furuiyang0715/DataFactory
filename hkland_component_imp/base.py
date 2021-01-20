@@ -54,13 +54,13 @@ class BaseSpider(object):
         "db": SPIDER_DB,
     }
 
-    test_cfg = {
-        "host": TEST_HOST,
-        "port": TEST_PORT,
-        "user": TEST_USER,
-        "password": TEST_PASSWD,
-        "db": TEST_DB,
-    }
+    # test_cfg = {
+    #     "host": TEST_HOST,
+    #     "port": TEST_PORT,
+    #     "user": TEST_USER,
+    #     "password": TEST_PASSWD,
+    #     "db": TEST_DB,
+    # }
 
     def __init__(self):
         self.juyuan_client = None
@@ -89,9 +89,9 @@ class BaseSpider(object):
         if not self.spider_client:
             self.spider_client = self._init_pool(self.spider_cfg)
 
-    def _test_init(self):
-        if not self.test_client:
-            self.test_client = self._init_pool(self.test_cfg)
+    # def _test_init(self):
+    #     if not self.test_client:
+    #         self.test_client = self._init_pool(self.test_cfg)
 
     def __del__(self):
         if self.juyuan_client:
@@ -212,16 +212,16 @@ and ListedSector in (1, 2, 6, 7) and SecuCode = "{}";'.format(secu_code)
         else:
             logger.warning("钉钉消息发送失败")
 
-    def sync_dc2test(self, table_name):
-        """测试使用 将 dc 数据库导出到测试库"""
-        self._dc_init()
-        self._test_init()
-        sql = '''select * from {}; '''.format(table_name)
-        datas = self.dc_client.select_all(sql)
-        self._batch_save(self.test_client, datas, table_name, [])
+    # def sync_dc2test(self, table_name):
+    #     """测试使用 将 dc 数据库导出到测试库"""
+    #     self._dc_init()
+    #     self._test_init()
+    #     sql = '''select * from {}; '''.format(table_name)
+    #     datas = self.dc_client.select_all(sql)
+    #     self._batch_save(self.test_client, datas, table_name, [])
 
-    def sync_spider2test(self):
-        pass
+    # def sync_spider2test(self):
+    #     pass
 
 
 # if __name__ == '__main__':
