@@ -54,13 +54,13 @@ class BaseSpider(object):
         "db": SPIDER_DB,
     }
 
-    test_cfg = {
-        "host": TEST_HOST,
-        "port": TEST_PORT,
-        "user": TEST_USER,
-        "password": TEST_PASSWD,
-        "db": TEST_DB,
-    }
+    # test_cfg = {
+    #     "host": TEST_HOST,
+    #     "port": TEST_PORT,
+    #     "user": TEST_USER,
+    #     "password": TEST_PASSWD,
+    #     "db": TEST_DB,
+    # }
 
     def __init__(self):
         self.juyuan_client = None
@@ -89,9 +89,9 @@ class BaseSpider(object):
         if not self.spider_client:
             self.spider_client = self._init_pool(self.spider_cfg)
 
-    def _test_init(self):
-        if not self.test_client:
-            self.test_client = self._init_pool(self.test_cfg)
+    # def _test_init(self):
+    #     if not self.test_client:
+    #         self.test_client = self._init_pool(self.test_cfg)
 
     def __del__(self):
         if self.juyuan_client:

@@ -24,7 +24,7 @@ class DailyUpdate(BaseSpider):
         self.sz_short_sell_list_table = 'hkex_lgt_special_szse_securities_for_short_selling'
 
     def sh_buy_and_sell_list(self):
-        self._test_init()
+        # self._test_init()
         self._spider_init()
         self._product_init()
 
@@ -42,7 +42,7 @@ class DailyUpdate(BaseSpider):
         return (not (datas - lst)) and (not (lst - datas))
 
     def sz_buy_and_sell_list(self):
-        self._test_init()
+        # self._test_init()
         self._spider_init()
         self._product_init()
 
@@ -61,7 +61,7 @@ class DailyUpdate(BaseSpider):
         return (not (datas - lst)) and (not (lst - datas))
 
     def sh_only_sell_list(self):
-        self._test_init()
+        # self._test_init()
         self._spider_init()
         self._product_init()
 
