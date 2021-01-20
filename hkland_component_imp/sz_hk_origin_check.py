@@ -112,12 +112,14 @@ class SZSCComponent(BaseSpider):
         def get_spider_hk_list():
             sql = 'select distinct(SecuCode) from {} where Time = (select max(Time) from {});'.format(
                 self.hk_list_table_name, self.hk_list_table_name)
+            logger.info(sql)
             ret = self.spider_client.select_all(sql)
             hk_list = [r.get("SecuCode") for r in ret]
             return hk_list
 
         def get_target_hk_list():
             sql = 'select SecuCode from {} where CompType = 4 and Flag = 1;'.format(self.target_table_name)
+            logger.info(sql)
             ret = self.product_client.select_all(sql)
             hk_list = [r.get("SecuCode") for r in ret]
             return hk_list
@@ -125,8 +127,8 @@ class SZSCComponent(BaseSpider):
         spider_hk_list = set(get_spider_hk_list())
         target_hk_list = set(get_target_hk_list())
         logger.info(spider_hk_list == target_hk_list)
-        print(spider_hk_list - target_hk_list)
-        print(target_hk_list - spider_hk_list)
+        print("爬虫比目标库多出: ", spider_hk_list - target_hk_list)
+        print("目标库比爬虫多出: ", target_hk_list - spider_hk_list)
         return spider_hk_list == target_hk_list
 
     def check_zh_list(self):
@@ -149,8 +151,8 @@ class SZSCComponent(BaseSpider):
         spider_zh_list = set(get_spider_zh_list())
         target_zh_list = set(get_target_zh_list())
         logger.info(spider_zh_list == target_zh_list)
-        print(spider_zh_list - target_zh_list)
-        print(target_zh_list - spider_zh_list)
+        print('爬虫比目标库多出: ', spider_zh_list - target_zh_list)
+        print("目标库比爬虫多出: ", target_zh_list - spider_zh_list)
         return spider_zh_list == target_zh_list
 
     def process_zh_changes(self, zh_changes):
