@@ -125,7 +125,7 @@ class OriginChecker(BaseSpider):
         # 移至滬股通特別證券/中華通特別證券名單 (只可賣出)
         change_add2 = 'Transfer to List of Special SSE Securities/Special China Connect Securities (stocks eligible for sell only)'
         # 移入 2 时，一般要移出 1, 在有特别说明时移出  3 4
-        sentence_rm34 = 'This stock will also be removed from the List of Eligible SZSE Securities for Margin Trading and the List of Eligible SZSE Securities for Short Selling.'
+        sentence_rm34 = 'This stock will also be removed from the List of Eligible SSE Securities for Margin Trading and the List of Eligible SSE Securities for Short Selling.'
 
         # 移除, 从 2 中移除
         change_rvl2 = 'Removal'
@@ -381,12 +381,6 @@ class OriginChecker(BaseSpider):
                 self.process_sh_changes(to_insert)
             else:
                 self.process_sz_changes(to_insert)
-
-            # with open("to_delete_{}.txt".format(count), "w") as f:
-            #     f.write(pprint.pformat(to_delete))
-            # with open("to_insert_{}.txt".format(count), "w") as f:
-            #     f.write(pprint.pformat(to_insert))
-
             count += 1
 
         # 检查一致性
@@ -425,5 +419,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-    # task()
