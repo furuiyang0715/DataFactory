@@ -147,7 +147,7 @@ class SZSCComponent(BaseSpider):
 
     def check_hk_list(self):
         self._spider_init()
-        self._test_init()
+        # self._test_init()
         self._product_init()
 
         def get_spider_hk_list():
