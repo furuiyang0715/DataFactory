@@ -75,9 +75,96 @@ class EliStockSpider(object):
             items.append(item)
         self.spider_conn.batch_insert(items, 'Change_of_SSE_Securities_Lists', headers)
 
+    # process
+    def process(self, item):
+        '''
+        mysql> select distinct(ChangeType) from Change_of_SSE_Securities_Lists;
+            +--------------------------------------------------------------------------------------------------------------------+
+            | ChangeType                                                                                                         |
+            +--------------------------------------------------------------------------------------------------------------------+
+            | 加入                                                                                                               |
+            | 加入(由滬股通特別證券/中華通特別證券名單 (只可賣出))                                                               |
+            | 移至滬股通特別證券/中華通特別證券名單 (只可賣出)                                                                   |
+            | 加入可進行保證金交易的合資格上交所證券名單及可賣空的合資格滬股通證券名單                                           |
+            | 移除                                                                                                               |
+            | 從可進行保證金交易的合資格上交所證券名單及可賣空的合資格滬股通證券名單中移除                                       |
+            | 上交所股份編號及股票名稱分別由601313及江南嘉捷變更而成                                                             |
+            | 上交所股份編號及股票名稱分別變更為601360及三六零                                                                   |
+            | 加入滬股通特別證券/中華通特別證券名單 (只可賣出)                                                                   |
+            | 已恢復買入                                                                                                         |
+            | 已暫停買入                                                                                                         |
+            +--------------------------------------------------------------------------------------------------------------------+
+
+        '''
+        if item["ChangeType"] == '加入':
+            if "由於該股票同時包括在上交所融資融券名單中，因此該股票將同時被納入合資格滬股通保證金交易股票名單及合資格滬股通擔保賣空股票名單內" in item.get("Remarks"):
+                # print("add 1 3 4")
+                pass
+            else:
+                # print("add 1")
+                pass
+        elif item["ChangeType"] == '加入(由滬股通特別證券/中華通特別證券名單 (只可賣出))':
+            # print("over 2, add 1")
+            #
+            # if ('由於該股票同時包括在上交所融資融券名單中，因此該股票將同時被納入合資格滬股通保證金交易股票名單及合資格滬股通擔保賣空股票名單內' in item.get("Remarks")) \
+            #         or ('由於該股票同時包括在上交所融資融券名單中，因此該股票將同時被納入可進行保證金交易的合資格上交所證券名單及可賣空的合資格滬股通證券名單內' in item.get("Remarks")) \
+            #         or ('該股票同時將被納入合資格滬股通保證金交易股票名單及合資格滬股通擔保賣空股票名單' in item.get("Remarks")):
+            #     print('add 3 4')
+            # else:
+            #     print(item.get("Remarks"))
+
+            pass
+
+        elif item["ChangeType"] == '加入可進行保證金交易的合資格上交所證券名單及可賣空的合資格滬股通證券名單':
+            # print("add 3 4")
+            pass
+
+        elif item["ChangeType"] == '加入滬股通特別證券/中華通特別證券名單 (只可賣出)':
+            # print('add 2')
+            pass
+
+        elif item["ChangeType"] == '移至滬股通特別證券/中華通特別證券名單 (只可賣出)':
+            # print("add 2 over 1")
+            # if '該股票同時由合資格滬股通保證金交易股票名單及合資格滬股通擔保賣空股票名單移除' in item.get("Remarks"):
+            #     print('over 3 4')
+            pass
+
+        elif item["ChangeType"] == '移除':
+            # print("over 2 ")
+            pass
+
+        elif item["ChangeType"] == '從可進行保證金交易的合資格上交所證券名單及可賣空的合資格滬股通證券名單中移除':
+            # print("over 3 4")
+            # print(item.get("Remarks"))
+            pass
+
+        elif item['ChangeType'] == '已恢復買入':
+            # print("over 5")
+            pass
+
+        elif item['ChangeType'] == '已暫停買入':
+            # print('add 5')
+            pass
+        else:
+            if item['ChangeType'] == '上交所股份編號及股票名稱分別由601313及江南嘉捷變更而成':
+                pass
+            elif item['ChangeType'] == '上交所股份編號及股票名稱分別變更為601360及三六零':
+                pass
+            else:
+                print(item)
+
+    def fetch_datas(self):
+        sql = '''select * from Change_of_SSE_Securities_Lists where PubDate = (select max(PubDate) from Change_of_SSE_Securities_Lists); '''
+        datas = self.spider_conn.query(sql)
+        for data in datas:
+            self.process(data)
+
+
+
 
 if __name__ == '__main__':
     eli = EliStockSpider()
     # eli.create_table()
     # eli.refresh_xls_file()
-    eli.perse_xls_datas()
+    # eli.perse_xls_datas()
+    eli.fetch_datas()
