@@ -151,7 +151,9 @@ class Connection(object):
                         traceback.print_exc()
                         raise
                 else:
-                    raise e
+                    logger.info(f"数据已存在{item}")
+                    pass
+                    # raise e
             else:
                 traceback.print_exc()
                 raise e

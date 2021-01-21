@@ -1,4 +1,5 @@
 import datetime
+import logging
 import re
 
 import requests
@@ -6,10 +7,16 @@ import xlrd
 from xlrd import xldate_as_tuple
 
 from hkland_configs import (SPIDER_MYSQL_HOST, SPIDER_MYSQL_USER, SPIDER_MYSQL_PORT, SPIDER_MYSQL_PASSWORD,
-                            SPIDER_MYSQL_DB)
+                            SPIDER_MYSQL_DB, LOCAL)
 from sql_base import Connection
 
 url = 'https://www.hkex.com.hk/Mutual-Market/Stock-Connect/Eligible-Stocks/View-All-Eligible-Securities?sc_lang=zh-HK'
+
+if LOCAL:
+    logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+else:
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 
 class EliStockSpider(object):
@@ -44,7 +51,7 @@ class EliStockSpider(object):
         '''
 
         sql = '''
-        CREATE TABLE `hkland_sgelistocks` (
+        CREATE TABLE IF NOT EXISTS `sgelistocks` (
           `ID` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'ID',
           `TradingType` int(11) NOT NULL COMMENT '交易方向',
           `TargetCategory` int(11) NOT NULL COMMENT '标的类别',
@@ -91,7 +98,6 @@ class EliStockSpider(object):
             items.append(item)
         self.spider_conn.batch_insert(items, 'Change_of_SSE_Securities_Lists', headers)
 
-    # process
     def process(self, item: dict, secucode: str):
         '''
         mysql> select distinct(ChangeType) from Change_of_SSE_Securities_Lists;
@@ -119,62 +125,67 @@ class EliStockSpider(object):
                 # ParValue CREATETIMEJZ UPDATETIMEJZ CMFID CMFTime
 
                 # fields = ['Time', 'TradingType', 'TargetCategory', 'SecuCode', 'InDate', 'OutDate']
-                # print("add 1 3 4")
-                item = {'TargetCategory': 1, "SecuCode": secucode, "InDate": item['EffectiveDate'], "Time": item['PubDate']}
-                item_ = {'TargetCategory': 3, "SecuCode": secucode, "InDate": item['EffectiveDate'], "Time": item['PubDate']}
-                item__ = {'TargetCategory': 4, "SecuCode": secucode, "InDate": item['EffectiveDate'], "Time": item['PubDate']}
-                try:
-                    self.spider_conn.table_insert('', item)
-                except:
-                    pass
-
-
-                pass
+                print("add 1 3 4")
+                data = {'TradingType': 1, 'TargetCategory': 1, "SecuCode": secucode, "InDate": item['EffectiveDate'], "Time": item['PubDate']}
+                data_ = {'TradingType': 1, 'TargetCategory': 3, "SecuCode": secucode, "InDate": item['EffectiveDate'], "Time": item['PubDate']}
+                data__ = {'TradingType': 1, 'TargetCategory': 4, "SecuCode": secucode, "InDate": item['EffectiveDate'], "Time": item['PubDate']}
+                self.spider_conn.table_insert('sgelistocks', data)
+                self.spider_conn.table_insert('sgelistocks', data_)
+                self.spider_conn.table_insert('sgelistocks', data__)
             else:
-                # print("add 1")
-                pass
-        elif item["ChangeType"] == '加入(由滬股通特別證券/中華通特別證券名單 (只可賣出))':
-            # print("over 2, add 1")
-            #
-            # if ('由於該股票同時包括在上交所融資融券名單中，因此該股票將同時被納入合資格滬股通保證金交易股票名單及合資格滬股通擔保賣空股票名單內' in item.get("Remarks")) \
-            #         or ('由於該股票同時包括在上交所融資融券名單中，因此該股票將同時被納入可進行保證金交易的合資格上交所證券名單及可賣空的合資格滬股通證券名單內' in item.get("Remarks")) \
-            #         or ('該股票同時將被納入合資格滬股通保證金交易股票名單及合資格滬股通擔保賣空股票名單' in item.get("Remarks")):
-            #     print('add 3 4')
-            # else:
-            #     print(item.get("Remarks"))
+                print("add 1")
+                data = {'TradingType': 1, 'TargetCategory': 1, "SecuCode": secucode, "InDate": item['EffectiveDate'], "Time": item['PubDate']}
+                self.spider_conn.table_insert('sgelistocks', data)
 
-            pass
+        elif item["ChangeType"] == '加入(由滬股通特別證券/中華通特別證券名單 (只可賣出))':
+            print("over 2, add 1")
+            data = {'TradingType': 1, 'TargetCategory': 1, "SecuCode": secucode, "InDate": item['EffectiveDate'], "Time": item['PubDate']}
+            self.spider_conn.table_insert('sgelistocks', data)
+            # _data = {''}      # TODO 结束 2 加入 1
+            if ('由於該股票同時包括在上交所融資融券名單中，因此該股票將同時被納入合資格滬股通保證金交易股票名單及合資格滬股通擔保賣空股票名單內' in item.get("Remarks")) \
+                    or ('由於該股票同時包括在上交所融資融券名單中，因此該股票將同時被納入可進行保證金交易的合資格上交所證券名單及可賣空的合資格滬股通證券名單內' in item.get("Remarks")) \
+                    or ('該股票同時將被納入合資格滬股通保證金交易股票名單及合資格滬股通擔保賣空股票名單' in item.get("Remarks")):
+                print('add 3 4')
+                data_ = {'TradingType': 1, 'TargetCategory': 3, "SecuCode": secucode, "InDate": item['EffectiveDate'], "Time": item['PubDate']}
+                data__ = {'TradingType': 1, 'TargetCategory': 4, "SecuCode": secucode, "InDate": item['EffectiveDate'], "Time": item['PubDate']}
+                self.spider_conn.table_insert('sgelistocks', data_)
+                self.spider_conn.table_insert('sgelistocks', data__)
+            else:
+                print(item.get("Remarks"))
 
         elif item["ChangeType"] == '加入可進行保證金交易的合資格上交所證券名單及可賣空的合資格滬股通證券名單':
-            # print("add 3 4")
-            pass
+            print("add 3 4")
+            data_ = {'TradingType': 1, 'TargetCategory': 3, "SecuCode": secucode, "InDate": item['EffectiveDate'], "Time": item['PubDate']}
+            data__ = {'TradingType': 1, 'TargetCategory': 4, "SecuCode": secucode, "InDate": item['EffectiveDate'], "Time": item['PubDate']}
+            self.spider_conn.table_insert('sgelistocks', data_)
+            self.spider_conn.table_insert('sgelistocks', data__)
 
         elif item["ChangeType"] == '加入滬股通特別證券/中華通特別證券名單 (只可賣出)':
-            # print('add 2')
-            pass
+            print('add 2')
+            _data = {'TradingType': 1, 'TargetCategory': 2, "SecuCode": secucode, "InDate": item['EffectiveDate'], "Time": item['PubDate']}
+            self.spider_conn.table_insert('sgelistocks', _data)
 
         elif item["ChangeType"] == '移至滬股通特別證券/中華通特別證券名單 (只可賣出)':
-            # print("add 2 over 1")
-            # if '該股票同時由合資格滬股通保證金交易股票名單及合資格滬股通擔保賣空股票名單移除' in item.get("Remarks"):
-            #     print('over 3 4')
-            pass
+            print("add 2 over 1")
+            _data = {'TradingType': 1, 'TargetCategory': 2, "SecuCode": secucode, "InDate": item['EffectiveDate'], "Time": item['PubDate']}
+            self.spider_conn.table_insert('sgelistocks', _data)
+        if '該股票同時由合資格滬股通保證金交易股票名單及合資格滬股通擔保賣空股票名單移除' in item.get("Remarks"):
+                print('over 3 4')
 
         elif item["ChangeType"] == '移除':
-            # print("over 2 ")
-            pass
+            print("over 2 ")
 
         elif item["ChangeType"] == '從可進行保證金交易的合資格上交所證券名單及可賣空的合資格滬股通證券名單中移除':
-            # print("over 3 4")
-            # print(item.get("Remarks"))
-            pass
+            print("over 3 4")
 
         elif item['ChangeType'] == '已恢復買入':
-            # print("over 5")
-            pass
+            print("over 5")
 
         elif item['ChangeType'] == '已暫停買入':
-            # print('add 5')
-            pass
+            print('add 5')
+            d = {'TradingType': 1, 'TargetCategory': 5, "SecuCode": secucode, "InDate": item['EffectiveDate'], "Time": item['PubDate']}
+            self.spider_conn.table_insert('sgelistocks', d)
+
         else:
             if item['ChangeType'] == '上交所股份編號及股票名稱分別由601313及江南嘉捷變更而成':
                 pass
@@ -195,10 +206,11 @@ class EliStockSpider(object):
             sql = f'''select * from Change_of_SSE_Securities_Lists where PubDate = \
 (select max(PubDate) from Change_of_SSE_Securities_Lists) and SecuCode = '{secucode}' \
 order by EffectiveDate asc; '''
-            print(sql)
+            # print(sql)
             datas = self.spider_conn.query(sql)
-            print(datas)
+            # print(datas)
             for data in datas:
+                print(data)
                 self.process(data, secucode)
 
 
