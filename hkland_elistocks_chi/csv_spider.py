@@ -42,6 +42,22 @@ class EliStockSpider(object):
           KEY `update_time` (`UPDATETIMEJZ`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='滬股通股票/中華通股票名單之更改'; 
         '''
+
+        sql = '''
+        CREATE TABLE `hkland_sgelistocks` (
+          `ID` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'ID',
+          `TradingType` int(11) NOT NULL COMMENT '交易方向',
+          `TargetCategory` int(11) NOT NULL COMMENT '标的类别',
+          `SecuCode` varchar(50) DEFAULT NULL COMMENT '证券代码',
+          `InDate` datetime NOT NULL COMMENT '调入日期',
+          `OutDate` datetime DEFAULT NULL COMMENT '调出日期',
+          `Time` datetime DEFAULT NULL COMMENT 'Come From Time',
+          `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
+          `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          UNIQUE KEY `IX_JZ_ZHSCEliStocks_ID` (`ID`),
+          UNIQUE KEY `IX_JZ_ZHSCEliStocks` (`Time`, `TradingType`,`TargetCategory`,`SecuCode`,`InDate`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=gbk COMMENT='深港通合资格成分股变更表';
+        '''
         self.spider_conn.execute(sql)
 
     def refresh_xls_file(self):
@@ -101,6 +117,8 @@ class EliStockSpider(object):
                 # TradingType TargetCategory InnerCode SecuCode SecuAbbr
                 # InDate OutDate Flag CCASSCode
                 # ParValue CREATETIMEJZ UPDATETIMEJZ CMFID CMFTime
+
+                # fields = ['Time', 'TradingType', 'TargetCategory', 'SecuCode', 'InDate', 'OutDate']
                 # print("add 1 3 4")
                 item = {'TargetCategory': 1, "SecuCode": secucode, "InDate": item['EffectiveDate'], "Time": item['PubDate']}
                 item_ = {'TargetCategory': 3, "SecuCode": secucode, "InDate": item['EffectiveDate'], "Time": item['PubDate']}
