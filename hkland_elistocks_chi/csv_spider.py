@@ -171,8 +171,9 @@ class EliStockSpider(object):
             # print("add 2 over 1")
             _data = {'TradingType': 1, 'TargetCategory': 2, "SecuCode": secucode, "InDate": item['EffectiveDate'], "Time": item['PubDate']}
             self.spider_conn.table_insert('sgelistocks', _data)
+
             if '該股票同時由合資格滬股通保證金交易股票名單及合資格滬股通擔保賣空股票名單移除' in item.get("Remarks"):
-                    print('over 3 4')
+                print('over 3 4')
 
         elif item["ChangeType"] == '移除':
             # print("over 2 ")
@@ -183,15 +184,12 @@ class EliStockSpider(object):
             pass
 
         elif item['ChangeType'] == '已恢復買入':
-            print("over 5")
+            # print("over 5")
             # 找到这个时间之前最近的的一个 add 5 的记录  更新其  EndDate
             # fields = ['OrderID', 'EffectiveDate', 'SecuCode', 'SecuAbbr', 'ChangeType', 'PubDate', 'Remarks']
             sql = f'''select * from Change_of_SSE_Securities_Lists where ChangeType = '已暫停買入' and EffectiveDate <= '{item['EffectiveDate']}' \
             order by EffectiveDate desc limit 1;'''
-            print("* " * 100)
-            print(sql)
             ret = self.spider_conn.get(sql)
-            print(ret)
             if ret:
                 d = {'TradingType': 1, 'TargetCategory': 5, "SecuCode": secucode, "InDate": ret['EffectiveDate'], "OutDate": item['EffectiveDate'], "Time": item['PubDate']}
                 self.spider_conn.table_insert('sgelistocks', d, ['OutDate', ])
