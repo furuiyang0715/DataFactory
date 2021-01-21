@@ -98,7 +98,9 @@ class EliStockSpider(object):
         '''
         if item["ChangeType"] == '加入':
             if "由於該股票同時包括在上交所融資融券名單中，因此該股票將同時被納入合資格滬股通保證金交易股票名單及合資格滬股通擔保賣空股票名單內" in item.get("Remarks"):
+                # TradingType TargetCategory InnerCode SecuCode SecuAbbr InDate OutDate Flag CCASSCode ParValue CREATETIMEJZ UPDATETIMEJZ CMFID CMFTime
                 # print("add 1 3 4")
+                r = {"indate": item.get("EffectiveDate"), "in1": 1, "in2": 0, 'in3': 1, "in4": 1}
                 pass
             else:
                 # print("add 1")
@@ -158,8 +160,6 @@ class EliStockSpider(object):
         datas = self.spider_conn.query(sql)
         for data in datas:
             self.process(data)
-
-
 
 
 if __name__ == '__main__':
