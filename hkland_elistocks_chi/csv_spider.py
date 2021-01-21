@@ -156,10 +156,13 @@ class EliStockSpider(object):
                 print(item)
 
     def fetch_datas(self):
-        sql = '''select * from Change_of_SSE_Securities_Lists where PubDate = (select max(PubDate) from Change_of_SSE_Securities_Lists); '''
+        sql = '''select * from Change_of_SSE_Securities_Lists where PubDate = \
+(select max(PubDate) from Change_of_SSE_Securities_Lists) order by SecuCode asc, EffectiveDate asc; '''
+
         datas = self.spider_conn.query(sql)
         for data in datas:
-            self.process(data)
+            print(data)
+            # self.process(data)
 
 
 if __name__ == '__main__':
