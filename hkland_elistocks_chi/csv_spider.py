@@ -156,6 +156,17 @@ class EliStockSpider(object):
                 print(item)
 
     def fetch_datas(self):
+
+        sql = '''select distinct(SecuCode) from Change_of_SSE_Securities_Lists where PubDate = \
+(select max(PubDate) from Change_of_SSE_Securities_Lists); '''
+        secucodes = self.spider_conn.query(sql)
+        secucodes = [r.get('SecuCode') for r in secucodes]
+        secucodes = sorted(secucodes)
+        print(secucodes)
+
+        import sys
+        sys.exit(0)
+
         sql = '''select * from Change_of_SSE_Securities_Lists where PubDate = \
 (select max(PubDate) from Change_of_SSE_Securities_Lists) order by SecuCode asc, EffectiveDate asc; '''
 
