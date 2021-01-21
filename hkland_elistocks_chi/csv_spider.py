@@ -193,6 +193,8 @@ class EliStockSpider(object):
             if ret:
                 d = {'TradingType': 1, 'TargetCategory': 5, "SecuCode": secucode, "InDate": ret['EffectiveDate'], "OutDate": item['EffectiveDate'], "Time": item['PubDate']}
                 self.spider_conn.table_insert('sgelistocks', d, ['OutDate', ])
+            else:
+                raise
 
         elif item['ChangeType'] == '已暫停買入':
             # print('add 5')
