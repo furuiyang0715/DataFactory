@@ -150,6 +150,8 @@ class Connection(object):
                     except:
                         traceback.print_exc()
                         raise
+                else:
+                    raise e
             else:
                 traceback.print_exc()
                 raise e

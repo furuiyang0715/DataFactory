@@ -76,7 +76,7 @@ class EliStockSpider(object):
         self.spider_conn.batch_insert(items, 'Change_of_SSE_Securities_Lists', headers)
 
     # process
-    def process(self, item):
+    def process(self, item: dict, secucode: str):
         '''
         mysql> select distinct(ChangeType) from Change_of_SSE_Securities_Lists;
             +--------------------------------------------------------------------------------------------------------------------+
@@ -98,9 +98,19 @@ class EliStockSpider(object):
         '''
         if item["ChangeType"] == '加入':
             if "由於該股票同時包括在上交所融資融券名單中，因此該股票將同時被納入合資格滬股通保證金交易股票名單及合資格滬股通擔保賣空股票名單內" in item.get("Remarks"):
-                # TradingType TargetCategory InnerCode SecuCode SecuAbbr InDate OutDate Flag CCASSCode ParValue CREATETIMEJZ UPDATETIMEJZ CMFID CMFTime
+                # TradingType TargetCategory InnerCode SecuCode SecuAbbr
+                # InDate OutDate Flag CCASSCode
+                # ParValue CREATETIMEJZ UPDATETIMEJZ CMFID CMFTime
                 # print("add 1 3 4")
-                r = {"indate": item.get("EffectiveDate"), "in1": 1, "in2": 0, 'in3': 1, "in4": 1}
+                item = {'TargetCategory': 1, "SecuCode": secucode, "InDate": item['EffectiveDate'], "Time": item['PubDate']}
+                item_ = {'TargetCategory': 3, "SecuCode": secucode, "InDate": item['EffectiveDate'], "Time": item['PubDate']}
+                item__ = {'TargetCategory': 4, "SecuCode": secucode, "InDate": item['EffectiveDate'], "Time": item['PubDate']}
+                try:
+                    self.spider_conn.table_insert('', item)
+                except:
+                    pass
+
+
                 pass
             else:
                 # print("add 1")
@@ -170,6 +180,8 @@ order by EffectiveDate asc; '''
             print(sql)
             datas = self.spider_conn.query(sql)
             print(datas)
+            for data in datas:
+                self.process(data, secucode)
 
 
         import sys
