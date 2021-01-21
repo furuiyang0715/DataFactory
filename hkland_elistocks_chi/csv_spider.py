@@ -214,18 +214,6 @@ order by EffectiveDate asc; '''
                 self.process(data, secucode)
 
 
-        import sys
-        sys.exit(0)
-
-        sql = '''select * from Change_of_SSE_Securities_Lists where PubDate = \
-(select max(PubDate) from Change_of_SSE_Securities_Lists) order by SecuCode asc, EffectiveDate asc; '''
-
-        datas = self.spider_conn.query(sql)
-        for data in datas:
-            print(data)
-            # self.process(data)
-
-
 if __name__ == '__main__':
     eli = EliStockSpider()
     # eli.create_table()
