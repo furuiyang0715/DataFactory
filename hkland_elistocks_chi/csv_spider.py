@@ -173,7 +173,8 @@ class EliStockSpider(object):
             self.spider_conn.table_insert('sgelistocks', _data)
 
             if '該股票同時由合資格滬股通保證金交易股票名單及合資格滬股通擔保賣空股票名單移除' in item.get("Remarks"):
-                print('over 3 4')
+                # print('over 3 4')
+                pass
 
         elif item["ChangeType"] == '移除':
             # print("over 2 ")
