@@ -87,12 +87,32 @@ for category, post_data in loop_info.items():
             item["Date"] = datetime.datetime.strptime(data['DetailDate'], '%Y-%m-%dT00:00:00')
             item['SecuCode'] = data['Code']
             # item['InnerCode'] =
+            item['SecuAbbr'] = data['Name']
+            item['Close'] = data['Close']
+            item['ChangePercent'] = data['ChangePercent']
             if data['MarketType'] == 1:    # 市场类型 1 沪股通 2 港股通（沪） 3 深股通 4 港通股（深）
                 item['CategoryCode'] = 'HG'
+                item['TJME'] = data['HGTJME']
+                item['TMRJE'] = data['HGTMRJE']
+                item['TCJJE'] = data['HGTCJJE']
 
+            elif data['MarketType'] == 2:
+                item['CategoryCode'] = 'GGh'
+                item['TJME'] = data['']
+                item['TMRJE'] = data['']
+                item['TCJJE'] = data['']
 
+            elif data['MarketType'] == 3:
+                item['CategoryCode'] = 'SG'
+                item['TJME'] = data['']
+                item['TMRJE'] = data['']
+                item['TCJJE'] = data['']
 
-                pass
+            elif data['MarketType'] == 4:
+                item['CategoryCode'] = 'GGs'
+                item['TJME'] = data['']
+                item['TMRJE'] = data['']
+                item['TCJJE'] = data['']
 
 '''
 CREATE TABLE `hkland_toptrade` (
