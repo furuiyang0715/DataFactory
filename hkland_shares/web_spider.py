@@ -266,3 +266,8 @@ def shares_spider_task():
         check_day = datetime.date.today() - datetime.timedelta(days=1)
         logger.info("数据时间是{}".format(check_day))
         SharesSpider(market_type, 1).start()
+
+
+
+# if __name__ == '__main__':
+#     pass
