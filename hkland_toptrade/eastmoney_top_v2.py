@@ -6,8 +6,11 @@ import time
 
 import requests
 
-class EastmoneyTopTradeV2(object):
+from hkland_toptrade.configs import JUY_HOST, JUY_PORT, JUY_USER, JUY_PASSWD, JUY_DB
+from hkland_toptrade.sql_base import Connection
 
+
+class EastmoneyTopTradeV2(object):
     api = 'http://dcfm.eastmoney.com/em_mutisvcexpandinterface/api/js/get?'
 
     base_post_data = {
@@ -64,7 +67,15 @@ class EastmoneyTopTradeV2(object):
         'GGs': sz_hk_post_data,     # 港股通(深)
     }
 
-    def _get_inner_code_map(self, market_type):
+    juyuan_conn = Connection(
+        host=JUY_HOST,
+        port=JUY_PORT,
+        user=JUY_USER,
+        password=JUY_PASSWD,
+        database=JUY_DB,
+    )
+
+    def get_inner_code_map(self, market_type: str = None):
         """https://dd.gildata.com/#/tableShow/27/column///
            https://dd.gildata.com/#/tableShow/718/column///
         """
@@ -72,7 +83,8 @@ class EastmoneyTopTradeV2(object):
             sql = 'SELECT SecuCode,InnerCode from SecuMain WHERE SecuCategory in (1, 2) and SecuMarket in (83, 90) and ListedSector in (1, 2, 6, 7);'
         else:
             sql = '''SELECT SecuCode,InnerCode from hk_secumain WHERE SecuCategory in (51, 3, 53, 78) and SecuMarket in (72) and ListedSector in (1, 2, 6, 7);'''
-        ret = self.juyuan_con.select_all(sql)
+
+        ret = self.juyuan_conn.query(sql)
         info = {}
         for r in ret:
             key = r.get("SecuCode")
@@ -81,6 +93,9 @@ class EastmoneyTopTradeV2(object):
         return info
 
     def start(self):
+        shsz_market_map = self.get_inner_code_map('sh')
+        hk_market_map = self.get_inner_code_map()
+
         for category, post_data in self.loop_info.items():
             resp = requests.get(self.api, params=post_data)
             if resp.status_code == 200:
@@ -88,11 +103,9 @@ class EastmoneyTopTradeV2(object):
                 string_data = re.findall(r'jQuery\d{21}_\d{13}\((.*)\)', body)[0]
                 json_data = json.loads(string_data)
                 for data in json_data:
-                    # print(data)
                     item = dict()
                     item["Date"] = datetime.datetime.strptime(data['DetailDate'], '%Y-%m-%dT00:00:00')
                     item['SecuCode'] = data['Code']
-                    # item['InnerCode'] =
                     item['SecuAbbr'] = data['Name']
                     item['Close'] = data['Close']
                     item['ChangePercent'] = data['ChangePercent']
@@ -101,24 +114,28 @@ class EastmoneyTopTradeV2(object):
                         item['TJME'] = data['HGTJME']
                         item['TMRJE'] = data['HGTMRJE']
                         item['TCJJE'] = data['HGTCJJE']
+                        item['InnerCode'] = shsz_market_map.get(item['SecuCode'])
 
                     elif data['MarketType'] == 2:
                         item['CategoryCode'] = 'GGh'
                         item['TJME'] = data['GGTHJME']
                         item['TMRJE'] = data['GGTHMRJE']
                         item['TCJJE'] = data['GGTHCJJE']
+                        item['InnerCode'] = hk_market_map.get(item['SecuCode'])
 
                     elif data['MarketType'] == 3:
                         item['CategoryCode'] = 'SG'
                         item['TJME'] = data['SGTJME']
                         item['TMRJE'] = data['SGTMRJE']
                         item['TCJJE'] = data['SGTCJJE']
+                        item['InnerCode'] = shsz_market_map.get(item['SecuCode'])
 
                     elif data['MarketType'] == 4:
                         item['CategoryCode'] = 'GGs'
                         item['TJME'] = data['GGTSJME']
                         item['TMRJE'] = data['GGTSMRJE']
                         item['TCJJE'] = data['GGTSCJJE']
+                        item['InnerCode'] = hk_market_map.get(item['SecuCode'])
 
                     print(item)
 
