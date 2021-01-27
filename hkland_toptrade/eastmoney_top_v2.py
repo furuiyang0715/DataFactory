@@ -1,15 +1,20 @@
 import copy
 import datetime
 import json
+import logging
 import re
 import time
-
 import requests
+
+import utils
 from hkland_configs import JUY_HOST, JUY_PORT, JUY_USER, JUY_PASSWD, JUY_DB
+from hkland_toptrade.mixin import TopTradeMixin
 from sql_base import Connection
 
+logger = logging.getLogger()
 
-class EastmoneyTopTradeV2(object):
+
+class EastmoneyTopTradeV2(TopTradeMixin):
     api = 'http://dcfm.eastmoney.com/em_mutisvcexpandinterface/api/js/get?'
 
     base_post_data = {
@@ -91,7 +96,7 @@ class EastmoneyTopTradeV2(object):
             info[key] = value
         return info
 
-    def start(self):
+    def crawl(self):
         shsz_market_map = self.get_inner_code_map('sh')
         hk_market_map = self.get_inner_code_map()
 
@@ -137,6 +142,17 @@ class EastmoneyTopTradeV2(object):
                         item['InnerCode'] = hk_market_map.get(item['SecuCode'])
 
                     print(item)
+
+    def start(self):
+        now_dt = datetime.datetime.now()
+        is_trading_day = utils.check_iftradingday('n', now_dt) and utils.check_iftradingday('s', now_dt)
+        if is_trading_day is False:
+            logger.info(f"{now_dt} 南北均不交易")
+            return
+
+        self.crawl()
+
+        self.refresh_updatetime()
 
 
 if __name__ == '__main__':
