@@ -16,7 +16,7 @@ logger = logging.getLogger()
 
 class SharesSpider(object):
     """滬股通及深股通持股紀錄按日查詢"""
-    spider_conn = Connection(    # 爬虫库
+    spider_conn = Connection(
         host=SPIDER_MYSQL_HOST,
         port=SPIDER_MYSQL_PORT,
         user=SPIDER_MYSQL_USER,
@@ -32,45 +32,33 @@ class SharesSpider(object):
         database=JUY_DB,
     )
 
-    def __init__(self, type, offset=1):
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36',
+    }
+
+    converter = opencc.OpenCC('t2s')  # 中文繁体转简体
+
+    def __init__(self, mk_type, offset=1):
         """
         默认只更新之前一天的记录
         """
-        self.type = type
-        self.url = 'https://www.hkexnews.hk/sdw/search/mutualmarket_c.aspx?t={}'.format(type)
-        self.headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36',
-        }
+        self.type = mk_type
         self.today = datetime.datetime.combine(datetime.date.today(), datetime.time.min)
         self.offset = offset
-        # FIXME 注意: offset 决定的是查询哪一天的记录 且站在当前时间点只能查询之前一天往前的记录
         self.check_day = (datetime.date.today() - datetime.timedelta(days=self.offset)).strftime("%Y/%m/%d")
-        self.converter = opencc.OpenCC('t2s')  # 中文繁体转简体
-        _type_map = {
-            'sh': '沪股通',
-            'sz': '深股通',
-            'hk': '港股通',
-        }
-
-        _market_map = {
-            "sh": 83,
-            "sz": 90,
-            'hk': 72,
-
-        }
-        self.market = _market_map.get(self.type)
-
-        self.type_name = _type_map.get(self.type)
-        _percent_comment_map = {
+        self.url = 'https://www.hkexnews.hk/sdw/search/mutualmarket_c.aspx?t={}'.format(type)
+        self.market = {"sh": 83, "sz": 90, 'hk': 72}.get(self.type)
+        self.type_name = {'sh': '沪股通', 'sz': '深股通', 'hk': '港股通'}.get(self.type)
+        self.percent_comment = {
             'sh': '占于上交所上市及交易的A股总数的百分比(%)',
             'sz': '占于深交所上市及交易的A股总数的百分比(%)',
             'hk': '占已发行股份的百分比(%)',
-        }
-        self.percent_comment = _percent_comment_map.get(self.type)
+        }.get(self.type)
 
         # 敏仪的爬虫表名是 hold_shares_sh hold_shares_sz hold_shares_hk
         # 我这边更新后的表名是 hoding_ .. 区别是跟正式表的字段保持一致
         self.spider_table = 'holding_shares_{}'.format(self.type)
+
         # 生成正式库中的两个 hkland_shares hkland_hkshares
         if self.type in ("sh", "sz"):
             self.table_name = 'hkland_shares'
@@ -80,22 +68,6 @@ class SharesSpider(object):
             raise
         self.inner_code_map = self.get_inner_code_map()
         self.update_fields = ['SecuCode', 'InnerCode', 'SecuAbbr', 'Date', 'Percent', 'ShareNum']
-
-    @property
-    def post_params(self):
-        """构建请求参数"""
-        data = {
-            '__VIEWSTATE': '/wEPDwUJNjIxMTYzMDAwZGQ79IjpLOM+JXdffc28A8BMMA9+yg==',
-            '__VIEWSTATEGENERATOR': 'EC4ACD6F',
-            '__EVENTVALIDATION': '/wEdAAdtFULLXu4cXg1Ju23kPkBZVobCVrNyCM2j+bEk3ygqmn1KZjrCXCJtWs9HrcHg6Q64ro36uTSn/Z2SUlkm9HsG7WOv0RDD9teZWjlyl84iRMtpPncyBi1FXkZsaSW6dwqO1N1XNFmfsMXJasjxX85jz8PxJxwgNJLTNVe2Bh/bcg5jDf8=',
-            'today': '{}'.format(self.today.strftime("%Y%m%d")),
-            'sortBy': 'stockcode',
-            'sortDirection': 'asc',
-            'alertMsg': '',
-            'txtShareholdingDate': '{}'.format(self.check_day),
-            'btnSearch': '搜尋',
-        }
-        return data
 
     # def _create_table(self):
     #     """创建爬虫数据库"""
@@ -119,9 +91,6 @@ class SharesSpider(object):
     #     spider.dispose()
 
     def get_inner_code_map(self):
-        """https://dd.gildata.com/#/tableShow/27/column///
-           https://dd.gildata.com/#/tableShow/718/column///
-        """
         if self.type in ("sh", "sz"):
             sql = 'SELECT SecuCode,InnerCode from SecuMain WHERE SecuCategory in (1, 2) and SecuMarket in (83, 90) and ListedSector in (1, 2, 6, 7);'
         else:
@@ -134,8 +103,24 @@ class SharesSpider(object):
             info[key] = value
         return info
 
+    @property
+    def post_params(self):
+        """构建请求参数"""
+        data = {
+            '__VIEWSTATE': '/wEPDwUJNjIxMTYzMDAwZGQ79IjpLOM+JXdffc28A8BMMA9+yg==',
+            '__VIEWSTATEGENERATOR': 'EC4ACD6F',
+            '__EVENTVALIDATION': '/wEdAAdtFULLXu4cXg1Ju23kPkBZVobCVrNyCM2j+bEk3ygqmn1KZjrCXCJtWs9HrcHg6Q64ro36uTSn/Z2SUlkm9HsG7WOv0RDD9teZWjlyl84iRMtpPncyBi1FXkZsaSW6dwqO1N1XNFmfsMXJasjxX85jz8PxJxwgNJLTNVe2Bh/bcg5jDf8=',
+            'today': '{}'.format(self.today.strftime("%Y%m%d")),
+            'sortBy': 'stockcode',
+            'sortDirection': 'asc',
+            'alertMsg': '',
+            'txtShareholdingDate': '{}'.format(self.check_day),
+            'btnSearch': '搜尋',
+        }
+        return data
+
     def suffix_process(self, code):
-        """对代码进行加减后缀"""
+        """对股票代码加后缀"""
         if len(code) == 6:
             if code[0] == '6':
                 return code+'.XSHG'
@@ -147,7 +132,7 @@ class SharesSpider(object):
     def _trans_secucode(self, secu_code: str):
         """香港 大陆证券代码转换
         规则: 沪: 60-> 9
-            深: 000-> 70, 001-> 71, 002-> 72, 003-> 73, 300-> 77
+             深: 000-> 70, 001-> 71, 002-> 72, 003-> 73, 300-> 77
 
         FIXME: 科创板  688 在港股无对应的代码
         """
@@ -177,7 +162,6 @@ class SharesSpider(object):
                 secu_code = "0"*(5-len(secu_code)) + secu_code
         else:
             raise
-
         return secu_code
 
     def get_inner_code(self, secu_code):
@@ -224,6 +208,7 @@ class SharesSpider(object):
             # 与当前参数时间对应的数据时间
             # 举例: 参数时间是 4.26 但是 4.26 无数据更新 之前最近的有数据的日期是 4.25 这里的时间就是 4.25
             logger.info("{}与之对应的之前最近的有数据的一天是 {}".format(self.check_day, date))
+
             trs = doc.xpath('//*[@id="mutualmarket-result"]/tbody/tr')
             for tr in trs:
                 item = {}
@@ -274,9 +259,10 @@ def shares_spider_task():
     for market_type in ("sh", "sz", "hk"):
         SharesSpider(market_type).check_update()
 
-    for _type in ("sh", "sz", "hk"):
-        logger.info("{} 爬虫开始运行.".format(_type))
+    for market_type in ("sh", "sz", "hk"):
+        logger.info("{} 爬虫开始运行.".format(market_type))
         # for _offset in range(1, 3):
-        _check_day = datetime.date.today() - datetime.timedelta(days=1)
-        logger.info("数据时间是{}".format(_check_day))
-        SharesSpider(_type, 1).start()
+        # 在凌晨两点的时候只对前一天的数据进行更新
+        check_day = datetime.date.today() - datetime.timedelta(days=1)
+        logger.info("数据时间是{}".format(check_day))
+        SharesSpider(market_type, 1).start()
