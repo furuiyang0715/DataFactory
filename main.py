@@ -8,6 +8,7 @@ from hkland_configs import LOCAL
 from hkland_shares.web_spider import shares_spider_task
 from hkland_shszhktradingday.tradingdayspider import tradingday_task
 from hkland_toptrade.eastmoney_top import EastMoneyTop10
+from hkland_toptrade.eastmoney_top_v2 import EastmoneyTop10V2
 from hkland_toptrade.exchange_top10 import ExchangeTop10
 from hkland_toptrade.jqka10_top import JqkaTop10
 
@@ -27,7 +28,8 @@ ap_scheduler = BackgroundScheduler(executors=executors)
 def handle(event_name: str):
     if event_name == 'toptrade':
         # EastMoneyTop10(datetime.datetime.today()).start()
-        EastMoneyTop10(datetime.datetime.today() - datetime.timedelta(days=3)).start()
+        # EastMoneyTop10(datetime.datetime.today() - datetime.timedelta(days=3)).start()
+        EastmoneyTop10V2().start()
     elif event_name == 'toptrade_exchange':
         # ExchangeTop10(datetime.datetime.today()).start()
         ExchangeTop10(datetime.datetime.today() - datetime.timedelta(days=3)).start()
@@ -52,8 +54,8 @@ def handle(event_name: str):
 
 
 if __name__ == '__main__':
-    # handle("toptrade")
+    handle("toptrade")
     # handle("toptrade_exchange")
     # handle("toptrade_jqka10")
     # handle("tradingday")
-    handle("shares")
+    # handle("shares")

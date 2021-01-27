@@ -14,7 +14,7 @@ from sql_base import Connection
 logger = logging.getLogger()
 
 
-class EastmoneyTopTradeV2(TopTradeMixin):
+class EastmoneyTop10V2(TopTradeMixin):
     api = 'http://dcfm.eastmoney.com/em_mutisvcexpandinterface/api/js/get?'
 
     base_post_data = {
@@ -71,18 +71,10 @@ class EastmoneyTopTradeV2(TopTradeMixin):
         'GGs': sz_hk_post_data,     # 港股通(深)
     }
 
-    juyuan_conn = Connection(
-        host=JUY_HOST,
-        port=JUY_PORT,
-        user=JUY_USER,
-        password=JUY_PASSWD,
-        database=JUY_DB,
-    )
+    fields = ['Date', 'SecuCode', 'InnerCode', 'SecuAbbr', 'Close', 'ChangePercent', 'TJME',
+              'TMRJE', 'TCJJE', 'CategoryCode']
 
     def get_inner_code_map(self, market_type: str = None):
-        """https://dd.gildata.com/#/tableShow/27/column///
-           https://dd.gildata.com/#/tableShow/718/column///
-        """
         if market_type in ("sh", "sz"):
             sql = 'SELECT SecuCode,InnerCode from SecuMain WHERE SecuCategory in (1, 2) and SecuMarket in (83, 90) and ListedSector in (1, 2, 6, 7);'
         else:
@@ -100,6 +92,8 @@ class EastmoneyTopTradeV2(TopTradeMixin):
         shsz_market_map = self.get_inner_code_map('sh')
         hk_market_map = self.get_inner_code_map()
 
+        items = []
+
         for category, post_data in self.loop_info.items():
             resp = requests.get(self.api, params=post_data)
             if resp.status_code == 200:
@@ -108,6 +102,8 @@ class EastmoneyTopTradeV2(TopTradeMixin):
                 json_data = json.loads(string_data)
                 for data in json_data:
                     item = dict()
+                    item['CMFID'] = 1  # 兼容之前的程序 写死
+                    item['CMFTime'] = datetime.datetime.now()  # 兼容和之前的程序 用当前的时间代替
                     item["Date"] = datetime.datetime.strptime(data['DetailDate'], '%Y-%m-%dT00:00:00')
                     item['SecuCode'] = data['Code']
                     item['SecuAbbr'] = data['Name']
@@ -142,6 +138,9 @@ class EastmoneyTopTradeV2(TopTradeMixin):
                         item['InnerCode'] = hk_market_map.get(item['SecuCode'])
 
                     print(item)
+                    items.append(item)
+
+        self.product_conn.batch_insert(items, self.table_name, self.fields)
 
     def start(self):
         now_dt = datetime.datetime.now()
@@ -153,10 +152,6 @@ class EastmoneyTopTradeV2(TopTradeMixin):
         self.crawl()
 
         self.refresh_updatetime()
-
-
-if __name__ == '__main__':
-    EastmoneyTopTradeV2().start()
 
 
 '''
