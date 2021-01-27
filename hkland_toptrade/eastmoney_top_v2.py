@@ -139,7 +139,8 @@ class EastmoneyTop10V2(TopTradeMixin):
                     items.append(item)
 
         self.product_conn.batch_insert(items, self.table_name, self.fields)
-        sql = f'''select count(*) from {self.table_name} where Date = {self.now_dt.date()}; '''
+        sql = f'''select count(*) from {self.table_name} where Date = '{self.now_dt.date()}'; '''
+        print(sql)
         today_save_count = self.product_conn.get(sql).get("count(*)")
         utils.ding_msg(f'{self.now_dt.date()} 东财十大成交股更新数量{today_save_count}')
 
