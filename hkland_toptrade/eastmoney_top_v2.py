@@ -98,21 +98,21 @@ for category, post_data in loop_info.items():
 
             elif data['MarketType'] == 2:
                 item['CategoryCode'] = 'GGh'
-                item['TJME'] = data['']
-                item['TMRJE'] = data['']
-                item['TCJJE'] = data['']
+                item['TJME'] = data['GGTHJME']
+                item['TMRJE'] = data['GGTHMRJE']
+                item['TCJJE'] = data['GGTHCJJE']
 
             elif data['MarketType'] == 3:
                 item['CategoryCode'] = 'SG'
-                item['TJME'] = data['']
-                item['TMRJE'] = data['']
-                item['TCJJE'] = data['']
+                item['TJME'] = data['SGTJME']
+                item['TMRJE'] = data['SGTMRJE']
+                item['TCJJE'] = data['SGTCJJE']
 
             elif data['MarketType'] == 4:
                 item['CategoryCode'] = 'GGs'
-                item['TJME'] = data['']
-                item['TMRJE'] = data['']
-                item['TCJJE'] = data['']
+                item['TJME'] = data['GGTSJME']
+                item['TMRJE'] = data['GGTSMRJE']
+                item['TCJJE'] = data['GGTSCJJE']
 
 '''
 CREATE TABLE `hkland_toptrade` (
