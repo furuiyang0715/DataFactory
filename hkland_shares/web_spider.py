@@ -196,28 +196,20 @@ class SharesSpider(object):
         ret = self.juyuan_conn.get(sql).get("ChiNameAbbr")
         return ret
 
-    def get_date(self):
+    def check_update(self):
+        # 检查网站当日有数据的情况下爬虫数据库是否正常保存到数据
         resp = requests.post(self.url, data=self.post_params)
         if resp.status_code == 200:
             body = resp.text
             doc = html.fromstring(body)
             date = doc.xpath('//*[@id="pnlResult"]/h2/span/text()')[0]
-            date = re.findall(r"持股日期: (\d{4}/\d{2}/\d{2})", date)[0]
-            return date
-
-    def select_spider_in_dt(self, dt):
-        sql = 'select count(*) as count from {} where Date = "{}";'.format(self.spider_table, dt)
-        ret = self.spider_conn.get(sql).get("count")
-        return ret
-
-    def check_update(self):
-        date = self.get_date()
-        count = self.select_spider_in_dt(date)
-        # print(count)
-        if count == 0:
-            utils.ding_msg("{} 网站最近更新时间 {} 的爬虫持股数据未更入库".format(self.spider_table, date))
-        else:
-            utils.ding_msg("{} 网站最近更新时间 {} 的爬虫持股数据已更新, 更新数量是 {}".format(self.spider_table, date, count))
+            website_date = re.findall(r"持股日期: (\d{4}/\d{2}/\d{2})", date)[0]
+            sql = 'select count(*) as count from {} where Date = "{}";'.format(self.spider_table, website_date)
+            count = self.spider_conn.get(sql).get("count")
+            if count == 0:
+                utils.ding_msg("{} 网站最近更新时间 {} 的爬虫持股数据未更入库".format(self.spider_table, website_date))
+            else:
+                utils.ding_msg("{} 网站最近更新时间 {} 的爬虫持股数据已更新, 更新数量是 {}".format(self.spider_table, website_date, count))
 
     def start(self):
         # # (1) 创建爬虫数据库
@@ -279,8 +271,8 @@ class SharesSpider(object):
 
 
 def shares_spider_task():
-    for _type in ("sh", "sz", "hk"):
-        SharesSpider(_type).check_update()
+    for market_type in ("sh", "sz", "hk"):
+        SharesSpider(market_type).check_update()
 
     for _type in ("sh", "sz", "hk"):
         logger.info("{} 爬虫开始运行.".format(_type))
