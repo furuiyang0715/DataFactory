@@ -64,6 +64,22 @@ class EastmoneyTopTradeV2(object):
         'GGs': sz_hk_post_data,     # 港股通(深)
     }
 
+    def _get_inner_code_map(self, market_type):
+        """https://dd.gildata.com/#/tableShow/27/column///
+           https://dd.gildata.com/#/tableShow/718/column///
+        """
+        if market_type in ("sh", "sz"):
+            sql = 'SELECT SecuCode,InnerCode from SecuMain WHERE SecuCategory in (1, 2) and SecuMarket in (83, 90) and ListedSector in (1, 2, 6, 7);'
+        else:
+            sql = '''SELECT SecuCode,InnerCode from hk_secumain WHERE SecuCategory in (51, 3, 53, 78) and SecuMarket in (72) and ListedSector in (1, 2, 6, 7);'''
+        ret = self.juyuan_con.select_all(sql)
+        info = {}
+        for r in ret:
+            key = r.get("SecuCode")
+            value = r.get('InnerCode')
+            info[key] = value
+        return info
+
     def start(self):
         for category, post_data in self.loop_info.items():
             resp = requests.get(self.api, params=post_data)
