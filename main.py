@@ -42,20 +42,20 @@ def handle(event_name: str):
         shares_spider_task()
 
 
-# # 在每天的17到19点每隔2min执行一次
-# ap_scheduler.add_job(func=handle, trigger="cron", hour='17-19', minute='*/2', args=('toptrade', ), name='toptrade', max_instances=1)
-# ap_scheduler.add_job(func=handle, trigger='cron', hour='8,12', args=("tradingday",), name="tradingday", max_instances=1)
-#
-# ap_scheduler.start()
-#
-#
-# while True:
-#     time.sleep(10)
+# 在每天的17到19点每隔2min执行一次
+ap_scheduler.add_job(func=handle, trigger="cron", hour='17-19', minute='*/2', args=('toptrade', ), name='toptrade', max_instances=1)
+ap_scheduler.add_job(func=handle, trigger='cron', hour='8,12', args=("tradingday",), name="tradingday", max_instances=1)
+
+ap_scheduler.start()
 
 
-if __name__ == '__main__':
-    handle("toptrade")
-    # handle("toptrade_exchange")
-    # handle("toptrade_jqka10")
-    # handle("tradingday")
-    # handle("shares")
+while True:
+    time.sleep(10)
+
+
+# if __name__ == '__main__':
+#     handle("toptrade")
+#     # handle("toptrade_exchange")
+#     # handle("toptrade_jqka10")
+#     # handle("tradingday")
+#     # handle("shares")

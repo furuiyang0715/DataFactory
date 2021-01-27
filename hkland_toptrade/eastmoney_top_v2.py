@@ -7,9 +7,7 @@ import time
 import requests
 
 import utils
-from hkland_configs import JUY_HOST, JUY_PORT, JUY_USER, JUY_PASSWD, JUY_DB
 from hkland_toptrade.mixin import TopTradeMixin
-from sql_base import Connection
 
 logger = logging.getLogger()
 
