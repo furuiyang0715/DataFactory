@@ -74,6 +74,8 @@ class EastmoneyTop10V2(TopTradeMixin):
     fields = ['Date', 'SecuCode', 'InnerCode', 'SecuAbbr', 'Close', 'ChangePercent', 'TJME',
               'TMRJE', 'TCJJE', 'CategoryCode']
 
+    now_dt = datetime.datetime.now()
+
     def get_inner_code_map(self, market_type: str = None):
         if market_type in ("sh", "sz"):
             sql = 'SELECT SecuCode,InnerCode from SecuMain WHERE SecuCategory in (1, 2) and SecuMarket in (83, 90) and ListedSector in (1, 2, 6, 7);'
@@ -136,17 +138,17 @@ class EastmoneyTop10V2(TopTradeMixin):
                         item['TMRJE'] = data['GGTSMRJE']
                         item['TCJJE'] = data['GGTSCJJE']
                         item['InnerCode'] = hk_market_map.get(item['SecuCode'])
-
-                    print(item)
                     items.append(item)
 
         self.product_conn.batch_insert(items, self.table_name, self.fields)
+        sql = f'''select count(*) from {self.table_name} where Date = {self.now_dt.date()}; '''
+        today_save_count = self.product_conn.get(sql).get("count(*)")
+        utils.ding_msg(f'{self.now_dt.date()} 东财十大成交股更新数量{today_save_count}')
 
     def start(self):
-        now_dt = datetime.datetime.now()
-        is_trading_day = utils.check_iftradingday('n', now_dt) and utils.check_iftradingday('s', now_dt)
+        is_trading_day = utils.check_iftradingday('n', self.now_dt) and utils.check_iftradingday('s', self.now_dt)
         if is_trading_day is False:
-            logger.info(f"{now_dt} 南北均不交易")
+            logger.info(f"{self.now_dt} 南北均不交易")
             return
 
         self.crawl()
