@@ -6,113 +6,110 @@ import time
 
 import requests
 
-# api = f'http://dcfm.eastmoney.com/em_mutisvcexpandinterface/api/js/get?\
-# callback=jQuery112307259899045837717_{int(time.time()* 1000)}\
-# &st=DetailDate%2CRank\
-# &sr=1\
-# &ps=10\
-# &p=1\
-# &type=HSGTCJB\
-# &token=70f12f2f4f091e459a279469fe49eca5\
-# &filter=(MarketType%3D1)\
-# &sty=HGT'
+class EastmoneyTopTradeV2(object):
 
-api = 'http://dcfm.eastmoney.com/em_mutisvcexpandinterface/api/js/get?'
+    api = 'http://dcfm.eastmoney.com/em_mutisvcexpandinterface/api/js/get?'
 
-base_post_data = {
-    'callback': f'jQuery112307259899045837717_{int(time.time()* 1000)}',
-    'st': 'DetailDate,Rank',
-    'sr': 1,
-    'ps': 10,
-    'p': 1,
-    'type': 'HSGTCJB',
-    'token': '70f12f2f4f091e459a279469fe49eca5',
+    base_post_data = {
+        'callback': f'jQuery112307259899045837717_{int(time.time()* 1000)}',
+        'st': 'DetailDate,Rank',
+        'sr': 1,
+        'ps': 10,
+        'p': 1,
+        'type': 'HSGTCJB',
+        'token': '70f12f2f4f091e459a279469fe49eca5',
 
-} 
-
-# 沪股通十大成交股参数
-base_post_data.update(
-    {
-        'filter': '(MarketType=1)',
-        'sty': 'HGT',
     }
-)
-hk_sh_post_data = copy.deepcopy(base_post_data)
 
-# 深股通十大成交股参数
-base_post_data.update(
-    {
-        'filter': '(MarketType=3)',
-        'sty': 'SGT',
+    # 沪股通十大成交股参数
+    base_post_data.update(
+        {
+            'filter': '(MarketType=1)',
+            'sty': 'HGT',
+        }
+    )
+    hk_sh_post_data = copy.deepcopy(base_post_data)
+
+    # 深股通十大成交股参数
+    base_post_data.update(
+        {
+            'filter': '(MarketType=3)',
+            'sty': 'SGT',
+        }
+    )
+    hk_sz_post_data = copy.deepcopy(base_post_data)
+
+    # 港股通（沪）
+    base_post_data.update(
+        {
+            'filter': '(MarketType=2)',
+            'sty': 'GGT',
+        }
+    )
+    sh_hk_post_data = copy.deepcopy(base_post_data)
+
+    # 港股通（深）
+    base_post_data.update(
+        {
+            'filter': '(MarketType=4)',
+            'sty': 'GGT',
+        }
+    )
+    sz_hk_post_data = copy.deepcopy(base_post_data)
+
+    loop_info = {
+        'HG': hk_sh_post_data,      # 沪股通
+        'GGh':  sh_hk_post_data,    # 港股通(沪)
+        'SG': hk_sz_post_data,      # 深股通
+        'GGs': sz_hk_post_data,     # 港股通(深)
     }
-)
-hk_sz_post_data = copy.deepcopy(base_post_data)
 
-# 港股通（沪）
-base_post_data.update(
-    {
-        'filter': '(MarketType=2)',
-        'sty': 'GGT',
-    }
-)
-sh_hk_post_data = copy.deepcopy(base_post_data)
+    def start(self):
+        for category, post_data in self.loop_info.items():
+            resp = requests.get(self.api, params=post_data)
+            if resp.status_code == 200:
+                body = resp.text
+                string_data = re.findall(r'jQuery\d{21}_\d{13}\((.*)\)', body)[0]
+                json_data = json.loads(string_data)
+                for data in json_data:
+                    # print(data)
+                    item = dict()
+                    item["Date"] = datetime.datetime.strptime(data['DetailDate'], '%Y-%m-%dT00:00:00')
+                    item['SecuCode'] = data['Code']
+                    # item['InnerCode'] =
+                    item['SecuAbbr'] = data['Name']
+                    item['Close'] = data['Close']
+                    item['ChangePercent'] = data['ChangePercent']
+                    if data['MarketType'] == 1:    # 市场类型 1 沪股通 2 港股通（沪） 3 深股通 4 港通股（深）
+                        item['CategoryCode'] = 'HG'
+                        item['TJME'] = data['HGTJME']
+                        item['TMRJE'] = data['HGTMRJE']
+                        item['TCJJE'] = data['HGTCJJE']
 
-# 港股通（深）
-base_post_data.update(
-    {
-        'filter': '(MarketType=4)',
-        'sty': 'GGT',
-    }
-)
-sz_hk_post_data = copy.deepcopy(base_post_data)
+                    elif data['MarketType'] == 2:
+                        item['CategoryCode'] = 'GGh'
+                        item['TJME'] = data['GGTHJME']
+                        item['TMRJE'] = data['GGTHMRJE']
+                        item['TCJJE'] = data['GGTHCJJE']
+
+                    elif data['MarketType'] == 3:
+                        item['CategoryCode'] = 'SG'
+                        item['TJME'] = data['SGTJME']
+                        item['TMRJE'] = data['SGTMRJE']
+                        item['TCJJE'] = data['SGTCJJE']
+
+                    elif data['MarketType'] == 4:
+                        item['CategoryCode'] = 'GGs'
+                        item['TJME'] = data['GGTSJME']
+                        item['TMRJE'] = data['GGTSMRJE']
+                        item['TCJJE'] = data['GGTSCJJE']
+
+                    print(item)
 
 
-loop_info = {
-    'HG': hk_sh_post_data,      # 沪股通
-    'GGh':  sh_hk_post_data,    # 港股通(沪)
-    'SG': hk_sz_post_data,      # 深股通
-    'GGs': sz_hk_post_data,     # 港股通(深)
-}
+if __name__ == '__main__':
+    EastmoneyTopTradeV2().start()
 
-
-for category, post_data in loop_info.items():
-    resp = requests.get(api, params=post_data)
-    if resp.status_code == 200:
-        body = resp.text
-        string_data = re.findall(r'jQuery\d{21}_\d{13}\((.*)\)', body)[0]
-        json_data = json.loads(string_data)
-        for data in json_data:
-            print(data)
-            item = dict()
-            item["Date"] = datetime.datetime.strptime(data['DetailDate'], '%Y-%m-%dT00:00:00')
-            item['SecuCode'] = data['Code']
-            # item['InnerCode'] =
-            item['SecuAbbr'] = data['Name']
-            item['Close'] = data['Close']
-            item['ChangePercent'] = data['ChangePercent']
-            if data['MarketType'] == 1:    # 市场类型 1 沪股通 2 港股通（沪） 3 深股通 4 港通股（深）
-                item['CategoryCode'] = 'HG'
-                item['TJME'] = data['HGTJME']
-                item['TMRJE'] = data['HGTMRJE']
-                item['TCJJE'] = data['HGTCJJE']
-
-            elif data['MarketType'] == 2:
-                item['CategoryCode'] = 'GGh'
-                item['TJME'] = data['GGTHJME']
-                item['TMRJE'] = data['GGTHMRJE']
-                item['TCJJE'] = data['GGTHCJJE']
-
-            elif data['MarketType'] == 3:
-                item['CategoryCode'] = 'SG'
-                item['TJME'] = data['SGTJME']
-                item['TMRJE'] = data['SGTMRJE']
-                item['TCJJE'] = data['SGTCJJE']
-
-            elif data['MarketType'] == 4:
-                item['CategoryCode'] = 'GGs'
-                item['TJME'] = data['GGTSJME']
-                item['TMRJE'] = data['GGTSMRJE']
-                item['TCJJE'] = data['GGTSCJJE']
 
 '''
 CREATE TABLE `hkland_toptrade` (
