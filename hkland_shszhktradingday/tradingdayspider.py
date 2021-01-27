@@ -8,6 +8,7 @@ import pandas as pd
 from lxml import html
 from urllib.request import urlretrieve
 
+import utils
 from hkland_configs import (DC_HOST, DC_PORT, DC_USER, DC_PASSWD, DC_DB, PRODUCT_MYSQL_HOST,
                             PRODUCT_MYSQL_DB, PRODUCT_MYSQL_USER, PRODUCT_MYSQL_PASSWORD,
                             PRODUCT_MYSQL_PORT)
@@ -237,6 +238,8 @@ def tradingday_task():
     logger.info("Last Update Time: {}".format(lastest_update_dt))
     if lastest_update_dt and (not lastest_update_dt >= _now - datetime.timedelta(days=2)):
         logger.info("No Update in Latest 2 Days, Return.")
+        utils.ding_msg('hkland_shszhktradingday: No Update in Latest 2 Days, Return.')
         return
 
     update_calendar()
+    utils.ding_msg('hkland_shszhktradingday: update calendar.')

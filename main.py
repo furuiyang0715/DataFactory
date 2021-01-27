@@ -35,7 +35,6 @@ def handle(event_name: str):
         ExchangeTop10(datetime.datetime.today() - datetime.timedelta(days=3)).start()
     elif event_name == 'toptrade_jqka10':
         JqkaTop10().start()
-
     elif event_name == 'tradingday':
         tradingday_task()
     elif event_name == 'shares':
