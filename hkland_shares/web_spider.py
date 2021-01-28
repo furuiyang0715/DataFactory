@@ -268,6 +268,5 @@ def shares_spider_task():
         SharesSpider(market_type, 1).start()
 
 
-
-# if __name__ == '__main__':
-#     pass
+if __name__ == '__main__':
+    pass
