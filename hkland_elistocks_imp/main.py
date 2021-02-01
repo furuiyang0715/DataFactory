@@ -338,7 +338,24 @@ class OriginChecker(BaseSpider):
         ]
 
         if reload:    # 重新生成
-            pass
+            info = ''
+            for table in origin_change_tables:
+                # 获取爬虫表有过更新的时间点
+                ret = self.get_distinct_spider_udpate_time(table)
+                dt_list = sorted([r.get("Time") for r in ret])
+                latest_records = self.select_onetime_records(table, dt_list[-1])
+                # 去掉一些无关字段
+                for r in latest_records:
+                    r.pop("id")
+                    r.pop("Time")
+                    r.pop("CREATETIMEJZ")
+                    r.pop("ItemID")
+                    r.pop("UPDATETIMEJZ")
+
+                if table == 'hkex_lgt_change_of_sse_securities_lists':
+                    self.process_sh_changes(latest_records)
+                else:
+                    self.process_sz_changes(latest_records)
         else:        # 从变化量生成
             info = ''
             count = 1
@@ -412,7 +429,7 @@ class OriginChecker(BaseSpider):
 
 def task():
     checker = OriginChecker()
-    checker.start()
+    checker.start(reload=True)
     checker.refresh_update_time()   # 更新工具表的最后更新时间
 
 
