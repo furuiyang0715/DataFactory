@@ -344,7 +344,7 @@ class OriginChecker(BaseSpider):
             # 获取爬虫表有过更新的时间点
             ret = self.get_distinct_spider_udpate_time(table)
             dt_list = sorted([r.get("Time") for r in ret])
-            # print("{} 至今全部的更新时间列表是{}".format(table, dt_list))
+            print("{} 至今全部的更新时间列表是{}".format(table, dt_list))
             # 注意: 最后的两次的差异 以及最后一次与第一次之间的差异 按需
             latest_records = self.select_onetime_records(table, dt_list[-1])
             first_records = self.select_onetime_records(table, dt_list[0])
@@ -383,10 +383,11 @@ class OriginChecker(BaseSpider):
             else:
                 self.process_sz_changes(to_insert)
 
-            # with open("to_delete_{}.txt".format(count), "w") as f:
-            #     f.write(pprint.pformat(to_delete))
-            # with open("to_insert_{}.txt".format(count), "w") as f:
-            #     f.write(pprint.pformat(to_insert))
+            # 将增量的变更记录存入文件中
+            with open("to_delete_{}.txt".format(count), "w") as f:
+                f.write(pprint.pformat(to_delete))
+            with open("to_insert_{}.txt".format(count), "w") as f:
+                f.write(pprint.pformat(to_insert))
 
             count += 1
 
