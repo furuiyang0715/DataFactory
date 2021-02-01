@@ -341,6 +341,7 @@ class OriginChecker(BaseSpider):
         info = ''
         count = 1
         for table in origin_change_tables:
+            # 获取爬虫表有过更新的时间点
             ret = self.get_distinct_spider_udpate_time(table)
             dt_list = sorted([r.get("Time") for r in ret])
             # print("{} 至今全部的更新时间列表是{}".format(table, dt_list))
@@ -409,7 +410,7 @@ class OriginChecker(BaseSpider):
 def task():
     checker = OriginChecker()
     checker.start()
-    checker.refresh_update_time()
+    checker.refresh_update_time()   # 更新工具表的最后更新时间
 
 
 def main():
@@ -424,6 +425,6 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    main()   # 定时调度程序
 
-    # task()
+    # task()   # 一次性执行程序
