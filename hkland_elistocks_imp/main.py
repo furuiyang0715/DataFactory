@@ -329,67 +329,69 @@ class OriginChecker(BaseSpider):
         ret = self.product_client.select_one(sql)
         return ret
 
-    def start(self):
+    def start(self, reload=False):
         """直接检查两个数据点之间的差异"""
-
         # 两个合资格股的变更表
         origin_change_tables = [
             'hkex_lgt_change_of_sse_securities_lists',
             'hkex_lgt_change_of_szse_securities_lists',
         ]
 
-        info = ''
-        count = 1
-        for table in origin_change_tables:
-            # 获取爬虫表有过更新的时间点
-            ret = self.get_distinct_spider_udpate_time(table)
-            dt_list = sorted([r.get("Time") for r in ret])
-            print("{} 至今全部的更新时间列表是{}".format(table, dt_list))
-            # 注意: 最后的两次的差异 以及最后一次与第一次之间的差异 按需
-            latest_records = self.select_onetime_records(table, dt_list[-1])
-            first_records = self.select_onetime_records(table, dt_list[0])
-            print(f"{table}: {dt_list[0]} --> {dt_list[-1]} ")
+        if reload:    # 重新生成
+            pass
+        else:        # 从变化量生成
+            info = ''
+            count = 1
+            for table in origin_change_tables:
+                # 获取爬虫表有过更新的时间点
+                ret = self.get_distinct_spider_udpate_time(table)
+                dt_list = sorted([r.get("Time") for r in ret])
+                print("{} 至今全部的更新时间列表是{}".format(table, dt_list))
+                # 注意: 最后的两次的差异 以及最后一次与第一次之间的差异 按需
+                latest_records = self.select_onetime_records(table, dt_list[-1])
+                first_records = self.select_onetime_records(table, dt_list[0])
+                print(f"{table}: {dt_list[0]} --> {dt_list[-1]} ")
 
-            # 去掉一些无关字段
-            for r in latest_records:
-                r.pop("id")
-                r.pop("Time")
-                r.pop("CREATETIMEJZ")
-                r.pop("ItemID")
-                r.pop("UPDATETIMEJZ")
+                # 去掉一些无关字段
+                for r in latest_records:
+                    r.pop("id")
+                    r.pop("Time")
+                    r.pop("CREATETIMEJZ")
+                    r.pop("ItemID")
+                    r.pop("UPDATETIMEJZ")
 
-            for r in first_records:
-                r.pop("id")
-                r.pop("Time")
-                r.pop("CREATETIMEJZ")
-                r.pop("ItemID")
-                r.pop("UPDATETIMEJZ")
+                for r in first_records:
+                    r.pop("id")
+                    r.pop("Time")
+                    r.pop("CREATETIMEJZ")
+                    r.pop("ItemID")
+                    r.pop("UPDATETIMEJZ")
 
-            to_insert = []
-            to_delete = []
-            for one in latest_records:
-                if not one in first_records and not one in records_sh and not one in records_sz:
-                    to_insert.append(one)
+                to_insert = []
+                to_delete = []
+                for one in latest_records:
+                    if not one in first_records and not one in records_sh and not one in records_sz:
+                        to_insert.append(one)
 
-            for one in first_records:
-                if not one in latest_records and not one in records_sh and not one in records_sz:
-                    to_delete.append(one)
+                for one in first_records:
+                    if not one in latest_records and not one in records_sh and not one in records_sz:
+                        to_delete.append(one)
 
-            info += "{} 与第一相比 应该删除的记录是: {}\n".format(table, len(to_delete))
-            info += "{} 与第一次相比, 应该增加的记录是: {}\n".format(table, len(to_insert))
+                info += "{} 与第一相比 应该删除的记录是: {}\n".format(table, len(to_delete))
+                info += "{} 与第一次相比, 应该增加的记录是: {}\n".format(table, len(to_insert))
 
-            if count == 1:
-                self.process_sh_changes(to_insert)
-            else:
-                self.process_sz_changes(to_insert)
+                if count == 1:
+                    self.process_sh_changes(to_insert)
+                else:
+                    self.process_sz_changes(to_insert)
 
-            # 将增量的变更记录存入文件中
-            with open("to_delete_{}.txt".format(count), "w") as f:
-                f.write(pprint.pformat(to_delete))
-            with open("to_insert_{}.txt".format(count), "w") as f:
-                f.write(pprint.pformat(to_insert))
+                # 将增量的变更记录存入文件中
+                with open("to_delete_{}.txt".format(count), "w") as f:
+                    f.write(pprint.pformat(to_delete))
+                with open("to_insert_{}.txt".format(count), "w") as f:
+                    f.write(pprint.pformat(to_insert))
 
-            count += 1
+                count += 1
 
         # 检查一致性
         dp = DailyUpdate()
@@ -405,7 +407,7 @@ class OriginChecker(BaseSpider):
 
         info += "沪股合资格校对的结果是 {}, \n深股合资格校对的结果是 {}\n".format((sh1, sh2, sh3, sh4), (sz1, sz2, sz3, sz4))
         print(info)
-        self.ding(info)
+        # self.ding(info)
 
 
 def task():
